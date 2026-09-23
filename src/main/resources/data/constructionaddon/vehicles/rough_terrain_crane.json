@@ -1,0 +1,197 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/rough_terrain_crane.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Rough Terrain Crane",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.45,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 160.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Rough Terrain Crane",
+    "tier": 3
+  },
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.72,
+      "offset_y": 1.75,
+      "offset_z": 0.35,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "crane",
+    "joints": [
+      {
+        "part": "$outrigger_l",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.2
+      },
+      {
+        "part": "$outrigger_r",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.2
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.4,
+        "pivot_z": -0.5,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$boom",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 2.15,
+        "pivot_z": -1.8,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "luff"
+      },
+      {
+        "part": "$boom2",
+        "parent": "$boom",
+        "pivot_x": 0.0,
+        "pivot_y": 2.15,
+        "pivot_z": -1.8,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": 1,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.5
+      },
+      {
+        "part": "$boom3",
+        "parent": "$boom2",
+        "pivot_x": 0.0,
+        "pivot_y": 2.15,
+        "pivot_z": -1.8,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": 1,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.5
+      },
+      {
+        "part": "$rope",
+        "parent": "$boom3",
+        "pivot_x": 0.0,
+        "pivot_y": 1.75,
+        "pivot_z": 5.05,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "scale",
+        "channel": "rope",
+        "offset": 0.0,
+        "inherit_rotation": false
+      },
+      {
+        "part": "$hook",
+        "parent": "$boom3",
+        "pivot_x": 0.0,
+        "pivot_y": 1.75,
+        "pivot_z": 5.05,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "rope",
+        "inherit_rotation": false
+      }
+    ],
+    "work_points": {
+      "boom_tip": {
+        "part": "$boom3",
+        "x": 0.0,
+        "y": 1.75,
+        "z": 5.05
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ],
+    "crane": {
+      "swing_speed": 1.5,
+      "luff_speed": 0.6,
+      "luff_min": 0.0,
+      "luff_max": 78.0,
+      "extend_speed": 0.06,
+      "extend_max": 8.0,
+      "rope_speed": 0.15,
+      "rope_min": 0.5,
+      "rope_max": 40.0,
+      "outrigger_speed": 0.04,
+      "require_outriggers": true,
+      "grab_radius": 1.5,
+      "max_lift_width": 6.0,
+      "hook_drop": 0.9
+    }
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.2,
+      "pivot_y": 0.6,
+      "pivot_z": 2.0,
+      "steer_angle": 25.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.2,
+      "pivot_y": 0.6,
+      "pivot_z": 2.0,
+      "steer_angle": 25.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 1.2,
+      "pivot_y": 0.6,
+      "pivot_z": -2.0
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -1.2,
+      "pivot_y": 0.6,
+      "pivot_z": -2.0
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/dump_truck.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Dump Truck",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.6,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Dump Truck",
+    "tier": 2
+  },
+  "seats": [
+    {
+      "name": "driver",
+      "offset_x": -0.6,
+      "offset_y": 1.2,
+      "offset_z": 2.4,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "dump_truck",
+    "joints": [
+      {
+        "part": "$bed",
+        "pivot_x": 0.0,
+        "pivot_y": 1.3,
+        "pivot_z": -2.9,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "bed"
+      },
+      {
+        "part": "$bed_load",
+        "parent": "$bed",
+        "pivot_x": 0,
+        "pivot_y": 1.45,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "scale",
+        "channel": "load",
+        "offset": 0.0
+      }
+    ],
+    "work_points": {
+      "discharge": {
+        "part": "$bed",
+        "x": 0.0,
+        "y": 1.5,
+        "z": -3.3
+      }
+    },
+    "dump_truck": {
+      "bed_min_x": -1.1,
+      "bed_min_y": 1.2,
+      "bed_min_z": -2.9,
+      "bed_max_x": 1.1,
+      "bed_max_y": 4.5,
+      "bed_max_z": 1.3,
+      "bed_speed": 1.5,
+      "bed_max_angle": 55.0,
+      "dump_start_angle": 20.0,
+      "dump_interval_slow": 8,
+      "dump_interval_fast": 2,
+      "capacity": 256,
+      "discharge_point": "discharge",
+      "dump_spread_radius": 4,
+      "dump_slope": 0.6
+    }
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": 2.4,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": 2.4,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -1.0
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -1.0
+    },
+    {
+      "part": "$wheel4",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -2.2
+    },
+    {
+      "part": "$wheel5",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -2.2
+    }
+  ]
+}

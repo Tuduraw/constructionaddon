@@ -1,0 +1,136 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/backhoe.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Mini Backhoe",
+  "scale": 0.6,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.28,
+  "acceleration": 0.04,
+  "turn_speed": 3.0,
+  "step_height": 0.6,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 70.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 600.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Mini Backhoe",
+    "tier": 1
+  },
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.78,
+      "offset_y": 0.95,
+      "offset_z": 0.7,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "excavator",
+    "joints": [
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.8,
+        "pivot_z": 0.0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$boom",
+        "parent": "$upper",
+        "pivot_x": -0.2,
+        "pivot_y": 1.3,
+        "pivot_z": 1.1,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "boom"
+      },
+      {
+        "part": "$arm",
+        "parent": "$boom",
+        "pivot_x": -0.2,
+        "pivot_y": 3.5,
+        "pivot_z": 3.4,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "arm"
+      },
+      {
+        "part": "$bucket",
+        "parent": "$arm",
+        "pivot_x": -0.2,
+        "pivot_y": 1.4,
+        "pivot_z": 4.4,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "bucket"
+      },
+      {
+        "part": "$bucket_load",
+        "parent": "$bucket",
+        "pivot_x": -0.2,
+        "pivot_y": 0.7,
+        "pivot_z": 4.7,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "scale",
+        "channel": "load",
+        "offset": 0.0
+      }
+    ],
+    "work_points": {
+      "bucket_tip": {
+        "part": "$bucket",
+        "x": -0.2,
+        "y": 0.6,
+        "z": 4.95
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ],
+    "excavator": {
+      "swing_speed": 2.5,
+      "boom_speed": 1.5,
+      "arm_speed": 2.0,
+      "boom_min": -40.0,
+      "boom_max": 35.0,
+      "arm_min": -50.0,
+      "arm_max": 110.0,
+      "bucket_min": -60.0,
+      "bucket_max": 110.0,
+      "curl_speed": 4.0,
+      "capacity": 2,
+      "dig_radius": 0.8,
+      "base_dig_ticks": 4.0,
+      "dump_angle": -20.0,
+      "dump_interval": 3,
+      "dump_spread_radius": 4,
+      "dump_slope": 0.75,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 3.5
+      }
+    }
+  }
+}

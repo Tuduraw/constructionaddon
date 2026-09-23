@@ -1,0 +1,84 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/tractor_head.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Tractor Head",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.7,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Tractor Head",
+    "tier": 3
+  },
+  "seats": [
+    {
+      "name": "driver",
+      "offset_x": -0.6,
+      "offset_y": 1.3,
+      "offset_z": 2.2,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "tractor",
+    "tractor": {
+      "hitch_x": 0.0,
+      "hitch_y": 1.1,
+      "hitch_z": -1.2,
+      "couple_radius": 2.0,
+      "towing_speed_factor": 0.7
+    }
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": 2.2,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": 2.2,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -0.9
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -0.9
+    },
+    {
+      "part": "$wheel4",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -2.1
+    },
+    {
+      "part": "$wheel5",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -2.1
+    }
+  ]
+}

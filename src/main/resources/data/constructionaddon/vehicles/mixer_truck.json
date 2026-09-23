@@ -1,0 +1,137 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/mixer_truck.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Concrete Mixer Truck",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.55,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 18,
+  "spawn_item": {
+    "display_name": "Concrete Mixer Truck",
+    "tier": 3
+  },
+  "seats": [
+    {
+      "name": "driver",
+      "offset_x": -0.6,
+      "offset_y": 1.2,
+      "offset_z": 2.4,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "mixer_truck",
+    "joints": [
+      {
+        "part": "$drum",
+        "pivot_x": 0.0,
+        "pivot_y": 2.375,
+        "pivot_z": -0.75,
+        "axis_x": 0.0,
+        "axis_y": -0.1987,
+        "axis_z": 0.9801,
+        "mode": "spin",
+        "channel": "drum"
+      },
+      {
+        "part": "$chute",
+        "pivot_x": 0.0,
+        "pivot_y": 1.6,
+        "pivot_z": -3.0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "chute_swing"
+      },
+      {
+        "part": "$chute_arm",
+        "parent": "$chute",
+        "pivot_x": 0.0,
+        "pivot_y": 1.6,
+        "pivot_z": -3.0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "chute_tilt"
+      }
+    ],
+    "work_points": {
+      "chute_tip": {
+        "part": "$chute_arm",
+        "x": 0.0,
+        "y": 0.9,
+        "z": -4.7
+      }
+    },
+    "mixer_truck": {
+      "chute_swing_speed": 3.0,
+      "chute_swing_limit": 100.0,
+      "chute_tilt_min": -25.0,
+      "chute_tilt_max": 30.0,
+      "chute_tilt_speed": 1.0,
+      "pour_interval": 4,
+      "spread_radius": 4,
+      "capacity": 64,
+      "water_capacity": 64,
+      "water_per_bucket": 8,
+      "mix_interval": 5,
+      "drum_mix_speed": 6.0,
+      "drum_pour_speed": -12.0,
+      "drum_idle_speed": 1.5
+    }
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": 2.4,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": 2.4,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -1.0
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -1.0
+    },
+    {
+      "part": "$wheel4",
+      "pivot_x": 1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -2.2
+    },
+    {
+      "part": "$wheel5",
+      "pivot_x": -1.1,
+      "pivot_y": 0.55,
+      "pivot_z": -2.2
+    }
+  ]
+}

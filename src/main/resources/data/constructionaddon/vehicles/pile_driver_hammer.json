@@ -1,0 +1,87 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/pile_driver_hammer.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Pile Driver (Drop Hammer)",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.25,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 140.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 18,
+  "spawn_item": {
+    "display_name": "Pile Driver (Drop Hammer)",
+    "tier": 3
+  },
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.6,
+      "offset_y": 1.65,
+      "offset_z": 0.2,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "pile_driver",
+    "joints": [
+      {
+        "part": "$mast",
+        "pivot_x": 0.0,
+        "pivot_y": 1.0,
+        "pivot_z": 1.6,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "mast",
+        "factor": 80.0,
+        "offset": -80.0
+      },
+      {
+        "part": "$hammer",
+        "parent": "$mast",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "hammer"
+      }
+    ],
+    "work_points": {
+      "pile_point": {
+        "part": "$mast",
+        "x": 0.0,
+        "y": 1.0,
+        "z": 2.35
+      }
+    },
+    "pile_driver": {
+      "mode": "hammer",
+      "max_depth": 32,
+      "default_depth": 8,
+      "mast_speed": 0.02,
+      "blows_per_block": 2.0,
+      "max_blows_per_block": 40,
+      "lift_ticks": 20,
+      "drop_ticks": 5,
+      "lift_height": 2.0,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 20.0
+      }
+    }
+  }
+}

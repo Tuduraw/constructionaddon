@@ -1,0 +1,84 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/bulldozer.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Bulldozer",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.3,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 160.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Bulldozer",
+    "tier": 2
+  },
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.0,
+      "offset_y": 1.65,
+      "offset_z": -0.8,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "bulldozer",
+    "joints": [
+      {
+        "part": "$blade",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "blade"
+      },
+      {
+        "part": "$blade_load",
+        "parent": "$blade",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 2.6,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "scale",
+        "channel": "load",
+        "offset": 0.0
+      }
+    ],
+    "bulldozer": {
+      "blade_front_z": 2.3,
+      "blade_width": 3.2,
+      "blade_bottom_y": 0.0,
+      "blade_height": 1.2,
+      "blade_min": -2.0,
+      "blade_max": 1.5,
+      "blade_speed": 0.04,
+      "capacity": 16,
+      "max_cuts_per_tick": 2,
+      "full_load_speed": 0.5,
+      "cut_drag": 0.04,
+      "unload_interval": 3,
+      "min_work_speed": 0.02,
+      "dump_spread_radius": 3,
+      "dump_slope": 0.75,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 2.0
+      }
+    }
+  }
+}
