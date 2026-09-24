@@ -2,6 +2,7 @@ package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.asset.ResistanceProfile;
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.work.BlockWork;
 import com.example.constructionaddon.work.GroundResistance;
 import com.example.constructionaddon.work.PourSpreader;
@@ -45,16 +46,49 @@ import java.util.Map;
  * Both methods take their hardness from the shared GroundResistance (resistance factor,
  * refusal_hardness, per-block overrides), so the same ground is proportionally hard for either.
  *
- * <p>Controls: work mode (hold M) raises the leader mast and holds the machine; arrow up / down
- * sets the target depth; primary (Z) held drives. Moving the machine so the mast stands over a
- * different column starts a new pile there. */
+ * <p>Controls - driving (WASD) always works except while the jacks/outriggers are down:
+ * <ul>
+ *   <li>secondary (X) press - raise / fold the leader. The machine can travel with the leader
+ *       up, as real ones do around a site. With crawler_extension, the crawlers widen first
+ *       before the leader rises (and the leader folds before they retract);</li>
+ *   <li>work mode (hold M) - deploy / stow the four-corner jacks (outriggers). Driving is
+ *       blocked only while they are actually out;</li>
+ *   <li>swing keys (default Left / Right) - slew the upper structure with leader and cab, any
+ *       time (travel swing is the vehicle's own turning, as usual);</li>
+ *   <li>vertical keys (default Up / Down) - target depth;</li>
+ *   <li>primary (Z) held - drive, once the leader is up and (unless require_outriggers is
+ *       false) the jacks are down.</li>
+ * </ul>
+ * Moving or swinging so the leader stands over a different column starts a new pile there.
+ *
+ * <p>The leader's look is entirely the JSON joints' business: a small machine can fold its whole
+ * leader down (one joint on "mast"), a large one fold only an upper section from a hinge while the
+ * lower section - and the rotary head/auger parked at its foot - stays put. Visual crawler widening
+ * ("track_width" channel) and rollers turning with travel ("travel" channel, blocks/tick) are
+ * likewise just joints. */
 public final class PileDriverModule extends MachineModule {
 
-	private static final String[] CHANNELS = {"mast", "hammer", "rpm", "feed"};
+	private static final String[] CHANNELS = {"mast", "hammer", "rpm", "feed", "swing", "outrigger", "track_width", "travel"};
 	private static final int MAST = 0;
 	private static final int HAMMER = 1;
 	private static final int RPM = 2;
 	private static final int FEED = 3;
+	private static final int SWING = 4;
+	private static final int OUTRIGGER = 5;
+	private static final int TRACK_WIDTH = 6;
+	private static final int TRAVEL = 7;
+
+	public record Setup(float swingSpeed, float swingLimit, float outriggerSpeed, boolean requireOutriggers,
+			boolean crawlerExtension, float trackWidthSpeed) {
+		static final MapCodec<Setup> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+				Codec.FLOAT.optionalFieldOf("swing_speed", 1.5f).forGetter(Setup::swingSpeed),
+				Codec.FLOAT.optionalFieldOf("swing_limit", 0f).forGetter(Setup::swingLimit),
+				Codec.FLOAT.optionalFieldOf("outrigger_speed", 0.04f).forGetter(Setup::outriggerSpeed),
+				Codec.BOOL.optionalFieldOf("require_outriggers", true).forGetter(Setup::requireOutriggers),
+				Codec.BOOL.optionalFieldOf("crawler_extension", false).forGetter(Setup::crawlerExtension),
+				Codec.FLOAT.optionalFieldOf("track_width_speed", 0.02f).forGetter(Setup::trackWidthSpeed)
+		).apply(i, Setup::new));
+	}
 
 	public record Common(String mode, String pilePoint, int maxDepth, int defaultDepth, float mastSpeed,
 			String defaultPileBlock, int surfaceSearch) {
@@ -88,9 +122,10 @@ public final class PileDriverModule extends MachineModule {
 		).apply(i, Rotary::new));
 	}
 
-	public record Settings(Common common, Hammer hammer, Rotary rotary, ResistanceProfile resistance) {
+	public record Settings(Common common, Setup setup, Hammer hammer, Rotary rotary, ResistanceProfile resistance) {
 		public static final Codec<Settings> CODEC = RecordCodecBuilder.create(i -> i.group(
 				Common.MAP_CODEC.forGetter(Settings::common),
+				Setup.MAP_CODEC.forGetter(Settings::setup),
 				Hammer.MAP_CODEC.forGetter(Settings::hammer),
 				Rotary.MAP_CODEC.forGetter(Settings::rotary),
 				ResistanceProfile.codec(1.0f, 20.0f).optionalFieldOf("resistance", new ResistanceProfile(1.0f, 20.0f, Map.of()))
@@ -105,7 +140,7 @@ public final class PileDriverModule extends MachineModule {
 		}
 	}
 
-	private enum Status { IDLE, MAST, READY, DRIVING, DONE, REFUSED, NO_PILE, NO_GROUND, PROTECTED }
+	private enum Status { IDLE, MAST, LEADER_DOWN, JACKS, READY, DRIVING, DONE, REFUSED, NO_PILE, NO_GROUND, PROTECTED }
 
 	// Current pile ("session").
 	private boolean hasSession;
@@ -114,6 +149,8 @@ public final class PileDriverModule extends MachineModule {
 	private int topY;
 	private int depth;
 	private int targetDepth = -1;
+	/** Leader up (target) - toggled by the secondary key. */
+	private boolean leaderUp;
 
 	// The block the pile is currently entering.
 	private BlockPos currentPos;
@@ -150,28 +187,70 @@ public final class PileDriverModule extends MachineModule {
 
 	@Override
 	public boolean suppressesDriving() {
-		// The leader mast physically holds the machine in place while raised - toggling work mode
-		// itself never blocks WASD, only the mast actually being up does.
-		return this.machine.getFloatChannel(MAST) > 0.01f;
+		// Only the jacks being physically down hold the machine - the leader being up does not;
+		// a real pile driver travels around a site with its leader raised.
+		return this.machine.getFloatChannel(OUTRIGGER) > 0.01f;
+	}
+
+	private static float approach(float value, float target, float speed) {
+		return value < target ? Math.min(target, value + speed) : Math.max(target, value - speed);
 	}
 
 	@Override
 	public void serverTick(ServerWorld world, ServerPlayerEntity operator) {
 		Settings s = this.settings();
+		Setup setup = s.setup();
 		if (this.targetDepth < 0) {
 			this.targetDepth = MathHelper.clamp(s.common().defaultDepth(), 1, Math.max(1, s.common().maxDepth()));
 		}
 
-		float mast = this.machine.getFloatChannel(MAST);
-		float mastTarget = this.machine.isWorkMode() ? 1f : 0f;
-		if (mast != mastTarget) {
-			mast = mast < mastTarget ? Math.min(mastTarget, mast + s.common().mastSpeed())
-					: Math.max(mastTarget, mast - s.common().mastSpeed());
-			this.machine.setFloatChannel(MAST, mast);
+		if (operator != null && this.machine.isSecondaryPressed()) {
+			this.leaderUp = !this.leaderUp;
 		}
 
-		if (operator != null && this.machine.isWorkMode()) {
-			int lift = (int) this.machine.workVertical();
+		// Leader and crawler width, sequenced: crawlers widen before the leader rises, and the
+		// leader folds before the crawlers retract (skipped when there's no crawler extension).
+		float mast = this.machine.getFloatChannel(MAST);
+		float width = this.machine.getFloatChannel(TRACK_WIDTH);
+		if (this.leaderUp) {
+			if (setup.crawlerExtension() && width < 1f) {
+				width = approach(width, 1f, setup.trackWidthSpeed());
+			} else {
+				mast = approach(mast, 1f, s.common().mastSpeed());
+			}
+		} else {
+			if (mast > 0f) {
+				mast = approach(mast, 0f, s.common().mastSpeed());
+			} else if (width > 0f) {
+				width = approach(width, 0f, setup.trackWidthSpeed());
+			}
+		}
+		if (!setup.crawlerExtension()) {
+			width = 0f;
+		}
+		this.machine.setFloatChannel(MAST, mast);
+		this.machine.setFloatChannel(TRACK_WIDTH, width);
+
+		// Jacks: work mode.
+		float outrigger = approach(this.machine.getFloatChannel(OUTRIGGER), this.machine.isWorkMode() ? 1f : 0f,
+				setup.outriggerSpeed());
+		this.machine.setFloatChannel(OUTRIGGER, outrigger);
+
+		// Rollers: signed travel, blocks per tick.
+		this.machine.setFloatChannel(TRAVEL, this.machine.getCruiseSpeedValue());
+
+		if (operator != null) {
+			float sideways = this.machine.workAxis(WorkAxis.SWING);
+			if (sideways != 0f) {
+				float swing = this.machine.getFloatChannel(SWING);
+				float next = swing + sideways * setup.swingSpeed();
+				if (setup.swingLimit() > 0f) {
+					next = MathHelper.clamp(next, -setup.swingLimit(), setup.swingLimit());
+				}
+				this.machine.setFloatChannel(SWING, next);
+				this.machine.workSwung(next - swing);
+			}
+			int lift = (int) this.machine.workAxis(WorkAxis.VERTICAL);
 			if (lift != 0 && --this.depthKeyCooldown <= 0) {
 				this.depthKeyCooldown = 4;
 				this.targetDepth = MathHelper.clamp(this.targetDepth + lift, 1, Math.max(1, s.common().maxDepth()));
@@ -180,13 +259,16 @@ public final class PileDriverModule extends MachineModule {
 			}
 		}
 
-		boolean ready = operator != null && this.machine.isWorkMode() && mast >= 0.999f;
-		if (!this.machine.isWorkMode()) {
-			this.status = Status.IDLE;
-		} else if (!ready) {
-			this.status = Status.MAST;
+		boolean leaderReady = mast >= 0.999f;
+		boolean jacksReady = !setup.requireOutriggers() || outrigger >= 0.999f;
+		if (!leaderReady) {
+			this.status = this.leaderUp ? Status.MAST : (this.machine.isWorkMode() ? Status.LEADER_DOWN : Status.IDLE);
+		} else if (!jacksReady) {
+			this.status = Status.JACKS;
+		} else if (!this.machine.isPrimaryHeld()) {
+			this.status = Status.READY;
 		}
-		boolean driving = ready && this.machine.isPrimaryHeld();
+		boolean driving = operator != null && leaderReady && jacksReady && this.machine.isPrimaryHeld();
 
 		if (s.rotaryMode()) {
 			this.tickRotary(world, operator, s, driving);
@@ -429,6 +511,10 @@ public final class PileDriverModule extends MachineModule {
 		return switch (this.status) {
 			case IDLE -> null;
 			case MAST -> Text.translatable("status.constructionaddon.pile_driver.mast", this.targetDepth);
+			// Names the leader key - built client-side instead (ConstructionAddonClient) so it shows
+			// whatever key is actually bound.
+			case LEADER_DOWN -> null;
+			case JACKS -> Text.translatable("status.constructionaddon.pile_driver.jacks", this.depth, this.targetDepth);
 			case READY -> Text.translatable("status.constructionaddon.pile_driver.ready", this.depth, this.targetDepth);
 			case DONE -> Text.translatable("status.constructionaddon.pile_driver.done", this.depth, this.targetDepth);
 			case NO_PILE -> Text.translatable("status.constructionaddon.pile_driver.no_pile");
@@ -448,6 +534,7 @@ public final class PileDriverModule extends MachineModule {
 	@Override
 	public void writeData(WriteView view) {
 		view.putInt("PileTargetDepth", this.targetDepth);
+		view.putBoolean("PileLeaderUp", this.leaderUp);
 		view.putBoolean("PileSession", this.hasSession);
 		view.putInt("PileX", this.pileX);
 		view.putInt("PileZ", this.pileZ);
@@ -458,6 +545,7 @@ public final class PileDriverModule extends MachineModule {
 	@Override
 	public void readData(ReadView view) {
 		this.targetDepth = view.getInt("PileTargetDepth", -1);
+		this.leaderUp = view.getBoolean("PileLeaderUp", false);
 		this.hasSession = view.getBoolean("PileSession", false);
 		this.pileX = view.getInt("PileX", 0);
 		this.pileZ = view.getInt("PileZ", 0);

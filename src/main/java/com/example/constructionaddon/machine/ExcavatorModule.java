@@ -2,6 +2,7 @@ package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.asset.ResistanceProfile;
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.work.BlockBag;
 import com.example.constructionaddon.work.BlockWork;
 import com.example.constructionaddon.work.GroundResistance;
@@ -184,7 +185,7 @@ public final class ExcavatorModule extends MachineModule {
 	// ------------------------------------------------------------------
 
 	private void updateSwing(Settings s) {
-		float input = this.machine.workHorizontal();
+		float input = this.machine.workAxis(WorkAxis.SWING);
 		if (input == 0f) {
 			return;
 		}
@@ -194,7 +195,7 @@ public final class ExcavatorModule extends MachineModule {
 			next = MathHelper.clamp(next, -s.motion().swingLimit(), s.motion().swingLimit());
 		}
 		this.machine.setFloatChannel(SWING, next);
-		this.machine.rotateJointSeatRiders(next - swing);
+		this.machine.workSwung(next - swing);
 	}
 
 	// ------------------------------------------------------------------
@@ -208,14 +209,14 @@ public final class ExcavatorModule extends MachineModule {
 	 * own configured speed. A joint angle is measured the way the JSON joints are written for
 	 * these machines: positive = raising (rotation about -X). */
 	private void updateBoomAndArm(Settings s) {
-		float boomInput = this.machine.workVertical();
+		float boomInput = this.machine.workAxis(WorkAxis.BOOM);
 		if (boomInput != 0f) {
 			float boom = this.machine.getFloatChannel(BOOM);
 			float next = MathHelper.clamp(boom + boomInput * s.motion().boomSpeed(),
 					Math.min(s.motion().boomMin(), s.motion().boomMax()), Math.max(s.motion().boomMin(), s.motion().boomMax()));
 			this.machine.setFloatChannel(BOOM, next);
 		}
-		float armInput = this.machine.workArm();
+		float armInput = this.machine.workAxis(WorkAxis.ARM);
 		if (armInput != 0f) {
 			float arm = this.machine.getFloatChannel(ARM);
 			float next = MathHelper.clamp(arm + armInput * s.motion().armSpeed(),

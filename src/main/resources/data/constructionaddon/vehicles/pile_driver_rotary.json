@@ -26,8 +26,8 @@
     {
       "name": "operator",
       "offset_x": 0.6,
-      "offset_y": 1.65,
-      "offset_z": 0.2,
+      "offset_y": 1.0,
+      "offset_z": 0.6,
       "driver": true
     }
   ],
@@ -35,7 +35,19 @@
     "machine": "pile_driver",
     "joints": [
       {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.7,
+        "pivot_z": 0.0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
         "part": "$mast",
+        "parent": "$upper",
         "pivot_x": 0.0,
         "pivot_y": 1.0,
         "pivot_z": 1.6,
@@ -46,6 +58,30 @@
         "channel": "mast",
         "factor": 80.0,
         "offset": -80.0
+      },
+      {
+        "part": "$jack_f",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": 1,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.6
+      },
+      {
+        "part": "$jack_b",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": -1,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.6
       },
       {
         "part": "$rotary_head",
@@ -82,7 +118,24 @@
         "z": 2.35
       }
     },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ],
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
     "pile_driver": {
+      "swing_speed": 1.5,
+      "swing_limit": 0.0,
+      "outrigger_speed": 0.04,
+      "require_outriggers": true,
+      "crawler_extension": false,
       "mode": "rotary",
       "max_depth": 40,
       "default_depth": 12,

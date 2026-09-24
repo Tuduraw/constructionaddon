@@ -2,6 +2,7 @@ package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.asset.ResistanceProfile;
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.work.BlockBag;
 import com.example.constructionaddon.work.BlockWork;
 import com.example.constructionaddon.work.GroundResistance;
@@ -112,7 +113,7 @@ public final class BulldozerModule extends MachineModule {
 		this.refusedThisTick = false;
 		this.protectedThisTick = false;
 		if (operator != null) {
-			float lift = this.machine.workVertical();
+			float lift = this.machine.workAxis(WorkAxis.VERTICAL);
 			if (lift != 0f) {
 				float blade = this.machine.getFloatChannel(BLADE);
 				this.machine.setFloatChannel(BLADE, MathHelper.clamp(blade + lift * s.bladeSpeed(),

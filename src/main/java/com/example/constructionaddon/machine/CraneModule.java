@@ -2,6 +2,7 @@ package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.ConstructionServerConfig;
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.tudursvehiclemod.entity.AbstractVehicleEntity;
 import com.example.tudursvehiclemod.entity.CarrierRunwayPlatformEntity;
 import com.mojang.serialization.Codec;
@@ -34,18 +35,14 @@ import java.util.UUID;
  * actually down - not by work mode itself - and the arm's own controls never touch WASD, so a
  * crane can be driven into position and worked without ever fighting the driving keys:
  * <ul>
- *   <li>Left / Right - slew;</li>
- *   <li>arrow Up / Down alone - hoist up / lower the hook (the default action);</li>
- *   <li>arrow Up / Down with secondary (X) held - luff the boom up / down;</li>
- *   <li>arrow Up / Down with secondary (X) AND primary (Z) both held - telescope the boom out /
- *       in;</li>
- *   <li>primary (Z) pressed alone (X not held) - take hold of the nearest liftable entity at the
- *       hook (mobs, dropped items, other vehicles; players only if the server allows), or release
- *       the load. Held together with X it instead starts the telescope combo above, without also
- *       grabbing/releasing.</li>
+ *   <li>swing keys (default Left / Right) - slew;</li>
+ *   <li>luff keys (default Up / Down) - boom angle;</li>
+ *   <li>telescope keys (default , / .) - extend / retract the boom;</li>
+ *   <li>hoist keys (default ; / /) - hook up / down;</li>
+ *   <li>primary (Z) press - take hold of the nearest liftable entity at the hook (mobs, dropped
+ *       items, other vehicles; players only if the server allows), or release the load.</li>
  * </ul>
- * Only one vertical key exists (the base mod's own arrow Up/Down), so hoist/luff/extend share it,
- * dispatched by which of X/Z is also held - see serverTick() for the exact precedence.
+ * Each has its own key binding, so all can be worked at once and rebound independently.
  * The load hangs below the hook and is positioned after every entity in the world has ticked,
  * so its own physics can't drag it away from the hook. */
 public final class CraneModule extends MachineModule {
@@ -136,7 +133,7 @@ public final class CraneModule extends MachineModule {
 			return;
 		}
 
-		float sideways = this.machine.workHorizontal();
+		float sideways = this.machine.workAxis(WorkAxis.SWING);
 		if (sideways != 0f) {
 			float swing = this.machine.getFloatChannel(SWING);
 			float next = swing + sideways * s.swingSpeed();
@@ -144,34 +141,29 @@ public final class CraneModule extends MachineModule {
 				next = MathHelper.clamp(next, -s.swingLimit(), s.swingLimit());
 			}
 			this.machine.setFloatChannel(SWING, next);
-			this.machine.rotateJointSeatRiders(next - swing);
+			this.machine.workSwung(next - swing);
 		}
 
-		// Only one vertical work axis is available, but a crane needs three: hoist, luff and
-		// extend. Dispatched by which work key is held - X alone: luff; X+Z together: extend;
-		// neither: hoist (the default, most-used action). Z ALONE never changes the axis (it
-		// stays hoist), so grab/release - Z's own press action, checked further below - keeps
-		// working normally when pressed on its own.
-		boolean secondaryHeld = this.machine.isSecondaryHeld();
-		boolean primaryHeld = this.machine.isPrimaryHeld();
-		float axisInput = this.machine.workVertical();
-		if (axisInput != 0f) {
-			if (secondaryHeld && primaryHeld) {
-				float extend = this.machine.getFloatChannel(EXTEND);
-				this.machine.setFloatChannel(EXTEND, MathHelper.clamp(extend + axisInput * s.extendSpeed(), 0f, s.extendMax()));
-			} else if (secondaryHeld) {
-				float luff = this.machine.getFloatChannel(LUFF);
-				this.machine.setFloatChannel(LUFF, MathHelper.clamp(luff + axisInput * s.luffSpeed(),
-						Math.min(s.luffMin(), s.luffMax()), Math.max(s.luffMin(), s.luffMax())));
-			} else {
-				rope = this.machine.getFloatChannel(ROPE);
-				this.machine.setFloatChannel(ROPE, MathHelper.clamp(rope - axisInput * s.ropeSpeed(), s.ropeMin(), s.ropeMax()));
-			}
+		// Luff, telescope and hoist each have their OWN key binding (WorkAxis LUFF / TELESCOPE /
+		// HOIST), so all three - and swing - can be worked at once, and rebound independently.
+		float luffInput = this.machine.workAxis(WorkAxis.LUFF);
+		if (luffInput != 0f) {
+			float luff = this.machine.getFloatChannel(LUFF);
+			this.machine.setFloatChannel(LUFF, MathHelper.clamp(luff + luffInput * s.luffSpeed(),
+					Math.min(s.luffMin(), s.luffMax()), Math.max(s.luffMin(), s.luffMax())));
+		}
+		float telescopeInput = this.machine.workAxis(WorkAxis.TELESCOPE);
+		if (telescopeInput != 0f) {
+			float extend = this.machine.getFloatChannel(EXTEND);
+			this.machine.setFloatChannel(EXTEND, MathHelper.clamp(extend + telescopeInput * s.extendSpeed(), 0f, s.extendMax()));
+		}
+		float hoistInput = this.machine.workAxis(WorkAxis.HOIST);
+		if (hoistInput != 0f) {
+			rope = this.machine.getFloatChannel(ROPE);
+			this.machine.setFloatChannel(ROPE, MathHelper.clamp(rope - hoistInput * s.ropeSpeed(), s.ropeMin(), s.ropeMax()));
 		}
 
-		// Suppressed while X is also held, so pressing Z to START the X+Z extend combo never
-		// ALSO grabs/releases a load - only a genuine Z-alone press does.
-		if (this.machine.isPrimaryPressed() && !secondaryHeld) {
+		if (this.machine.isPrimaryPressed()) {
 			if (this.heldUuid != null) {
 				this.release(world);
 			} else {

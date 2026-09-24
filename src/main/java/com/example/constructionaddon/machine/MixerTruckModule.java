@@ -1,6 +1,7 @@
 package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.work.BlockWork;
 import com.example.constructionaddon.work.PourSpreader;
 import com.mojang.serialization.Codec;
@@ -244,12 +245,12 @@ public final class MixerTruckModule extends MachineModule {
 	}
 
 	private void updateChute(Chute c) {
-		float sideways = this.machine.workHorizontal();
+		float sideways = this.machine.workAxis(WorkAxis.SWING);
 		if (sideways != 0f) {
 			float swing = this.machine.getFloatChannel(CHUTE_SWING) + sideways * c.swingSpeed();
 			this.machine.setFloatChannel(CHUTE_SWING, MathHelper.clamp(swing, -c.swingLimit(), c.swingLimit()));
 		}
-		float lift = this.machine.workVertical();
+		float lift = this.machine.workAxis(WorkAxis.VERTICAL);
 		if (lift != 0f) {
 			float tilt = this.machine.getFloatChannel(CHUTE_TILT) + lift * c.tiltSpeed();
 			this.machine.setFloatChannel(CHUTE_TILT, MathHelper.clamp(tilt,

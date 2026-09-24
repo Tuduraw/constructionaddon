@@ -16,6 +16,7 @@ import java.util.Optional;
  *   "joints": [ ... ],
  *   "work_points": { "bucket_tip": { "part": "$bucket", "x": 0.0, "y": 0.4, "z": 5.1 } },
  *   "seat_parts": [ { "seat": 0, "part": "$upper" } ],
+ *   "swing_sound": { "sound": "minecraft:block.note_block.bit", "pitch": 1.8, "interval": 8 },
  *   "excavator": { ...machine-specific settings... }
  * }
  * </pre>
@@ -28,21 +29,24 @@ public record ConstructionSettings(
 		List<Joint> joints,
 		Map<String, WorkPoint> workPoints,
 		List<SeatPart> seatParts,
+		Optional<SwingSound> swingSound,
 		Object machineSettings
 ) {
 
 	public static final ConstructionSettings DEFAULT =
-			new ConstructionSettings(MachineType.NONE, List.of(), Map.of(), List.of(), null);
+			new ConstructionSettings(MachineType.NONE, List.of(), Map.of(), List.of(), Optional.empty(), null);
 
 	/** The machine-independent half, parsed first; the machine-specific object is parsed after the
 	 * machine type is known. */
-	public record Common(String machine, List<Joint> joints, Map<String, WorkPoint> workPoints, List<SeatPart> seatParts) {
+	public record Common(String machine, List<Joint> joints, Map<String, WorkPoint> workPoints, List<SeatPart> seatParts,
+			Optional<SwingSound> swingSound) {
 		public static final Codec<Common> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.STRING.optionalFieldOf("machine", "none").forGetter(Common::machine),
 				Joint.CODEC.listOf().optionalFieldOf("joints", List.of()).forGetter(Common::joints),
 				Codec.unboundedMap(Codec.STRING, WorkPoint.CODEC).optionalFieldOf("work_points", Map.of())
 						.forGetter(Common::workPoints),
-				SeatPart.CODEC.listOf().optionalFieldOf("seat_parts", List.of()).forGetter(Common::seatParts)
+				SeatPart.CODEC.listOf().optionalFieldOf("seat_parts", List.of()).forGetter(Common::seatParts),
+				SwingSound.CODEC.optionalFieldOf("swing_sound").forGetter(Common::swingSound)
 		).apply(instance, Common::new));
 	}
 

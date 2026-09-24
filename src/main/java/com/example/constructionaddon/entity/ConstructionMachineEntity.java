@@ -6,10 +6,12 @@ import com.example.constructionaddon.asset.ConstructionSettings;
 import com.example.constructionaddon.asset.ConstructionSettingsRegistry;
 import com.example.constructionaddon.asset.Joint;
 import com.example.constructionaddon.asset.SeatPart;
+import com.example.constructionaddon.asset.SwingSound;
 import com.example.constructionaddon.asset.WorkPoint;
 import com.example.constructionaddon.machine.JointSolver;
 import com.example.constructionaddon.machine.MachineModule;
 import com.example.constructionaddon.machine.MachineType;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.tudursvehiclemod.asset.SeatDefinition;
 import com.example.tudursvehiclemod.asset.VehicleDefinition;
 import com.example.tudursvehiclemod.entity.CarEntity;
@@ -23,7 +25,10 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
@@ -93,9 +98,8 @@ public class ConstructionMachineEntity extends CarEntity {
 
 	private boolean primaryHeld;
 	private boolean secondaryHeld;
-	private float workHorizontalInput;
-	private float workVerticalInput;
-	private float workArmInput;
+	private final float[] workAxes = new float[WorkAxis.values().length];
+	private int swingSoundCooldown;
 	private boolean lastPrimaryHeld;
 	private boolean lastSecondaryHeld;
 	private boolean primaryPressed;
@@ -308,16 +312,13 @@ public class ConstructionMachineEntity extends CarEntity {
 		this.secondaryHeld = secondary;
 	}
 
-	/** From WorkAxisPayload (server) - only the driver's keys count. Default binding: Left (+1) /
-	 * Right (-1) for horizontal, Up (+1) / Down (-1) for vertical, and a THIRD dedicated axis
-	 * (default , (+1) / . (-1)) used only by machines with more than two independent joints to
-	 * drive at once (a backhoe's arm, alongside boom on the vertical axis and swing on the
-	 * horizontal one) - see workHorizontal() / workVertical() / workArm(). */
-	public void setWorkAxisInput(float vertical, float horizontal, float arm) {
-		this.workVerticalInput = vertical;
-		this.workHorizontalInput = horizontal;
-		this.workArmInput = arm;
+	/** From WorkAxisPayload (server) - only the driver's keys count. */
+	public void setWorkAxisMask(int mask) {
+		for (WorkAxis axis : WorkAxis.values()) {
+			this.workAxes[axis.ordinal()] = WorkAxis.unpack(mask, axis);
+		}
 	}
+
 
 	public boolean isPrimaryHeld() {
 		return this.primaryHeld;
@@ -346,24 +347,12 @@ public class ConstructionMachineEntity extends CarEntity {
 		return this.isManualMode();
 	}
 
-	/** Dedicated work axes, independent of driving AND of the base mod's own key bindings: Left =
-	 * +1 / Right = -1 for horizontal, Up = +1 / Down = -1 for vertical by default (see
-	 * ConstructionAddonClient). These are this addon's OWN key bindings - not a reuse of the base
-	 * mod's arrow-key level ascend/descend feature - so reassigning either one in the controls
-	 * menu never touches, or is touched by, anything else's key bindings, direct or indirect. */
-	public float workHorizontal() {
-		return this.workHorizontalInput;
+	/** A work axis value (-1/0/+1) from this addon's own key bindings - independent of driving
+	 * (WASD) and of every other binding, each axis rebindable on its own (see WorkAxis). */
+	public float workAxis(WorkAxis axis) {
+		return this.workAxes[axis.ordinal()];
 	}
 
-	public float workVertical() {
-		return this.workVerticalInput;
-	}
-
-	/** Default , (+1) / . (-1) - see workHorizontal()'s own doc for why this exists as a third
-	 * axis. Unused by every module except ExcavatorModule (arm, independent of boom). */
-	public float workArm() {
-		return this.workArmInput;
-	}
 
 	private boolean drivingSuppressed() {
 		return this.module().suppressesDriving();
@@ -463,15 +452,16 @@ public class ConstructionMachineEntity extends CarEntity {
 		if (operator == null) {
 			this.primaryHeld = false;
 			this.secondaryHeld = false;
-			this.workHorizontalInput = 0f;
-			this.workVerticalInput = 0f;
-			this.workArmInput = 0f;
+			java.util.Arrays.fill(this.workAxes, 0f);
 		}
 		this.primaryPressed = this.primaryHeld && !this.lastPrimaryHeld;
 		this.secondaryPressed = this.secondaryHeld && !this.lastSecondaryHeld;
 		this.lastPrimaryHeld = this.primaryHeld;
 		this.lastSecondaryHeld = this.secondaryHeld;
 
+		if (this.swingSoundCooldown > 0) {
+			this.swingSoundCooldown--;
+		}
 		if (!this.tudursvehiclemod$isDestroyed()) {
 			module.serverTick(serverWorld, operator);
 		}
@@ -579,6 +569,38 @@ public class ConstructionMachineEntity extends CarEntity {
 		}
 		Matrix4f matrix = this.jointMatrices(tickDelta).get(part);
 		return matrix == null ? null : jointHeading(matrix);
+	}
+
+	/** Called by a module every tick its WORK swing (upper structure slewing on its own, not the
+	 * vehicle turning) actually moves, by degreesLeft (positive = left). Turns joint-seat riders
+	 * with it and plays the vehicle's own swing alarm, if its JSON defines one
+	 * ("construction.swing_sound") - most machines don't, and then nothing plays. */
+	public void workSwung(float degreesLeft) {
+		if (Math.abs(degreesLeft) < 1.0e-4f) {
+			return;
+		}
+		this.rotateJointSeatRiders(degreesLeft);
+		this.playSwingSound();
+	}
+
+	private void playSwingSound() {
+		if (this.swingSoundCooldown > 0 || !(this.getEntityWorld() instanceof ServerWorld world)) {
+			return;
+		}
+		SwingSound sound = this.settings().swingSound().orElse(null);
+		if (sound == null) {
+			return;
+		}
+		Identifier id = Identifier.tryParse(sound.sound());
+		if (id == null) {
+			return;
+		}
+		// Any registered sound event, or - for a resource-pack-only sound the registry doesn't
+		// know - a direct reference to its id, which the client resolves from sounds.json.
+		SoundEvent event = Registries.SOUND_EVENT.getOptionalValue(id).orElseGet(() -> SoundEvent.of(id));
+		world.playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), event, SoundCategory.NEUTRAL,
+				sound.volume(), sound.pitch());
+		this.swingSoundCooldown = Math.max(1, sound.interval());
 	}
 
 	/** SERVER side of turning joint-seat riders with a slewing upper structure. Positive =

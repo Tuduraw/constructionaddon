@@ -91,6 +91,7 @@ public final class ConstructionSettingsRegistry implements SimpleSynchronousReso
 		JsonElement machineJson = obj.has(type.id()) ? obj.get(type.id()) : new JsonObject();
 		Object machineSettings = type.parseSettings(machineJson,
 				error -> LOGGER.error("Invalid '{}' settings for '{}': {}", type.id(), vehicleId, error));
-		return new ConstructionSettings(type, common.joints(), common.workPoints(), common.seatParts(), machineSettings);
+		return new ConstructionSettings(type, common.joints(), common.workPoints(), common.seatParts(),
+				common.swingSound(), machineSettings);
 	}
 }

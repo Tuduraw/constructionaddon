@@ -149,6 +149,12 @@
         "part": "$upper"
       }
     ],
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
     "crane": {
       "swing_speed": 1.5,
       "luff_speed": 0.6,

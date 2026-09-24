@@ -63,7 +63,7 @@ public class ConstructionAddon implements ModInitializer {
 					AbstractVehicleEntity vehicle = AbstractVehicleEntity.tudursvehiclemod$getEffectiveVehicle(context.player());
 					if (vehicle instanceof ConstructionMachineEntity machine
 							&& machine.getControllingPassenger() == context.player()) {
-						machine.setWorkAxisInput(payload.vertical(), payload.horizontal(), payload.arm());
+						machine.setWorkAxisMask(payload.mask());
 					}
 				}));
 

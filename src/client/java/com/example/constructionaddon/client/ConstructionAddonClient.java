@@ -5,6 +5,7 @@ import com.example.constructionaddon.entity.ConstructionMachineEntity;
 import com.example.constructionaddon.machine.BulldozerModule;
 import com.example.constructionaddon.machine.ExcavatorModule;
 import com.example.constructionaddon.machine.MachineType;
+import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.network.WorkAxisPayload;
 import com.example.constructionaddon.network.WorkInputPayload;
 import com.example.tudursvehiclemod.client.render.VehicleEntityRenderer;
@@ -24,40 +25,35 @@ import org.lwjgl.glfw.GLFW;
  * come from ConstructionMachineEntity's custom part transforms), so the client concern here is
  * just the machine's own keys.
  *
- * <p>Every machine control lives on this addon's OWN key bindings (defaulting to the arrow keys,
- * plus , / . for a third axis) and Z/X - none of it ever touches WASD, so driving and operating a
- * machine always work at the same time:
- * <ul>
- *   <li>Up / Down, Left / Right - this addon's own vertical/horizontal work axes;</li>
- *   <li>, / . - this addon's own third ("arm") axis, only used by machines with more than two
- *       independent joints to drive at once (a backhoe's arm, alongside boom and swing above);</li>
- *   <li>Z (primary) / X (secondary) - the two work action keys (dig/curl, grab/release, pour,
- *       raise/lower a bed, drive a pile, couple/uncouple), and also modifiers on the vertical
- *       axis where a module needs more than one vertical concept (a crane's luff/extend/hoist) -
- *       see CraneModule for the exact mapping.</li>
- * </ul>
- * All of this addon's own bindings default to the same physical keys as certain base mod
- * bindings (Up/Down = the base mod's own level ascend/descend) but are entirely separate
- * bindings under this addon's own category - rebinding one here never touches, or is touched by,
- * the other, or by anything else. Work MODE itself has no key of its own - it is the base mod's
- * manual-mode key (hold M), used by a crane/pile driver to deploy outriggers/mast; it never
- * affects WASD either. */
+ * <p>Every machine control lives on this addon's OWN key bindings - one pair per WorkAxis
+ * (swing, generic vertical, backhoe boom / arm, crane luff / telescope / hoist) plus Z / X - none
+ * of it ever touches WASD, so driving and operating a machine always work at the same time.
+ * Several axes share default keys (boom and luff both Up / Down; arm and telescope both , / .)
+ * but each is its own binding, rebindable independently; Up / Down also match the base mod's own
+ * level ascend/descend by default, again as a separate binding. Minecraft marks bindings sharing
+ * a key red in the controls menu; that is expected here and harmless, since each only acts on its
+ * own machine. Work MODE has no key of its own - it is the base mod's manual-mode key (hold M). */
 public class ConstructionAddonClient implements ClientModInitializer {
 
 	private static KeyBinding primaryKey;
 	private static KeyBinding secondaryKey;
-	private static KeyBinding axisUpKey;
-	private static KeyBinding axisDownKey;
-	private static KeyBinding axisLeftKey;
-	private static KeyBinding axisRightKey;
-	private static KeyBinding armInKey;
-	private static KeyBinding armOutKey;
+	/** [axis.ordinal()][0 = positive, 1 = negative]. */
+	private static final KeyBinding[][] AXIS_KEYS = new KeyBinding[WorkAxis.values().length][2];
 
 	private static boolean lastPrimary;
 	private static boolean lastSecondary;
-	private static float lastVertical;
-	private static float lastHorizontal;
-	private static float lastArm;
+	private static int lastAxisMask;
+
+	/** Default keys per axis: {positive, negative}. Several axes deliberately share defaults (a
+	 * backhoe's boom and a crane's luff are both Up/Down) - each is still its own binding. */
+	private static int[] defaultKeys(WorkAxis axis) {
+		return switch (axis) {
+			case SWING -> new int[] {GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_RIGHT};
+			case VERTICAL, BOOM, LUFF -> new int[] {GLFW.GLFW_KEY_UP, GLFW.GLFW_KEY_DOWN};
+			case ARM, TELESCOPE -> new int[] {GLFW.GLFW_KEY_COMMA, GLFW.GLFW_KEY_PERIOD};
+			case HOIST -> new int[] {GLFW.GLFW_KEY_SEMICOLON, GLFW.GLFW_KEY_SLASH};
+		};
+	}
 
 	@Override
 	public void onInitializeClient() {
@@ -68,26 +64,19 @@ public class ConstructionAddonClient implements ClientModInitializer {
 				"key.constructionaddon.work_primary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Z, category));
 		secondaryKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"key.constructionaddon.work_secondary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, category));
-		axisUpKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_axis_up", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UP, category));
-		axisDownKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_axis_down", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_DOWN, category));
-		axisLeftKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_axis_left", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT, category));
-		axisRightKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_axis_right", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT, category));
-		armInKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_axis_arm_in", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_COMMA, category));
-		armOutKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_axis_arm_out", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_PERIOD, category));
+		for (WorkAxis axis : WorkAxis.values()) {
+			int[] keys = defaultKeys(axis);
+			AXIS_KEYS[axis.ordinal()][0] = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+					axis.positiveTranslationKey(), InputUtil.Type.KEYSYM, keys[0], category));
+			AXIS_KEYS[axis.ordinal()][1] = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+					axis.negativeTranslationKey(), InputUtil.Type.KEYSYM, keys[1], category));
+		}
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (client.player == null) {
 				lastPrimary = false;
 				lastSecondary = false;
-				lastVertical = 0f;
-				lastHorizontal = 0f;
-				lastArm = 0f;
+				lastAxisMask = 0;
 				return;
 			}
 			AbstractVehicleEntity vehicle = AbstractVehicleEntity.tudursvehiclemod$getEffectiveVehicle(client.player);
@@ -103,14 +92,17 @@ public class ConstructionAddonClient implements ClientModInitializer {
 				ClientPlayNetworking.send(new WorkInputPayload(primary, secondary));
 			}
 
-			float vertical = operating ? (axisUpKey.isPressed() ? 1f : 0f) - (axisDownKey.isPressed() ? 1f : 0f) : 0f;
-			float horizontal = operating ? (axisLeftKey.isPressed() ? 1f : 0f) - (axisRightKey.isPressed() ? 1f : 0f) : 0f;
-			float arm = operating ? (armInKey.isPressed() ? 1f : 0f) - (armOutKey.isPressed() ? 1f : 0f) : 0f;
-			if (vertical != lastVertical || horizontal != lastHorizontal || arm != lastArm) {
-				lastVertical = vertical;
-				lastHorizontal = horizontal;
-				lastArm = arm;
-				ClientPlayNetworking.send(new WorkAxisPayload(vertical, horizontal, arm));
+			float[] axes = new float[WorkAxis.values().length];
+			if (operating) {
+				for (WorkAxis axis : WorkAxis.values()) {
+					KeyBinding[] pair = AXIS_KEYS[axis.ordinal()];
+					axes[axis.ordinal()] = (pair[0].isPressed() ? 1f : 0f) - (pair[1].isPressed() ? 1f : 0f);
+				}
+			}
+			int mask = WorkAxis.pack(axes);
+			if (mask != lastAxisMask) {
+				lastAxisMask = mask;
+				ClientPlayNetworking.send(new WorkAxisPayload(mask));
 			}
 
 			if (operating && machine.age % 10 == 0) {
@@ -144,6 +136,11 @@ public class ConstructionAddonClient implements ClientModInitializer {
 			String blade = String.format(java.util.Locale.ROOT, "%+.2f", machine.channel("blade"));
 			return Text.translatable("status.constructionaddon.bulldozer.full", blade, total, capacity,
 					KeyBindingUtil.boundKeyText("key.constructionaddon.work_primary"));
+		}
+		if (type == MachineType.PILE_DRIVER && machine.isWorkMode()
+				&& machine.channel("mast") <= 0.001f && machine.channel("track_width") <= 0.001f) {
+			return Text.translatable("status.constructionaddon.pile_driver.leader_down",
+					KeyBindingUtil.boundKeyText("key.constructionaddon.work_secondary"));
 		}
 		if (type == MachineType.TRACTOR && machine.channel("coupled") > 0.5f) {
 			return Text.translatable("status.constructionaddon.tractor.coupled",

@@ -1,0 +1,370 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/pile_driver_large.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Large Pile Driver (Rotary)",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.2,
+  "acceleration": 0.04,
+  "turn_speed": 1.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 220.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Large Pile Driver (Rotary)",
+    "tier": 5
+  },
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.95,
+      "offset_y": 1.4,
+      "offset_z": 0.9,
+      "driver": true
+    }
+  ],
+  "construction": {
+    "machine": "pile_driver",
+    "joints": [
+      {
+        "part": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "track_width",
+        "factor": 0.7
+      },
+      {
+        "part": "$roller_l0",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": -2.2,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_l1",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": -1.1,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_l2",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": 0.0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_l3",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": 1.1,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_l4",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": 2.2,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$idler_l0",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.47,
+        "pivot_z": 2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 143.24
+      },
+      {
+        "part": "$idler_l1",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.47,
+        "pivot_z": -2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 143.24
+      },
+      {
+        "part": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "track_width",
+        "factor": 0.7
+      },
+      {
+        "part": "$roller_r0",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": -2.2,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_r1",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": -1.1,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_r2",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": 0.0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_r3",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": 1.1,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$roller_r4",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.3,
+        "pivot_z": 2.2,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 204.63
+      },
+      {
+        "part": "$idler_r0",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.47,
+        "pivot_z": 2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 143.24
+      },
+      {
+        "part": "$idler_r1",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.47,
+        "pivot_z": -2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "travel",
+        "factor": 143.24
+      },
+      {
+        "part": "$jack_f",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": 1,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.8
+      },
+      {
+        "part": "$jack_b",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": -1,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.8
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.05,
+        "pivot_z": 0.0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$leader_lower",
+        "parent": "$upper",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate"
+      },
+      {
+        "part": "$leader_upper",
+        "parent": "$leader_lower",
+        "pivot_x": 0.0,
+        "pivot_y": 5.6,
+        "pivot_z": 2.7,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "mast",
+        "factor": 100.0,
+        "offset": -100.0
+      },
+      {
+        "part": "$rotary_head",
+        "parent": "$leader_lower",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "feed",
+        "factor": -1.0
+      },
+      {
+        "part": "$auger",
+        "parent": "$rotary_head",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 3.5,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "spin",
+        "channel": "rpm",
+        "factor": 0.3
+      }
+    ],
+    "work_points": {
+      "pile_point": {
+        "part": "$leader_lower",
+        "x": 0.0,
+        "y": 1.2,
+        "z": 3.5
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ],
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "pile_driver": {
+      "mode": "rotary",
+      "max_depth": 60,
+      "default_depth": 16,
+      "mast_speed": 0.012,
+      "swing_speed": 1.0,
+      "outrigger_speed": 0.03,
+      "require_outriggers": true,
+      "crawler_extension": true,
+      "track_width_speed": 0.02,
+      "ticks_per_block": 30.0,
+      "rpm": 25.0,
+      "min_rpm": 4.0,
+      "rpm_response": 0.1,
+      "resistance": {
+        "hardness_scale": 0.8,
+        "refusal_hardness": 30.0
+      }
+    }
+  }
+}
