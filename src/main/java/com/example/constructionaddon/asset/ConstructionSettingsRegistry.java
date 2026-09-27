@@ -17,13 +17,9 @@ import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Per-vehicle ConstructionSettings, keyed by the same vehicle Identifier the base mod's own
- * VehicleRegistry uses. Reads the same data/&lt;namespace&gt;/vehicles/*.json files the base mod
- * parses and keeps only the "construction" object (the pattern the base mod's sample addons use).
- *
- * <p>Like those addons, this sees the resource-pack/datapack tree only: a vehicle supplied through
- * the base mod's external tudursvehiclemod-addons/ folder still loads and drives, but gets
- * DEFAULT (no machine functions). */
+/** Reads the "construction" object from the same data/<namespace>/vehicles/*.json files the base
+ * mod loads, keyed by the same vehicle id. Vehicles from the base mod's external addon folder get
+ * DEFAULT (they drive, without machine functions). */
 public final class ConstructionSettingsRegistry implements SimpleSynchronousResourceReloadListener {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger("ConstructionAddon/Settings");

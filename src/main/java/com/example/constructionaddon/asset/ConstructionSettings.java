@@ -8,22 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** This addon's part of one vehicle JSON - the "construction" object:
- *
- * <pre>
- * "construction": {
- *   "machine": "excavator",
- *   "joints": [ ... ],
- *   "work_points": { "bucket_tip": { "part": "$bucket", "x": 0.0, "y": 0.4, "z": 5.1 } },
- *   "seat_parts": [ { "seat": 0, "part": "$upper" } ],
- *   "swing_sound": { "sound": "minecraft:block.note_block.bit", "pitch": 1.8, "interval": 8 },
- *   "excavator": { ...machine-specific settings... }
- * }
- * </pre>
- *
- * The base mod's VehicleDefinition ignores keys it doesn't know, so one vehicle stays described by
- * one file. The machine-specific object is keyed by the machine's own id and parsed by that
- * machine's own codec (see MachineType); every field of it is optional. */
+/** The "construction" object of a vehicle JSON (machine, joints, work_points, seat_parts,
+ * swing_sound, and a machine-specific object keyed by the machine id). The base mod ignores
+ * unknown keys, so one file describes the whole vehicle. */
 public record ConstructionSettings(
 		MachineType machine,
 		List<Joint> joints,
@@ -53,15 +40,6 @@ public record ConstructionSettings(
 	/** This machine's own settings record, or the fallback when absent or of another type. */
 	public <T> T machineSettings(Class<T> type, T fallback) {
 		return type.isInstance(this.machineSettings) ? type.cast(this.machineSettings) : fallback;
-	}
-
-	public Optional<Joint> joint(String part) {
-		for (Joint joint : this.joints) {
-			if (joint.part().equals(part)) {
-				return Optional.of(joint);
-			}
-		}
-		return Optional.empty();
 	}
 
 	public WorkPoint workPoint(String name) {

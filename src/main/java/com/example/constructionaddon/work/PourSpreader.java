@@ -10,23 +10,11 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Decides where the next block of poured/dumped material goes, so material behaves like it's
- * actually piling up rather than always stacking straight down under the source point:
- *
- * <ol>
- *   <li>From the source point, the material falls straight down to the first supporting block.</li>
- *   <li>From that landing cell it spreads horizontally (4-way) through free cells, stopped by
- *       walls and by the spread radius.</li>
- *   <li>Wherever the spread passes over a drop, the material runs down into it - so every lower
- *       free cell in reach is filled before the level rises.</li>
- *   <li>Among all reachable cells, the one with the lowest SCORE wins - height plus horizontal
- *       distance from the landing point times {@code slope}. slope 0 (mixer concrete) means pure
- *       liquid behaviour: the absolute lowest cell always wins regardless of distance, filling a
- *       form layer by layer with a level top. A positive slope (loose material - excavator spoil,
- *       a bulldozer's spilled blade, a dump truck's load) lets material stack near the source
- *       before it becomes cheaper to spread outward, building up a mound with roughly that slope
- *       instead of spreading dead flat - the higher the value, the steeper (narrower) the pile.</li>
- * </ol> */
+/** Where the next block of poured or dumped material goes. From the source point it falls to the
+ * first support, spreads 4-way through free cells within the radius (stopped by walls), and runs
+ * down into any hole it passes. Of all reachable cells, the lowest "height + distance x slope"
+ * wins: slope 0 behaves like a liquid (concrete fills a form layer by layer, level on top); a
+ * positive slope piles loose material into a mound, steeper the higher the value. */
 public final class PourSpreader {
 
 	private PourSpreader() {
@@ -36,11 +24,6 @@ public final class PourSpreader {
 	private static final int MAX_NODES = 400;
 	/** How far material may fall from the outlet, or down into a hole. */
 	private static final int MAX_DROP = 8;
-
-	/** Liquid behaviour (slope 0) - see the class doc. */
-	public static BlockPos findTarget(World world, Vec3d outlet, int radius) {
-		return findTarget(world, outlet, radius, 0f);
-	}
 
 	/** The cell to fill next, or null if nothing within reach can take material. */
 	public static BlockPos findTarget(World world, Vec3d outlet, int radius, float slope) {

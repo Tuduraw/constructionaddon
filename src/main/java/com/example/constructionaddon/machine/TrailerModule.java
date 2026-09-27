@@ -14,20 +14,11 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.UUID;
 
-/** Trailer (low-loader for machinery). Loading itself is entirely the base mod's own runway
- * system - the trailer's JSON defines its deck, and a hatch-gated ramp runway, as ordinary
- * "runways"; anything standing on the deck travels with the trailer through the base mod's own
- * deck carrying. What this module adds is being TOWED:
- *
- * <p>Coupled to a tractor, the trailer is positioned kinematically every tick on both sides: the
- * kingpin (kingpin_x/y/z) sits on the tractor's fifth wheel, and the trailer turns so its rear
- * axle (axle_z) trails behind - the classic articulated-vehicle geometry, which is what makes a
- * trailer cut corners and swing wide when reversing. max_articulation stops a jack-knife.
- *
- * <p>Both sides compute the same motion from the tractor's own position, so the trailer follows
- * the driver's (client-authoritative) tractor without lag; the drawn position uses that local
- * result even between the server's own position updates. Uncoupled, it is an ordinary unmanned
- * CarEntity - it rolls to a stop and stays put. */
+/** Towed trailer. Loading uses the base mod's runways (deck + hatch-gated ramp in the JSON).
+ * Coupled, it is positioned every tick on both sides from the tractor's own position: the kingpin
+ * sits on the fifth wheel and the rear axle (axle_z) trails behind, limited by max_articulation.
+ * Computing it client-side too means no lag behind a player-driven tractor. Uncoupled, it is an
+ * ordinary unmanned CarEntity. */
 public final class TrailerModule extends MachineModule {
 
 	private static final String[] CHANNELS = {};
@@ -43,8 +34,7 @@ public final class TrailerModule extends MachineModule {
 				Codec.FLOAT.optionalFieldOf("max_articulation", 75f).forGetter(Settings::maxArticulation)
 		).apply(i, Settings::new));
 
-		static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private UUID tractorUuid;

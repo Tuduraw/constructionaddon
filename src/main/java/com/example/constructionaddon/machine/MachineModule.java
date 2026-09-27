@@ -2,28 +2,32 @@ package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
 import com.example.tudursvehiclemod.asset.VehicleDefinition;
+import com.example.constructionaddon.network.WorkAxis;
+import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-/** What makes one machine an excavator, a crane, a pile driver...
+/** The work function of one machine (excavator, crane, pile driver...), chosen by the vehicle
+ * JSON's "construction.machine". All machines share one entity type; driving, fuel, seats,
+ * inventory and destruction are the base mod's own.
  *
- * <p>Every machine is the same entity type (ConstructionMachineEntity, a CarEntity) - driving,
- * wheels/tracks, fuel, HUD, inventory, seats, destruction all come from the base mod unchanged.
- * The module chosen by the vehicle JSON's "construction.machine" adds the work function on top.
- * Keeping it composition rather than one subclass per machine means one entity type, one
- * converter category and one set of spawner items cover every machine, and an addon pack can
- * build a new machine out of any module with nothing but JSON and a model.
- *
- * <p>State the client must SEE (joint positions, load level) goes through the entity's generic
- * synced channels - named per module by {@link #floatChannels()} and referenced by name from the
- * JSON's joints. Everything else stays in plain fields on the server. */
+ * <p>State the client must see (joint positions, load level) goes through the entity's synced
+ * channels, named per module by {@link #floatChannels()} and referenced by the JSON joints. */
 public abstract class MachineModule {
 
 	protected final ConstructionMachineEntity machine;
+
+	/** A settings codec's all-defaults value (every field is optional). */
+	public static <T> T defaults(Codec<T> codec) {
+		return codec.parse(JsonOps.INSTANCE, new JsonObject()).result().orElseThrow();
+	}
 
 	protected MachineModule(ConstructionMachineEntity machine) {
 		this.machine = machine;
@@ -31,16 +35,39 @@ public abstract class MachineModule {
 
 	public abstract MachineType type();
 
+	/** Moves a float channel by input x speed, clamped to [min, max] (either order). Returns the
+	 * change actually applied. */
+	protected float nudge(int channel, float input, float speed, float min, float max) {
+		if (input == 0f) {
+			return 0f;
+		}
+		float value = this.machine.getFloatChannel(channel);
+		float next = MathHelper.clamp(value + input * speed, Math.min(min, max), Math.max(min, max));
+		this.machine.setFloatChannel(channel, next);
+		return next - value;
+	}
+
+	/** Moves a float channel toward target at speed per tick; returns the new value. */
+	protected float approach(int channel, float target, float speed) {
+		float value = this.machine.getFloatChannel(channel);
+		float next = value < target ? Math.min(target, value + speed) : Math.max(target, value - speed);
+		this.machine.setFloatChannel(channel, next);
+		return next;
+	}
+
+	/** Work swing from the swing keys: limit 0 = unlimited. Turns joint-seat riders and plays the
+	 * swing sound through ConstructionMachineEntity#workSwung. */
+	protected void workSwing(int channel, float speed, float limit) {
+		float bound = limit > 0f ? limit : Float.MAX_VALUE;
+		this.machine.workSwung(this.nudge(channel, this.machine.workAxis(WorkAxis.SWING), speed, -bound, bound));
+	}
+
 	/** Names of the synced float channels this machine drives, by index (at most
 	 * ConstructionMachineEntity.FLOAT_CHANNELS). Joints refer to these names. */
 	public abstract String[] floatChannels();
 
-	/** True while this machine cannot physically move - default false, since driving (WASD) and
-	 * operating the machine (its own dedicated axes and work keys) are otherwise independent and
-	 * run at the same time. Only a genuine physical constraint should return true here (a
-	 * crane's outriggers actually down, a pile driver's mast actually up) - never work mode
-	 * itself, which by itself never blocks driving. When true, the entity feeds the base mod's
-	 * driving code zero input and holds the brake. */
+	/** True while the machine physically can't move (outriggers / jacks down). Work mode alone
+	 * never blocks driving. When true, driving input is zeroed and the brake held. */
 	public boolean suppressesDriving() {
 		return false;
 	}
@@ -101,8 +128,5 @@ public abstract class MachineModule {
 	/** Client-side rendering override of the vehicle's yaw, or null. */
 	public Float renderYawOverride(float tickDelta) {
 		return null;
-	}
-
-	public void onRemoved() {
 	}
 }

@@ -17,17 +17,9 @@ import net.minecraft.util.math.Vec3d;
 import java.util.List;
 import java.util.UUID;
 
-/** Tractor unit (truck head) for towing a trailer on its fifth wheel.
- *
- * <ul>
- *   <li>Primary (Z) press - couple to the trailer whose kingpin is within couple_radius of this
- *       tractor's fifth wheel (hitch_x/y/z), or uncouple.</li>
- *   <li>The hatch key (H) of a coupled tractor opens / closes the TRAILER's ramps (its
- *       hatch-gated runway and $hatch toggle parts), so the driver can load machinery without
- *       leaving the cab.</li>
- *   <li>While towing, top speed is scaled by towing_speed_factor.</li>
- * </ul>
- * The trailer's own following motion is TrailerModule's job. */
+/** Tractor unit. Primary (Z) couples to a trailer whose kingpin is within couple_radius of the
+ * fifth wheel (hitch_x/y/z), or uncouples. While coupled, the hatch key opens the trailer's ramps
+ * and top speed is scaled by towing_speed_factor. */
 public final class TractorModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"coupled"};
@@ -42,8 +34,7 @@ public final class TractorModule extends MachineModule {
 				Codec.FLOAT.optionalFieldOf("towing_speed_factor", 0.7f).forGetter(Settings::towingSpeedFactor)
 		).apply(i, Settings::new));
 
-		static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private UUID trailerUuid;
@@ -155,9 +146,7 @@ public final class TractorModule extends MachineModule {
 
 	@Override
 	public Text status() {
-		// "coupled" names the uncouple/hatch keys - shown client-side instead (see
-		// ConstructionAddonClient), so it always names whatever keys the player has those bound
-		// to right now, not just the defaults (the hatch key isn't even this addon's own).
+		// Names keys: built client-side (ConstructionAddonClient).
 		if (this.trailerUuid != null) {
 			return null;
 		}

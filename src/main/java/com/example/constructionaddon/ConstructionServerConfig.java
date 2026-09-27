@@ -23,11 +23,6 @@ public final class ConstructionServerConfig {
 	 * and tow but never alter terrain - for servers that don't want this at all. */
 	public boolean allowTerrainEditing = true;
 
-	/** Whether terrain may be altered with no player operator to check permissions against.
-	 * Every machine function is operated by a seated player today, so this only matters for
-	 * future unmanned operation; false keeps protection checks meaningful. */
-	public boolean allowUnmannedTerrainEditing = false;
-
 	/** Whether a crane hook may pick up players. Off by default - a held player is teleported
 	 * every tick, which is safe but can be unpleasant for them. */
 	public boolean craneCanLiftPlayers = false;

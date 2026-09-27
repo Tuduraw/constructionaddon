@@ -2,7 +2,6 @@ package com.example.constructionaddon.machine;
 
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 
@@ -60,7 +59,6 @@ public enum MachineType {
 
 	private static <T> Object parse(Codec<T> codec, JsonElement json, Consumer<String> onError) {
 		return codec.parse(JsonOps.INSTANCE, json).resultOrPartial(onError)
-				.or(() -> codec.parse(JsonOps.INSTANCE, new JsonObject()).result())
-				.orElse(null);
+				.orElseGet(() -> MachineModule.defaults(codec));
 	}
 }

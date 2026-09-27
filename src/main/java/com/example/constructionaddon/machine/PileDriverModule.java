@@ -27,45 +27,24 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Locale;
-import java.util.Map;
 
-/** Pile driver - drives a column of the block loaded in its cargo (the first block item found)
- * straight down into the ground under its leader mast. Two driving methods, chosen by "mode":
- *
+/** Pile driver: drives the first block item in its cargo, block by block, into the ground under
+ * the leader. The driving method ("mode") decides how hardness (GroundResistance) slows it:
  * <ul>
- *   <li><b>hammer</b> (drop hammer / monkey): the hammer is winched up and dropped; every blow
- *       counts. A block needs blows_per_block x resistance factor blows before the pile advances
- *       into it. When a block would need more than max_blows_per_block blows, driving stops
- *       (refusal).</li>
- *   <li><b>rotary</b> (rotary press-in): the head turns the pile in. Advancing one block takes
- *       ticks_per_block x factor ticks, and the rotation speed drops to rpm / factor - harder
- *       ground visibly slows the head. When the speed would fall below min_rpm the head stalls
- *       and driving stops (refusal).</li>
+ *   <li>hammer - blows needed per block = blows_per_block x factor; refusal above
+ *       max_blows_per_block;</li>
+ *   <li>rotary - ticks per block = ticks_per_block x factor, rotation = rpm / factor; refusal
+ *       below min_rpm.</li>
  * </ul>
+ * Controls (driving always works except with the jacks down): secondary (X) raises / folds the
+ * leader (travel with it up is fine; with crawler_extension the crawlers widen first); work mode
+ * deploys the jacks; swing keys slew the upper structure; vertical keys set the target depth;
+ * primary (Z) drives once the leader is up and (unless require_outriggers is false) the jacks are
+ * down. A different column under the leader starts a new pile.
  *
- * Both methods take their hardness from the shared GroundResistance (resistance factor,
- * refusal_hardness, per-block overrides), so the same ground is proportionally hard for either.
- *
- * <p>Controls - driving (WASD) always works except while the jacks/outriggers are down:
- * <ul>
- *   <li>secondary (X) press - raise / fold the leader. The machine can travel with the leader
- *       up, as real ones do around a site. With crawler_extension, the crawlers widen first
- *       before the leader rises (and the leader folds before they retract);</li>
- *   <li>work mode (hold M) - deploy / stow the four-corner jacks (outriggers). Driving is
- *       blocked only while they are actually out;</li>
- *   <li>swing keys (default Left / Right) - slew the upper structure with leader and cab, any
- *       time (travel swing is the vehicle's own turning, as usual);</li>
- *   <li>vertical keys (default Up / Down) - target depth;</li>
- *   <li>primary (Z) held - drive, once the leader is up and (unless require_outriggers is
- *       false) the jacks are down.</li>
- * </ul>
- * Moving or swinging so the leader stands over a different column starts a new pile there.
- *
- * <p>The leader's look is entirely the JSON joints' business: a small machine can fold its whole
- * leader down (one joint on "mast"), a large one fold only an upper section from a hinge while the
- * lower section - and the rotary head/auger parked at its foot - stays put. Visual crawler widening
- * ("track_width" channel) and rollers turning with travel ("travel" channel, blocks/tick) are
- * likewise just joints. */
+ * <p>The leader's shape, crawler widening ("track_width") and roller spin ("travel", blocks per
+ * tick) are purely JSON joints: a small machine folds the whole leader, a large one only its upper
+ * section above a hinge. */
 public final class PileDriverModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"mast", "hammer", "rpm", "feed", "swing", "outrigger", "track_width", "travel"};
@@ -128,12 +107,10 @@ public final class PileDriverModule extends MachineModule {
 				Setup.MAP_CODEC.forGetter(Settings::setup),
 				Hammer.MAP_CODEC.forGetter(Settings::hammer),
 				Rotary.MAP_CODEC.forGetter(Settings::rotary),
-				ResistanceProfile.codec(1.0f, 20.0f).optionalFieldOf("resistance", new ResistanceProfile(1.0f, 20.0f, Map.of()))
-						.forGetter(Settings::resistance)
+				ResistanceProfile.field(1.0f, 20.0f).forGetter(Settings::resistance)
 		).apply(i, Settings::new));
 
-		static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		static final Settings DEFAULT = MachineModule.defaults(CODEC);
 
 		boolean rotaryMode() {
 			return "rotary".equalsIgnoreCase(this.common.mode());
@@ -192,10 +169,6 @@ public final class PileDriverModule extends MachineModule {
 		return this.machine.getFloatChannel(OUTRIGGER) > 0.01f;
 	}
 
-	private static float approach(float value, float target, float speed) {
-		return value < target ? Math.min(target, value + speed) : Math.max(target, value - speed);
-	}
-
 	@Override
 	public void serverTick(ServerWorld world, ServerPlayerEntity operator) {
 		Settings s = this.settings();
@@ -208,48 +181,32 @@ public final class PileDriverModule extends MachineModule {
 			this.leaderUp = !this.leaderUp;
 		}
 
-		// Leader and crawler width, sequenced: crawlers widen before the leader rises, and the
-		// leader folds before the crawlers retract (skipped when there's no crawler extension).
+		// Crawlers widen before the leader rises and retract only after it has folded (no
+		// widening at all without crawler_extension).
 		float mast = this.machine.getFloatChannel(MAST);
 		float width = this.machine.getFloatChannel(TRACK_WIDTH);
-		if (this.leaderUp) {
-			if (setup.crawlerExtension() && width < 1f) {
-				width = approach(width, 1f, setup.trackWidthSpeed());
-			} else {
-				mast = approach(mast, 1f, s.common().mastSpeed());
-			}
-		} else {
-			if (mast > 0f) {
-				mast = approach(mast, 0f, s.common().mastSpeed());
-			} else if (width > 0f) {
-				width = approach(width, 0f, setup.trackWidthSpeed());
-			}
-		}
 		if (!setup.crawlerExtension()) {
-			width = 0f;
+			this.machine.setFloatChannel(TRACK_WIDTH, 0f);
+			mast = this.approach(MAST, this.leaderUp ? 1f : 0f, s.common().mastSpeed());
+		} else if (this.leaderUp) {
+			if (width < 1f) {
+				this.approach(TRACK_WIDTH, 1f, setup.trackWidthSpeed());
+			} else {
+				mast = this.approach(MAST, 1f, s.common().mastSpeed());
+			}
+		} else if (mast > 0f) {
+			mast = this.approach(MAST, 0f, s.common().mastSpeed());
+		} else {
+			this.approach(TRACK_WIDTH, 0f, setup.trackWidthSpeed());
 		}
-		this.machine.setFloatChannel(MAST, mast);
-		this.machine.setFloatChannel(TRACK_WIDTH, width);
 
-		// Jacks: work mode.
-		float outrigger = approach(this.machine.getFloatChannel(OUTRIGGER), this.machine.isWorkMode() ? 1f : 0f,
-				setup.outriggerSpeed());
-		this.machine.setFloatChannel(OUTRIGGER, outrigger);
+		float outrigger = this.approach(OUTRIGGER, this.machine.isWorkMode() ? 1f : 0f, setup.outriggerSpeed());
 
 		// Rollers: signed travel, blocks per tick.
 		this.machine.setFloatChannel(TRAVEL, this.machine.getCruiseSpeedValue());
 
 		if (operator != null) {
-			float sideways = this.machine.workAxis(WorkAxis.SWING);
-			if (sideways != 0f) {
-				float swing = this.machine.getFloatChannel(SWING);
-				float next = swing + sideways * setup.swingSpeed();
-				if (setup.swingLimit() > 0f) {
-					next = MathHelper.clamp(next, -setup.swingLimit(), setup.swingLimit());
-				}
-				this.machine.setFloatChannel(SWING, next);
-				this.machine.workSwung(next - swing);
-			}
+			this.workSwing(SWING, setup.swingSpeed(), setup.swingLimit());
 			int lift = (int) this.machine.workAxis(WorkAxis.VERTICAL);
 			if (lift != 0 && --this.depthKeyCooldown <= 0) {
 				this.depthKeyCooldown = 4;
@@ -511,8 +468,7 @@ public final class PileDriverModule extends MachineModule {
 		return switch (this.status) {
 			case IDLE -> null;
 			case MAST -> Text.translatable("status.constructionaddon.pile_driver.mast", this.targetDepth);
-			// Names the leader key - built client-side instead (ConstructionAddonClient) so it shows
-			// whatever key is actually bound.
+			// Names a key: built client-side (ConstructionAddonClient).
 			case LEADER_DOWN -> null;
 			case JACKS -> Text.translatable("status.constructionaddon.pile_driver.jacks", this.depth, this.targetDepth);
 			case READY -> Text.translatable("status.constructionaddon.pile_driver.ready", this.depth, this.targetDepth);

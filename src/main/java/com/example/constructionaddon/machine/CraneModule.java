@@ -28,23 +28,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-/** Mobile crane.
- *
- * <p>Work mode (hold M) deploys the outriggers; the crane only operates once they are fully out
- * (unless require_outriggers is false). Driving is blocked only while the outriggers are
- * actually down - not by work mode itself - and the arm's own controls never touch WASD, so a
- * crane can be driven into position and worked without ever fighting the driving keys:
- * <ul>
- *   <li>swing keys (default Left / Right) - slew;</li>
- *   <li>luff keys (default Up / Down) - boom angle;</li>
- *   <li>telescope keys (default , / .) - extend / retract the boom;</li>
- *   <li>hoist keys (default ; / /) - hook up / down;</li>
- *   <li>primary (Z) press - take hold of the nearest liftable entity at the hook (mobs, dropped
- *       items, other vehicles; players only if the server allows), or release the load.</li>
- * </ul>
- * Each has its own key binding, so all can be worked at once and rebound independently.
- * The load hangs below the hook and is positioned after every entity in the world has ticked,
- * so its own physics can't drag it away from the hook. */
+/** Mobile crane. Work mode deploys the outriggers; it operates once they are out (unless
+ * require_outriggers is false), and can't drive while they are. Swing / luff / telescope / hoist
+ * keys each move their own joint, all at once if wanted; primary (Z) grabs the nearest liftable
+ * entity at the hook (mobs, items, vehicles; players only if the server allows) or releases it.
+ * The load is positioned after every entity in the world has ticked, so its own physics can't
+ * pull it off the hook. */
 public final class CraneModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"swing", "luff", "extend", "rope", "outrigger", "hook"};
@@ -77,8 +66,7 @@ public final class CraneModule extends MachineModule {
 				Codec.FLOAT.optionalFieldOf("hook_drop", 0.9f).forGetter(Settings::hookDrop)
 		).apply(i, Settings::new));
 
-		static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private UUID heldUuid;
@@ -113,19 +101,9 @@ public final class CraneModule extends MachineModule {
 	@Override
 	public void serverTick(ServerWorld world, ServerPlayerEntity operator) {
 		Settings s = this.settings();
-		float outrigger = this.machine.getFloatChannel(OUTRIGGER);
-		float outriggerTarget = this.machine.isWorkMode() ? 1f : 0f;
-		if (outrigger != outriggerTarget) {
-			outrigger = outrigger < outriggerTarget
-					? Math.min(outriggerTarget, outrigger + s.outriggerSpeed())
-					: Math.max(outriggerTarget, outrigger - s.outriggerSpeed());
-			this.machine.setFloatChannel(OUTRIGGER, outrigger);
-		}
+		float outrigger = this.approach(OUTRIGGER, this.machine.isWorkMode() ? 1f : 0f, s.outriggerSpeed());
 		// Keeps the rope within range even for a freshly placed crane (channels start at 0).
-		float rope = this.machine.getFloatChannel(ROPE);
-		if (rope < s.ropeMin() || rope > s.ropeMax()) {
-			this.machine.setFloatChannel(ROPE, MathHelper.clamp(rope, s.ropeMin(), s.ropeMax()));
-		}
+		this.machine.setFloatChannel(ROPE, MathHelper.clamp(this.machine.getFloatChannel(ROPE), s.ropeMin(), s.ropeMax()));
 		this.machine.setFloatChannel(HOOK, this.heldUuid != null ? 1f : 0f);
 
 		boolean ready = !s.requireOutriggers() || outrigger >= 0.999f;
@@ -133,35 +111,11 @@ public final class CraneModule extends MachineModule {
 			return;
 		}
 
-		float sideways = this.machine.workAxis(WorkAxis.SWING);
-		if (sideways != 0f) {
-			float swing = this.machine.getFloatChannel(SWING);
-			float next = swing + sideways * s.swingSpeed();
-			if (s.swingLimit() > 0f) {
-				next = MathHelper.clamp(next, -s.swingLimit(), s.swingLimit());
-			}
-			this.machine.setFloatChannel(SWING, next);
-			this.machine.workSwung(next - swing);
-		}
-
-		// Luff, telescope and hoist each have their OWN key binding (WorkAxis LUFF / TELESCOPE /
-		// HOIST), so all three - and swing - can be worked at once, and rebound independently.
-		float luffInput = this.machine.workAxis(WorkAxis.LUFF);
-		if (luffInput != 0f) {
-			float luff = this.machine.getFloatChannel(LUFF);
-			this.machine.setFloatChannel(LUFF, MathHelper.clamp(luff + luffInput * s.luffSpeed(),
-					Math.min(s.luffMin(), s.luffMax()), Math.max(s.luffMin(), s.luffMax())));
-		}
-		float telescopeInput = this.machine.workAxis(WorkAxis.TELESCOPE);
-		if (telescopeInput != 0f) {
-			float extend = this.machine.getFloatChannel(EXTEND);
-			this.machine.setFloatChannel(EXTEND, MathHelper.clamp(extend + telescopeInput * s.extendSpeed(), 0f, s.extendMax()));
-		}
-		float hoistInput = this.machine.workAxis(WorkAxis.HOIST);
-		if (hoistInput != 0f) {
-			rope = this.machine.getFloatChannel(ROPE);
-			this.machine.setFloatChannel(ROPE, MathHelper.clamp(rope - hoistInput * s.ropeSpeed(), s.ropeMin(), s.ropeMax()));
-		}
+		this.workSwing(SWING, s.swingSpeed(), s.swingLimit());
+		this.nudge(LUFF, this.machine.workAxis(WorkAxis.LUFF), s.luffSpeed(), s.luffMin(), s.luffMax());
+		this.nudge(EXTEND, this.machine.workAxis(WorkAxis.TELESCOPE), s.extendSpeed(), 0f, s.extendMax());
+		// Hoisting up shortens the rope.
+		this.nudge(ROPE, -this.machine.workAxis(WorkAxis.HOIST), s.ropeSpeed(), s.ropeMin(), s.ropeMax());
 
 		if (this.machine.isPrimaryPressed()) {
 			if (this.heldUuid != null) {

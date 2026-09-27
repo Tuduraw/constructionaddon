@@ -20,18 +20,10 @@ import org.joml.Vector3f;
 
 import java.util.List;
 
-/** Dump truck. The bed IS the base mod's own vehicle inventory - anything a player puts in by
- * hand (the vehicle menu, K) is as much load as what an excavator pours in, and vice versa.
- *
- * <ul>
- *   <li>Loading: an excavator bucket opened with its cutting edge over this truck's bed
- *       (bed_min / bed_max, a box in model coordinates) pours straight into the inventory.</li>
- *   <li>Primary (Z) held - raise the bed; secondary (X) held - lower it. Once the bed is past
- *       dump_start_angle, block items leave through the tailgate work point as falling blocks,
- *       faster the steeper the bed. Driving slowly while dumping spreads the load in a strip,
- *       like spreading gravel from a real truck.</li>
- * </ul>
- * Only block items are dumped; anything else stays in the bed. */
+/** Dump truck. The bed is the vehicle inventory, so hand-loaded items and excavator loads are
+ * the same thing. An excavator dumping with its cutting edge inside bed_min / bed_max loads it.
+ * Primary (Z) raises the bed, secondary (X) lowers it; past dump_start_angle block items leave the
+ * discharge point, faster the steeper the bed. Non-block items stay in the bed. */
 public final class DumpTruckModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"bed", "load"};
@@ -59,8 +51,7 @@ public final class DumpTruckModule extends MachineModule {
 				Codec.FLOAT.optionalFieldOf("dump_slope", 0.75f).forGetter(Settings::dumpSlope)
 		).apply(i, Settings::new));
 
-		static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private int dumpCooldown;
@@ -99,18 +90,9 @@ public final class DumpTruckModule extends MachineModule {
 			this.machine.setFloatChannel(LOAD, MathHelper.clamp(this.loadCount / (float) this.capacity(), 0f, 1f));
 		}
 
+		float bedInput = (this.machine.isPrimaryHeld() ? 1f : 0f) - (this.machine.isSecondaryHeld() ? 1f : 0f);
+		this.nudge(BED, bedInput, s.bedSpeed(), 0f, s.bedMaxAngle());
 		float bed = this.machine.getFloatChannel(BED);
-		float delta = 0f;
-		if (this.machine.isPrimaryHeld()) {
-			delta += s.bedSpeed();
-		}
-		if (this.machine.isSecondaryHeld()) {
-			delta -= s.bedSpeed();
-		}
-		if (delta != 0f) {
-			bed = MathHelper.clamp(bed + delta, 0f, s.bedMaxAngle());
-			this.machine.setFloatChannel(BED, bed);
-		}
 
 		this.dumpedThisTick = false;
 		if (operator != null && bed >= s.dumpStartAngle() && this.loadCount > 0) {

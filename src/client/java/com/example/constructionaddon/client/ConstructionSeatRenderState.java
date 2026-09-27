@@ -1,15 +1,11 @@
 package com.example.constructionaddon.client;
 
-/** Added to every LivingEntityRenderState by LivingEntityRenderStateMixin, so
- * LivingEntityRendererMixin can carry a value captured during updateRenderState() (which has the
- * entity) forward to setupTransforms() (which only has the render state). */
+/** Added to LivingEntityRenderState by LivingEntityRenderStateMixin, carrying the joint-seat yaw
+ * from updateRenderState() (has the entity) to setupTransforms() (has only the state). */
 public interface ConstructionSeatRenderState {
 
-	boolean constructionaddon$hasSeatYaw();
-
+	/** Degrees, positive = left; NaN when the entity isn't on a joint seat. */
 	float constructionaddon$getSeatYawOffset();
 
 	void constructionaddon$setSeatYawOffset(float value);
-
-	void constructionaddon$clearSeatYawOffset();
 }

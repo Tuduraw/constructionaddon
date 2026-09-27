@@ -28,28 +28,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** Backhoe / hydraulic excavator.
- *
- * <p>Driving (WASD) and operating the arm are entirely independent - the arm never touches the
- * driving keys, so both work at once. Work mode (hold M) is only the arm's own on/off lever, the
- * cab controls being:
+/** Backhoe / hydraulic excavator. Driving (WASD) and the arm are independent. Work mode (hold M)
+ * enables the arm; then:
  * <ul>
- *   <li>Left / Right - slew the upper structure (and the cab with its operator) left / right;</li>
- *   <li>arrow Up / Down - raise / lower the BOOM;</li>
- *   <li>the arm-axis keys (default , / .) - curl the ARM in / out;</li>
- * </ul>
- * Boom and arm each have their OWN dedicated input and move fully independently at their own
- * configured speeds - not solved together from a single target the way an earlier version of
- * this module did (a two-link IK giving straight-line bucket control). That gave smoother motion
- * but no way to move just one joint precisely; direct per-joint control trades the smoothness for
- * the fine, independent adjustment a real excavator's separate boom and arm levers give, and lets
- * both be driven at once since they're on separate keys.
- * <ul>
- *   <li>primary (Z) held - curl the bucket in and dig: blocks at the cutting edge are broken and
- *       loaded, harder ground taking longer (shared GroundResistance);</li>
- *   <li>secondary (X) held - open the bucket; once it passes the dump angle the load pours out
- *       at the cutting edge - straight into a dump truck's bed when the edge is over one,
- *       otherwise spreading out and mounding up nearby (see BlockWork#drop()).</li>
+ *   <li>swing keys - slew the upper structure with the cab;</li>
+ *   <li>boom keys / arm keys - move boom and arm, each independently (both at once is fine);</li>
+ *   <li>primary (Z) held - curl the bucket and dig: blocks at the cutting edge are broken and
+ *       loaded, harder ground taking longer (GroundResistance);</li>
+ *   <li>secondary (X) held - open the bucket; past dump_angle the load pours out at the cutting
+ *       edge, into a dump truck's bed if it's over one, otherwise mounding up on the ground.</li>
  * </ul> */
 public final class ExcavatorModule extends MachineModule {
 
@@ -59,12 +46,6 @@ public final class ExcavatorModule extends MachineModule {
 	private static final int ARM = 2;
 	private static final int BUCKET = 3;
 	private static final int LOAD = 4;
-
-	public record Geometry(String tipPoint) {
-		static final MapCodec<Geometry> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
-				Codec.STRING.optionalFieldOf("tip_point", "bucket_tip").forGetter(Geometry::tipPoint)
-		).apply(i, Geometry::new));
-	}
 
 	public record Motion(float swingSpeed, float swingLimit, float boomSpeed, float armSpeed,
 			float boomMin, float boomMax, float armMin, float armMax, float bucketMin, float bucketMax,
@@ -84,9 +65,10 @@ public final class ExcavatorModule extends MachineModule {
 		).apply(i, Motion::new));
 	}
 
-	public record Work(int capacity, float digRadius, float baseDigTicks, float dumpAngle, int dumpInterval,
-			int dumpSpreadRadius, float dumpSlope) {
+	public record Work(String tipPoint, int capacity, float digRadius, float baseDigTicks, float dumpAngle,
+			int dumpInterval, int dumpSpreadRadius, float dumpSlope) {
 		static final MapCodec<Work> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+				Codec.STRING.optionalFieldOf("tip_point", "bucket_tip").forGetter(Work::tipPoint),
 				Codec.INT.optionalFieldOf("capacity", 4).forGetter(Work::capacity),
 				Codec.FLOAT.optionalFieldOf("dig_radius", 0.8f).forGetter(Work::digRadius),
 				Codec.FLOAT.optionalFieldOf("base_dig_ticks", 4f).forGetter(Work::baseDigTicks),
@@ -97,17 +79,14 @@ public final class ExcavatorModule extends MachineModule {
 		).apply(i, Work::new));
 	}
 
-	public record Settings(Geometry geometry, Motion motion, Work work, ResistanceProfile resistance) {
+	public record Settings(Motion motion, Work work, ResistanceProfile resistance) {
 		public static final Codec<Settings> CODEC = RecordCodecBuilder.create(i -> i.group(
-				Geometry.MAP_CODEC.forGetter(Settings::geometry),
 				Motion.MAP_CODEC.forGetter(Settings::motion),
 				Work.MAP_CODEC.forGetter(Settings::work),
-				ResistanceProfile.codec(1.0f, 3.5f).optionalFieldOf("resistance", new ResistanceProfile(1.0f, 3.5f, java.util.Map.of()))
-						.forGetter(Settings::resistance)
+				ResistanceProfile.field(1.0f, 3.5f).forGetter(Settings::resistance)
 		).apply(i, Settings::new));
 
-		public static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		public static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private enum Status { IDLE, WORKING, FULL, REFUSED, PROTECTED, DUMPING, TRUCK }
@@ -150,78 +129,25 @@ public final class ExcavatorModule extends MachineModule {
 		}
 		this.status = Status.WORKING;
 
-		this.updateSwing(s);
-		this.updateBoomAndArm(s);
+		Motion m = s.motion();
+		this.workSwing(SWING, m.swingSpeed(), m.swingLimit());
+		// Joint angles as the sample JSON writes them: positive = raising.
+		this.nudge(BOOM, this.machine.workAxis(WorkAxis.BOOM), m.boomSpeed(), m.boomMin(), m.boomMax());
+		this.nudge(ARM, this.machine.workAxis(WorkAxis.ARM), m.armSpeed(), m.armMin(), m.armMax());
+		float curlInput = (this.machine.isPrimaryHeld() ? 1f : 0f) - (this.machine.isSecondaryHeld() ? 1f : 0f);
+		float curled = this.nudge(BUCKET, curlInput, m.curlSpeed(), m.bucketMin(), m.bucketMax());
 
-		float bucket = this.machine.getFloatChannel(BUCKET);
-		float curl = 0f;
-		if (this.machine.isPrimaryHeld()) {
-			curl += s.motion().curlSpeed();
-		}
-		if (this.machine.isSecondaryHeld()) {
-			curl -= s.motion().curlSpeed();
-		}
-		float newBucket = MathHelper.clamp(bucket + curl,
-				Math.min(s.motion().bucketMin(), s.motion().bucketMax()), Math.max(s.motion().bucketMin(), s.motion().bucketMax()));
-		this.machine.setFloatChannel(BUCKET, newBucket);
-
-		if (this.machine.isPrimaryHeld() && newBucket > bucket) {
+		if (this.machine.isPrimaryHeld() && curled > 0f) {
 			this.dig(world, operator, s);
 		} else {
 			this.digTarget = null;
 			this.digProgress = 0f;
 		}
 
-		if (newBucket <= s.work().dumpAngle() && !this.bag.isEmpty()) {
-			if (--this.dumpCooldown <= 0) {
-				this.dumpCooldown = Math.max(1, s.work().dumpInterval());
-				this.releaseOne(world, operator, s);
-			}
-		}
-	}
-
-	// ------------------------------------------------------------------
-	// Slewing
-	// ------------------------------------------------------------------
-
-	private void updateSwing(Settings s) {
-		float input = this.machine.workAxis(WorkAxis.SWING);
-		if (input == 0f) {
-			return;
-		}
-		float swing = this.machine.getFloatChannel(SWING);
-		float next = swing + input * s.motion().swingSpeed();
-		if (s.motion().swingLimit() > 0f) {
-			next = MathHelper.clamp(next, -s.motion().swingLimit(), s.motion().swingLimit());
-		}
-		this.machine.setFloatChannel(SWING, next);
-		this.machine.workSwung(next - swing);
-	}
-
-	// ------------------------------------------------------------------
-	// Boom / arm: independent direct control, each on its own dedicated axis
-	// ------------------------------------------------------------------
-
-	/** Boom and arm each have their own dedicated input and move independently - the operator
-	 * decides exactly how much of each to use, rather than the two being solved together from a
-	 * single "bucket position" target. Both can be driven at once (they're separate physical
-	 * levers on a real excavator too), each simply adding to its own joint's current angle at its
-	 * own configured speed. A joint angle is measured the way the JSON joints are written for
-	 * these machines: positive = raising (rotation about -X). */
-	private void updateBoomAndArm(Settings s) {
-		float boomInput = this.machine.workAxis(WorkAxis.BOOM);
-		if (boomInput != 0f) {
-			float boom = this.machine.getFloatChannel(BOOM);
-			float next = MathHelper.clamp(boom + boomInput * s.motion().boomSpeed(),
-					Math.min(s.motion().boomMin(), s.motion().boomMax()), Math.max(s.motion().boomMin(), s.motion().boomMax()));
-			this.machine.setFloatChannel(BOOM, next);
-		}
-		float armInput = this.machine.workAxis(WorkAxis.ARM);
-		if (armInput != 0f) {
-			float arm = this.machine.getFloatChannel(ARM);
-			float next = MathHelper.clamp(arm + armInput * s.motion().armSpeed(),
-					Math.min(s.motion().armMin(), s.motion().armMax()), Math.max(s.motion().armMin(), s.motion().armMax()));
-			this.machine.setFloatChannel(ARM, next);
+		if (this.machine.getFloatChannel(BUCKET) <= s.work().dumpAngle() && !this.bag.isEmpty()
+				&& --this.dumpCooldown <= 0) {
+			this.dumpCooldown = Math.max(1, s.work().dumpInterval());
+			this.releaseOne(world, operator, s);
 		}
 	}
 
@@ -234,7 +160,7 @@ public final class ExcavatorModule extends MachineModule {
 			this.status = Status.FULL;
 			return;
 		}
-		Vec3d tip = this.machine.workPoint(s.geometry().tipPoint());
+		Vec3d tip = this.machine.workPoint(s.work().tipPoint());
 		BlockPos target = this.findDigTarget(world, tip, s.work().digRadius());
 		if (target == null) {
 			this.digTarget = null;
@@ -250,7 +176,7 @@ public final class ExcavatorModule extends MachineModule {
 		this.lastHardness = resistance.hardness();
 		if (resistance.passable()) {
 			// Plants, snow layers and the like are simply cleared out of the way.
-			BlockWork.remove(world, operator, target, this.machine);
+			BlockWork.remove(world, operator, target);
 			return;
 		}
 		if (resistance.refused()) {
@@ -265,7 +191,7 @@ public final class ExcavatorModule extends MachineModule {
 		if (this.digProgress >= 1f) {
 			this.digProgress = 0f;
 			Block block = state.getBlock();
-			if (BlockWork.remove(world, operator, target, this.machine)) {
+			if (BlockWork.remove(world, operator, target)) {
 				this.bag.add(block);
 			}
 		}
@@ -297,7 +223,7 @@ public final class ExcavatorModule extends MachineModule {
 		if (block == null) {
 			return;
 		}
-		Vec3d tip = this.machine.workPoint(s.geometry().tipPoint());
+		Vec3d tip = this.machine.workPoint(s.work().tipPoint());
 		this.status = Status.DUMPING;
 		if (block.asItem() != Items.AIR) {
 			ConstructionMachineEntity truck = DumpTruckModule.findReceiver(world, tip, this.machine);
@@ -318,9 +244,7 @@ public final class ExcavatorModule extends MachineModule {
 		int capacity = this.settings().work().capacity();
 		return switch (this.status) {
 			case IDLE -> null;
-			// FULL needs to name the release key - shown client-side instead (see
-			// ConstructionAddonClient), so it always names whatever key the player has that
-			// bound to right now, not just the default.
+			// Names a key: built client-side (ConstructionAddonClient).
 			case FULL -> null;
 			case REFUSED -> Text.translatable("status.constructionaddon.excavator.refused",
 					String.format(java.util.Locale.ROOT, "%.1f", this.lastHardness));

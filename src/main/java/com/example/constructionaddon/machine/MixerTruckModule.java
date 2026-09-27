@@ -28,22 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Concrete mixer truck.
- *
- * <p>MIXING: raw material goes into the vehicle's own inventory (K). The drum turns it into
- * ready-mixed material by the "recipes" list - by default each colour of concrete powder plus
- * water becomes that colour of concrete. Recipes are plain data (input item, output block,
- * whether water is used), so a pack can make the same truck lay other materials too. The drum
- * holds one output at a time: a different output only starts once the drum has been emptied.
- *
- * <p>WATER: each water bucket in the inventory is emptied into the tank (the empty bucket stays
- * behind), and a truck standing in water tops its tank up by itself.
- *
- * <p>POURING (the "laying" mechanism): work mode (hold M) enables the chute controls without
- * ever taking WASD away from driving - the work-axis keys (default J / L) swing the chute, arrow
- * up / down raise / lower it; primary (Z) held pours from the chute outlet, so the truck can
- * inch forward while pouring to lay a strip. Poured material settles like a
- * liquid (see PourSpreader): it runs down into the lowest free cells within spread_radius and
- * stops at walls, so it fills formwork layer by layer and finishes level. */
+ * <ul>
+ *   <li>Mixing: inventory items are turned into the drum's material by "recipes" (default: each
+ *       concrete powder + water -> that concrete). One output at a time.</li>
+ *   <li>Water: water buckets in the inventory empty into the tank; standing in water refills it.</li>
+ *   <li>Pouring: with work mode on, swing keys swing the chute and vertical keys tilt it; primary
+ *       (Z) held pours. Material settles like a liquid (PourSpreader), filling forms level.</li>
+ * </ul> */
 public final class MixerTruckModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"drum", "chute_swing", "chute_tilt", "load"};
@@ -107,8 +98,7 @@ public final class MixerTruckModule extends MachineModule {
 				Recipe.CODEC.listOf().optionalFieldOf("recipes", defaultRecipes()).forGetter(Settings::recipes)
 		).apply(i, Settings::new));
 
-		static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private enum Status { IDLE, POURING, EMPTY, NO_TARGET, PROTECTED }
@@ -245,17 +235,9 @@ public final class MixerTruckModule extends MachineModule {
 	}
 
 	private void updateChute(Chute c) {
-		float sideways = this.machine.workAxis(WorkAxis.SWING);
-		if (sideways != 0f) {
-			float swing = this.machine.getFloatChannel(CHUTE_SWING) + sideways * c.swingSpeed();
-			this.machine.setFloatChannel(CHUTE_SWING, MathHelper.clamp(swing, -c.swingLimit(), c.swingLimit()));
-		}
-		float lift = this.machine.workAxis(WorkAxis.VERTICAL);
-		if (lift != 0f) {
-			float tilt = this.machine.getFloatChannel(CHUTE_TILT) + lift * c.tiltSpeed();
-			this.machine.setFloatChannel(CHUTE_TILT, MathHelper.clamp(tilt,
-					Math.min(c.tiltMin(), c.tiltMax()), Math.max(c.tiltMin(), c.tiltMax())));
-		}
+		// The chute's swing isn't the upper structure's, so no workSwung() (no seat turn, no alarm).
+		this.nudge(CHUTE_SWING, this.machine.workAxis(WorkAxis.SWING), c.swingSpeed(), -c.swingLimit(), c.swingLimit());
+		this.nudge(CHUTE_TILT, this.machine.workAxis(WorkAxis.VERTICAL), c.tiltSpeed(), c.tiltMin(), c.tiltMax());
 	}
 
 	private void pourOne(ServerWorld world, ServerPlayerEntity operator, Chute c) {
@@ -264,7 +246,7 @@ public final class MixerTruckModule extends MachineModule {
 			return;
 		}
 		Vec3d outlet = this.machine.workPoint(c.chutePoint());
-		BlockPos target = PourSpreader.findTarget(world, outlet, Math.max(0, c.spreadRadius()));
+		BlockPos target = PourSpreader.findTarget(world, outlet, Math.max(0, c.spreadRadius()), 0f);
 		if (target == null) {
 			this.status = Status.NO_TARGET;
 			return;

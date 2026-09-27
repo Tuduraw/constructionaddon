@@ -22,21 +22,16 @@ import net.minecraft.util.math.MathHelper;
 
 import java.util.LinkedHashSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
-/** Bulldozer. No work mode needed - it grades while it drives, the way a real dozer does.
- *
+/** Bulldozer. Grades while driving; no work mode needed.
  * <ul>
- *   <li>Arrow up / down - raise / lower the blade. The blade's bottom edge sets the GRADE: at 0
- *       it is the level the tracks stand on, below 0 the blade cuts into the ground and the dozer
- *       works its way down layer by layer.</li>
- *   <li>Driving forward, every block at or above grade in front of the blade is cut and heaped
- *       against the blade (up to its capacity), and every hole just below grade is filled from
- *       that heap - bumps go, dips fill, the ground comes out level. Harder ground drags on the
- *       machine (shared GroundResistance); ground at or beyond refusal hardness can't be cut and
- *       stops the dozer like any wall. A full blade pushes noticeably slower.</li>
- *   <li>Primary (Z) held - spill the heap in front of the blade.</li>
+ *   <li>vertical keys - raise / lower the blade. Its bottom edge is the grade: 0 = track level,
+ *       below 0 cuts down layer by layer;</li>
+ *   <li>driving forward cuts blocks at or above grade onto the blade (up to capacity) and fills
+ *       holes just below grade from it. Hard ground drags (GroundResistance); refusal-hard ground
+ *       can't be cut. A full blade is slower;</li>
+ *   <li>primary (Z) held - spill the load in front.</li>
  * </ul> */
 public final class BulldozerModule extends MachineModule {
 
@@ -68,13 +63,11 @@ public final class BulldozerModule extends MachineModule {
 				Codec.FLOAT.optionalFieldOf("cut_drag", 0.04f).forGetter(Settings::cutDrag),
 				Codec.INT.optionalFieldOf("unload_interval", 3).forGetter(Settings::unloadInterval),
 				Codec.FLOAT.optionalFieldOf("min_work_speed", 0.02f).forGetter(Settings::minSpeed),
-				ResistanceProfile.codec(1.0f, 2.0f).optionalFieldOf("resistance", new ResistanceProfile(1.0f, 2.0f, Map.of()))
-						.forGetter(Settings::resistance),
+				ResistanceProfile.field(1.0f, 2.0f).forGetter(Settings::resistance),
 				Dump.MAP_CODEC.forGetter(Settings::dump)
 		).apply(i, Settings::new));
 
-		public static final Settings DEFAULT = CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, new com.google.gson.JsonObject())
-				.result().orElseThrow();
+		public static final Settings DEFAULT = MachineModule.defaults(CODEC);
 	}
 
 	private final BlockBag bag = new BlockBag();
@@ -113,12 +106,7 @@ public final class BulldozerModule extends MachineModule {
 		this.refusedThisTick = false;
 		this.protectedThisTick = false;
 		if (operator != null) {
-			float lift = this.machine.workAxis(WorkAxis.VERTICAL);
-			if (lift != 0f) {
-				float blade = this.machine.getFloatChannel(BLADE);
-				this.machine.setFloatChannel(BLADE, MathHelper.clamp(blade + lift * s.bladeSpeed(),
-						Math.min(s.bladeMin(), s.bladeMax()), Math.max(s.bladeMin(), s.bladeMax())));
-			}
+			this.nudge(BLADE, this.machine.workAxis(WorkAxis.VERTICAL), s.bladeSpeed(), s.bladeMin(), s.bladeMax());
 			if (this.machine.getCruiseSpeedValue() > s.minSpeed()) {
 				this.grade(world, operator, s);
 			}
@@ -174,7 +162,7 @@ public final class BulldozerModule extends MachineModule {
 				}
 				GroundResistance.Result resistance = GroundResistance.evaluate(world, pos, state, s.resistance());
 				if (resistance.passable()) {
-					BlockWork.remove(world, operator, pos, this.machine);
+					BlockWork.remove(world, operator, pos);
 					continue;
 				}
 				if (resistance.refused()) {
@@ -189,7 +177,7 @@ public final class BulldozerModule extends MachineModule {
 					continue;
 				}
 				Block block = state.getBlock();
-				if (BlockWork.remove(world, operator, pos, this.machine)) {
+				if (BlockWork.remove(world, operator, pos)) {
 					this.bag.add(block);
 					cuts++;
 					drag += resistance.factor();
@@ -220,9 +208,7 @@ public final class BulldozerModule extends MachineModule {
 		if (this.refusedThisTick) {
 			return Text.translatable("status.constructionaddon.bulldozer.refused", blade, this.bag.total(), s.capacity());
 		}
-		// FULL needs to name the spill key - shown client-side instead (see
-		// ConstructionAddonClient), so it always names whatever key the player has that bound
-		// to right now, not just the default.
+		// Names a key: built client-side (ConstructionAddonClient).
 		if (this.bag.total() >= s.capacity()) {
 			return null;
 		}

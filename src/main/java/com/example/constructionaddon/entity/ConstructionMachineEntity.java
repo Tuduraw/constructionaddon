@@ -45,23 +45,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Every construction machine: a CarEntity (so driving, tracks/wheels, fuel, inventory, seats,
- * HUD and destruction all stay the base mod's own) plus one MachineModule chosen by the vehicle
- * JSON's "construction.machine".
+/** Every construction machine: a CarEntity (driving, tracks/wheels, fuel, inventory, seats, HUD
+ * and destruction stay the base mod's own) plus one MachineModule chosen by the vehicle JSON's
+ * "construction.machine".
  *
- * <p>This class supplies what every module shares:
+ * <p>Shared by every module:
  * <ul>
- *   <li>generic SYNCED CHANNELS - {@link #FLOAT_CHANNELS} floats and {@link #INT_CHANNELS} ints,
- *       written by the module on the server, read on the client. Floats are interpolated
- *       between ticks for drawing and drive the JSON-defined joints;</li>
- *   <li>the joint system: {@link #tudursvehiclemod$getCustomPartTransforms(float)} for drawing and
- *       {@link #workPoint(String)} for acting in the world, from the very same matrices;</li>
- *   <li>WORK MODE (the base mod's own manual-mode flag, hold M): while a module says so, the
- *       base driving code sees zero input and a held brake, and the raw inputs - W/S, A/D,
- *       arrow up/down - are read by the module as work axes instead;</li>
- *   <li>the two work keys (primary / secondary) from this addon's own payload;</li>
- *   <li>seats that ride on a joint (an excavator cab on its slewing upper structure), including
- *       the rider's camera.</li>
+ *   <li>synced channels ({@link #FLOAT_CHANNELS} floats, {@link #INT_CHANNELS} ints), written by
+ *       the module on the server; floats drive the JSON joints and are interpolated for drawing;</li>
+ *   <li>the joint matrices, used both for drawing and for {@link #workPoint(String)};</li>
+ *   <li>work inputs: the work axes and the two work keys, from this addon's own payloads;</li>
+ *   <li>seats riding on a joint (a cab on a slewing upper structure), including the rider's view.</li>
  * </ul> */
 public class ConstructionMachineEntity extends CarEntity {
 
@@ -85,7 +79,6 @@ public class ConstructionMachineEntity extends CarEntity {
 	/** Machines whose module asked to run after every entity in the world ticked. */
 	public static final Set<ConstructionMachineEntity> END_TICK_MACHINES = ConcurrentHashMap.newKeySet();
 
-
 	private MachineModule module;
 
 	/** Client: channel values at the previous and current tick, for render interpolation. */
@@ -99,11 +92,11 @@ public class ConstructionMachineEntity extends CarEntity {
 	private boolean primaryHeld;
 	private boolean secondaryHeld;
 	private final float[] workAxes = new float[WorkAxis.values().length];
-	private int swingSoundCooldown;
 	private boolean lastPrimaryHeld;
 	private boolean lastSecondaryHeld;
 	private boolean primaryPressed;
 	private boolean secondaryPressed;
+	private int swingSoundCooldown;
 
 	public ConstructionMachineEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -147,9 +140,6 @@ public class ConstructionMachineEntity extends CarEntity {
 	public MachineModule module() {
 		MachineType type = this.settings().machine();
 		if (this.module == null || this.module.type() != type) {
-			if (this.module != null) {
-				this.module.onRemoved();
-			}
 			this.module = type.create(this);
 		}
 		return this.module;
@@ -319,7 +309,6 @@ public class ConstructionMachineEntity extends CarEntity {
 		}
 	}
 
-
 	public boolean isPrimaryHeld() {
 		return this.primaryHeld;
 	}
@@ -337,22 +326,15 @@ public class ConstructionMachineEntity extends CarEntity {
 		return this.secondaryPressed;
 	}
 
-	/** Work mode = the base mod's own manual-mode flag (hold M), reused rather than duplicated.
-	 * A per-machine "systems engaged" lever - it enables a module's own arm/chute controls (and,
-	 * for a crane or pile driver, drives outriggers/mast toward deployed) but by itself never
-	 * blocks driving: WASD always drives regardless of this flag. Only an actual physical state
-	 * (outriggers down, mast up) ever makes a module suppress driving - see
-	 * MachineModule#suppressesDriving(). */
+	/** Work mode = the base mod's manual-mode flag (hold M). Never blocks driving by itself. */
 	public boolean isWorkMode() {
 		return this.isManualMode();
 	}
 
-	/** A work axis value (-1/0/+1) from this addon's own key bindings - independent of driving
-	 * (WASD) and of every other binding, each axis rebindable on its own (see WorkAxis). */
+	/** -1 / 0 / +1 from this addon's own key bindings (see WorkAxis). */
 	public float workAxis(WorkAxis axis) {
 		return this.workAxes[axis.ordinal()];
 	}
-
 
 	private boolean drivingSuppressed() {
 		return this.module().suppressesDriving();
@@ -394,8 +376,7 @@ public class ConstructionMachineEntity extends CarEntity {
 			return;
 		}
 		if (module.suppressesDriving()) {
-			// Cancels the base mod's cruise-control throttle so a machine put into work mode while
-			// rolling actually stops, instead of holding whatever throttle it had.
+			// Cancels the base mod's cruise-control throttle so the machine actually stops.
 			this.setThrottleDirect(0f);
 		}
 		super.updateVehicleMovement(def);
@@ -481,9 +462,6 @@ public class ConstructionMachineEntity extends CarEntity {
 	public void onRemoved() {
 		super.onRemoved();
 		END_TICK_MACHINES.remove(this);
-		if (this.module != null) {
-			this.module.onRemoved();
-		}
 	}
 
 	// ------------------------------------------------------------------
@@ -493,23 +471,10 @@ public class ConstructionMachineEntity extends CarEntity {
 	/** World-space shift of a passenger whose seat rides on a joint, relative to where the base
 	 * mod would put it, or null for an ordinary seat. */
 	private Vec3d seatPartShift(Entity passenger, float tickDelta, boolean eye) {
-		ConstructionSettings settings = this.settings();
-		if (settings.seatParts().isEmpty()) {
-			return null;
-		}
+		String part = this.jointSeatPart(passenger);
 		int seatIndex = this.tudursvehiclemod$getAssignedSeatIndex(passenger);
 		VehicleDefinition def = this.getDefinition();
-		if (seatIndex < 0 || seatIndex >= def.seats().size()) {
-			return null;
-		}
-		String part = null;
-		for (SeatPart seatPart : settings.seatParts()) {
-			if (seatPart.seat() == seatIndex) {
-				part = seatPart.part();
-				break;
-			}
-		}
-		if (part == null) {
+		if (part == null || seatIndex < 0 || seatIndex >= def.seats().size()) {
 			return null;
 		}
 		Matrix4f matrix = this.jointMatrices(tickDelta).get(part);
@@ -556,12 +521,8 @@ public class ConstructionMachineEntity extends CarEntity {
 		return null;
 	}
 
-	/** For third-person rendering (LivingEntityRendererMixin): the extra yaw this passenger's own
-	 * joint-mounted seat currently carries relative to this machine's own hull, in this addon's
-	 * own "positive = left" convention (matching rotateJointSeatRiders()'s degreesLeft) - what
-	 * that mixin adds on top of the base mod's own "body matches vehicle hull" render override.
-	 * Null if this passenger isn't seated on one of this machine's rotating joints. Client side
-	 * only (jointMatrices() needs render-interpolated channel values, which only exist there). */
+	/** Yaw (degrees, positive = left) of this passenger's joint-mounted seat relative to the hull,
+	 * or null for an ordinary seat. Used for the rider's view and third-person body. */
 	public Float renderedSeatYawOffset(Entity passenger, float tickDelta) {
 		String part = this.jointSeatPart(passenger);
 		if (part == null) {
@@ -571,56 +532,16 @@ public class ConstructionMachineEntity extends CarEntity {
 		return matrix == null ? null : jointHeading(matrix);
 	}
 
-	/** Called by a module every tick its WORK swing (upper structure slewing on its own, not the
-	 * vehicle turning) actually moves, by degreesLeft (positive = left). Turns joint-seat riders
-	 * with it and plays the vehicle's own swing alarm, if its JSON defines one
-	 * ("construction.swing_sound") - most machines don't, and then nothing plays. */
+	/** Called by a module whenever its work swing (the upper structure slewing on its own, not the
+	 * vehicle turning) moves, by degreesLeft. Turns joint-seat riders and plays the vehicle's
+	 * swing_sound, if it has one.
+	 *
+	 * <p>Server side: a riding player's view is client-authoritative, so this only keeps the
+	 * server's copy in step for other players (same as CarEntity: setYaw + requestTeleport). The
+	 * rider's own view is turned client-side by followJointSeatYawClient(). Only yaw is changed;
+	 * vanilla keeps headYaw following it, and the body is handled by LivingEntityRendererMixin. */
 	public void workSwung(float degreesLeft) {
 		if (Math.abs(degreesLeft) < 1.0e-4f) {
-			return;
-		}
-		this.rotateJointSeatRiders(degreesLeft);
-		this.playSwingSound();
-	}
-
-	private void playSwingSound() {
-		if (this.swingSoundCooldown > 0 || !(this.getEntityWorld() instanceof ServerWorld world)) {
-			return;
-		}
-		SwingSound sound = this.settings().swingSound().orElse(null);
-		if (sound == null) {
-			return;
-		}
-		Identifier id = Identifier.tryParse(sound.sound());
-		if (id == null) {
-			return;
-		}
-		// Any registered sound event, or - for a resource-pack-only sound the registry doesn't
-		// know - a direct reference to its id, which the client resolves from sounds.json.
-		SoundEvent event = Registries.SOUND_EVENT.getOptionalValue(id).orElseGet(() -> SoundEvent.of(id));
-		world.playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), event, SoundCategory.NEUTRAL,
-				sound.volume(), sound.pitch());
-		this.swingSoundCooldown = Math.max(1, sound.interval());
-	}
-
-	/** SERVER side of turning joint-seat riders with a slewing upper structure. Positive =
-	 * counter-clockwise from above (left). Called by the modules whenever their swing channel
-	 * changes.
-	 *
-	 * <p>This alone does NOT turn a real player's view: a riding player's look direction is
-	 * client-authoritative. It exists so the server's own copy (what OTHER players see, via entity
-	 * tracking) stays in step; the rider's own view is turned by followJointSeatYawClient() on
-	 * their own client. This is exactly how the base mod's CarEntity turns passengers with the
-	 * car: its updateVehicleMovement() runs on both sides, and the client-side
-	 * passenger.setYaw() is what actually moves the view - the server-side half here mirrors that
-	 * method's own server-side half (setYaw + requestTeleport) line for line.
-	 *
-	 * <p>Only yaw is touched - NOT headYaw. Vanilla already keeps a player's own headYaw in step
-	 * with yaw on its own; explicitly nudging headYaw by this SAME delta on top of that double
-	 * counts it, so the head visibly over-rotates past the body instead of turning with it (the
-	 * body itself is corrected separately, once, by LivingEntityRendererMixin). */
-	public void rotateJointSeatRiders(float degreesLeft) {
-		if (Math.abs(degreesLeft) < 1.0e-4f || this.settings().seatParts().isEmpty()) {
 			return;
 		}
 		for (Entity passenger : this.tudursvehiclemod$getRealPassengerList()) {
@@ -634,22 +555,27 @@ public class ConstructionMachineEntity extends CarEntity {
 						player.getYaw(), player.getPitch());
 			}
 		}
+		this.playSwingSound();
 	}
 
-	/** CLIENT side of the above - the part that actually turns a riding player's view (and, with
-	 * it, their body, which vanilla turns toward the view on its own).
-	 *
-	 * <p>The client never runs a module's work logic (swing is decided on the server and arrives
-	 * as a synced channel), so the turn is measured here instead, generically: how far
-	 * renderedSeatYawOffset() moved between the previous and the current channel values - the
-	 * same interpolation endpoints the renderer draws from. Works for any seat_parts joint chain,
-	 * not just a single swing channel.
-	 *
-	 * <p>Only yaw is touched here too, for the same reason as rotateJointSeatRiders() - see that
-	 * method's own doc. Turning the player's own view (yaw) is a SEPARATE concern from turning
-	 * their rendered third-person BODY - LivingEntityRendererMixin handles the body, straight
-	 * from renderedSeatYawOffset(), every frame, with no dependency on this method or on any
-	 * per-tick state at all. */
+	private void playSwingSound() {
+		if (this.swingSoundCooldown > 0 || !(this.getEntityWorld() instanceof ServerWorld world)) {
+			return;
+		}
+		SwingSound sound = this.settings().swingSound().orElse(null);
+		Identifier id = sound == null ? null : Identifier.tryParse(sound.sound());
+		if (id == null) {
+			return;
+		}
+		// Unregistered ids (resource-pack-only sounds) are referenced directly.
+		SoundEvent event = Registries.SOUND_EVENT.getOptionalValue(id).orElseGet(() -> SoundEvent.of(id));
+		world.playSound(null, this.getX(), this.getY() + 1.0, this.getZ(), event, SoundCategory.NEUTRAL,
+				sound.volume(), sound.pitch());
+		this.swingSoundCooldown = Math.max(1, sound.interval());
+	}
+
+	/** Client side of workSwung(): the client never runs module logic, so the seat's turn is
+	 * measured from the synced channels (previous vs current tick) and applied to the rider's yaw. */
 	private void followJointSeatYawClient() {
 		if (this.settings().seatParts().isEmpty()) {
 			return;
@@ -661,11 +587,9 @@ public class ConstructionMachineEntity extends CarEntity {
 				continue;
 			}
 			float delta = MathHelper.wrapDegrees(current - previous);
-			if (Math.abs(delta) < 1.0e-4f) {
-				continue;
+			if (Math.abs(delta) >= 1.0e-4f) {
+				passenger.setYaw(passenger.getYaw() - delta);
 			}
-			// Positive heading = turned toward model +X = left; Minecraft yaw grows clockwise.
-			passenger.setYaw(passenger.getYaw() - delta);
 		}
 	}
 
