@@ -235,17 +235,19 @@ public class ConstructionMachineEntity extends CarEntity {
 	/** Client: interpolated for drawing. Server: current values. */
 	public Map<String, Matrix4f> jointMatrices(float tickDelta) {
 		ConstructionSettings settings = this.settings();
-		if (settings.joints().isEmpty()) {
+		if (settings.joints().isEmpty() && settings.crawlers().isEmpty()) {
 			return Map.of();
 		}
+		JointSolver.BeltSource belts = belt -> this.tudursvehiclemod$getCrawlerTrackPhase(belt, tickDelta);
 		if (this.getEntityWorld().isClient()) {
-			return JointSolver.solve(settings.joints(),
+			return JointSolver.solve(settings.joints(), settings.crawlers(),
 					name -> this.channelLerp(name, tickDelta),
 					joint -> MathHelper.lerp(tickDelta,
 							this.prevSpinPhase.getOrDefault(joint.part(), 0f),
-							this.spinPhase.getOrDefault(joint.part(), 0f)));
+							this.spinPhase.getOrDefault(joint.part(), 0f)),
+					belts);
 		}
-		return JointSolver.solve(settings.joints(), this::channel, joint -> 0f);
+		return JointSolver.solve(settings.joints(), settings.crawlers(), this::channel, joint -> 0f, belts);
 	}
 
 	/** A named work point in world space, following its joint chain. */

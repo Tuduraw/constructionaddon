@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** The "construction" object of a vehicle JSON (machine, joints, work_points, seat_parts,
+/** The "construction" object of a vehicle JSON (machine, joints, crawlers, work_points, seat_parts,
  * swing_sound, and a machine-specific object keyed by the machine id). The base mod ignores
  * unknown keys, so one file describes the whole vehicle. */
 public record ConstructionSettings(
 		MachineType machine,
 		List<Joint> joints,
+		List<Crawler> crawlers,
 		Map<String, WorkPoint> workPoints,
 		List<SeatPart> seatParts,
 		Optional<SwingSound> swingSound,
@@ -21,15 +22,16 @@ public record ConstructionSettings(
 ) {
 
 	public static final ConstructionSettings DEFAULT =
-			new ConstructionSettings(MachineType.NONE, List.of(), Map.of(), List.of(), Optional.empty(), null);
+			new ConstructionSettings(MachineType.NONE, List.of(), List.of(), Map.of(), List.of(), Optional.empty(), null);
 
 	/** The machine-independent half, parsed first; the machine-specific object is parsed after the
 	 * machine type is known. */
-	public record Common(String machine, List<Joint> joints, Map<String, WorkPoint> workPoints, List<SeatPart> seatParts,
-			Optional<SwingSound> swingSound) {
+	public record Common(String machine, List<Joint> joints, List<Crawler> crawlers, Map<String, WorkPoint> workPoints,
+			List<SeatPart> seatParts, Optional<SwingSound> swingSound) {
 		public static final Codec<Common> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.STRING.optionalFieldOf("machine", "none").forGetter(Common::machine),
 				Joint.CODEC.listOf().optionalFieldOf("joints", List.of()).forGetter(Common::joints),
+				Crawler.CODEC.listOf().optionalFieldOf("crawlers", List.of()).forGetter(Common::crawlers),
 				Codec.unboundedMap(Codec.STRING, WorkPoint.CODEC).optionalFieldOf("work_points", Map.of())
 						.forGetter(Common::workPoints),
 				SeatPart.CODEC.listOf().optionalFieldOf("seat_parts", List.of()).forGetter(Common::seatParts),

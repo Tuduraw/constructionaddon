@@ -47,97 +47,6 @@
         "factor": 0.7
       },
       {
-        "part": "$roller_l0",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": -2.2,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_l1",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": -1.1,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_l2",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": 0.0,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_l3",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": 1.1,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_l4",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": 2.2,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$idler_l0",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.47,
-        "pivot_z": 2.55,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 143.24
-      },
-      {
-        "part": "$idler_l1",
-        "parent": "$track_l",
-        "pivot_x": 0,
-        "pivot_y": 0.47,
-        "pivot_z": -2.55,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 143.24
-      },
-      {
         "part": "$track_r",
         "pivot_x": 0,
         "pivot_y": 0,
@@ -150,95 +59,290 @@
         "factor": 0.7
       },
       {
-        "part": "$roller_r0",
-        "parent": "$track_r",
+        "part": "$sprocket_l",
+        "parent": "$track_l",
         "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": -2.2,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_r1",
-        "parent": "$track_r",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": -1.1,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_r2",
-        "parent": "$track_r",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": 0.0,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_r3",
-        "parent": "$track_r",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": 1.1,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$roller_r4",
-        "parent": "$track_r",
-        "pivot_x": 0,
-        "pivot_y": 0.3,
-        "pivot_z": 2.2,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 204.63
-      },
-      {
-        "part": "$idler_r0",
-        "parent": "$track_r",
-        "pivot_x": 0,
-        "pivot_y": 0.47,
-        "pivot_z": 2.55,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 143.24
-      },
-      {
-        "part": "$idler_r1",
-        "parent": "$track_r",
-        "pivot_x": 0,
-        "pivot_y": 0.47,
+        "pivot_y": 0.5,
         "pivot_z": -2.55,
         "axis_x": 1,
         "axis_y": 0,
         "axis_z": 0,
-        "mode": "spin",
-        "channel": "travel",
-        "factor": 143.24
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -136.419
+      },
+      {
+        "part": "$idler_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.5,
+        "pivot_z": 2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -136.419
+      },
+      {
+        "part": "$wheel0_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": -1.9872,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel1_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": -1.3248,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel2_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": -0.6624,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel3_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 0.0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel4_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 0.6624,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel5_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 1.3248,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel6_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 1.9872,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -358.099
+      },
+      {
+        "part": "$carrier0_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.81,
+        "pivot_z": -1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -520.871
+      },
+      {
+        "part": "$carrier1_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.81,
+        "pivot_z": 1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -520.871
+      },
+      {
+        "part": "$sprocket_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.5,
+        "pivot_z": -2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -136.419
+      },
+      {
+        "part": "$idler_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.5,
+        "pivot_z": 2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -136.419
+      },
+      {
+        "part": "$wheel0_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": -1.9872,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel1_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": -1.3248,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel2_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": -0.6624,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel3_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 0.0,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel4_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 0.6624,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel5_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 1.3248,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$wheel6_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.24,
+        "pivot_z": 1.9872,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -358.099
+      },
+      {
+        "part": "$carrier0_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.81,
+        "pivot_z": -1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -520.871
+      },
+      {
+        "part": "$carrier1_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.81,
+        "pivot_z": 1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -520.871
       },
       {
         "part": "$jack_f",
@@ -276,33 +380,22 @@
         "channel": "swing"
       },
       {
-        "part": "$leader_lower",
+        "part": "$leader",
         "parent": "$upper",
-        "pivot_x": 0,
-        "pivot_y": 0,
-        "pivot_z": 0,
-        "axis_x": 1,
-        "axis_y": 0,
-        "axis_z": 0,
-        "mode": "rotate"
-      },
-      {
-        "part": "$leader_upper",
-        "parent": "$leader_lower",
         "pivot_x": 0.0,
-        "pivot_y": 5.6,
+        "pivot_y": 1.5,
         "pivot_z": 2.7,
         "axis_x": 1,
         "axis_y": 0,
         "axis_z": 0,
         "mode": "rotate",
         "channel": "mast",
-        "factor": 100.0,
-        "offset": -100.0
+        "factor": 78.0,
+        "offset": -78.0
       },
       {
         "part": "$rotary_head",
-        "parent": "$leader_lower",
+        "parent": "$leader",
         "pivot_x": 0,
         "pivot_y": 0,
         "pivot_z": 0,
@@ -314,7 +407,7 @@
         "factor": -1.0
       },
       {
-        "part": "$auger",
+        "part": "$pile",
         "parent": "$rotary_head",
         "pivot_x": 0,
         "pivot_y": 0,
@@ -325,11 +418,1039 @@
         "mode": "spin",
         "channel": "rpm",
         "factor": 0.3
+      },
+      {
+        "part": "$backstay_l",
+        "parent": "$upper",
+        "pivot_x": 0.65,
+        "pivot_y": 2.4,
+        "pivot_z": -3.3,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        }
+      },
+      {
+        "part": "$backstay_l_s1",
+        "parent": "$backstay_l",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s2",
+        "parent": "$backstay_l_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s3",
+        "parent": "$backstay_l_s2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s4",
+        "parent": "$backstay_l_s3",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s5",
+        "parent": "$backstay_l_s4",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s6",
+        "parent": "$backstay_l_s5",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s7",
+        "parent": "$backstay_l_s6",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s8",
+        "parent": "$backstay_l_s7",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s9",
+        "parent": "$backstay_l_s8",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s10",
+        "parent": "$backstay_l_s9",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s11",
+        "parent": "$backstay_l_s10",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s12",
+        "parent": "$backstay_l_s11",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s13",
+        "parent": "$backstay_l_s12",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s14",
+        "parent": "$backstay_l_s13",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s15",
+        "parent": "$backstay_l_s14",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s16",
+        "parent": "$backstay_l_s15",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s17",
+        "parent": "$backstay_l_s16",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_l_s18",
+        "parent": "$backstay_l_s17",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r",
+        "parent": "$upper",
+        "pivot_x": -0.65,
+        "pivot_y": 2.4,
+        "pivot_z": -3.3,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        }
+      },
+      {
+        "part": "$backstay_r_s1",
+        "parent": "$backstay_r",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s2",
+        "parent": "$backstay_r_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s3",
+        "parent": "$backstay_r_s2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s4",
+        "parent": "$backstay_r_s3",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s5",
+        "parent": "$backstay_r_s4",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s6",
+        "parent": "$backstay_r_s5",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s7",
+        "parent": "$backstay_r_s6",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s8",
+        "parent": "$backstay_r_s7",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s9",
+        "parent": "$backstay_r_s8",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s10",
+        "parent": "$backstay_r_s9",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s11",
+        "parent": "$backstay_r_s10",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s12",
+        "parent": "$backstay_r_s11",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s13",
+        "parent": "$backstay_r_s12",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s14",
+        "parent": "$backstay_r_s13",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s15",
+        "parent": "$backstay_r_s14",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s16",
+        "parent": "$backstay_r_s15",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s17",
+        "parent": "$backstay_r_s16",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      },
+      {
+        "part": "$backstay_r_s18",
+        "parent": "$backstay_r_s17",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0438,
+        "axis_y": 0.7002,
+        "axis_z": 0.7127,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.3,
+          "y": 8.0,
+          "z": 2.4
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.65,
+          "y": 2.4,
+          "z": -3.3
+        },
+        "factor": 0.0556
+      }
+    ],
+    "crawlers": [
+      {
+        "belt": "$belt_l",
+        "parent": "$track_l",
+        "link_prefix": "$link_l_",
+        "link_spacing": 0.2511,
+        "path": [
+          {
+            "y": 0.04,
+            "z": 2.55
+          },
+          {
+            "y": 0.1016,
+            "z": 2.78
+          },
+          {
+            "y": 0.27,
+            "z": 2.9484
+          },
+          {
+            "y": 0.5,
+            "z": 3.01
+          },
+          {
+            "y": 0.73,
+            "z": 2.9484
+          },
+          {
+            "y": 0.8984,
+            "z": 2.78
+          },
+          {
+            "y": 0.96,
+            "z": 2.55
+          },
+          {
+            "y": 0.96,
+            "z": -2.55
+          },
+          {
+            "y": 0.8984,
+            "z": -2.78
+          },
+          {
+            "y": 0.73,
+            "z": -2.9484
+          },
+          {
+            "y": 0.5,
+            "z": -3.01
+          },
+          {
+            "y": 0.27,
+            "z": -2.9484
+          },
+          {
+            "y": 0.1016,
+            "z": -2.78
+          },
+          {
+            "y": 0.04,
+            "z": -2.55
+          }
+        ]
+      },
+      {
+        "belt": "$belt_r",
+        "parent": "$track_r",
+        "link_prefix": "$link_r_",
+        "link_spacing": 0.2511,
+        "path": [
+          {
+            "y": 0.04,
+            "z": 2.55
+          },
+          {
+            "y": 0.1016,
+            "z": 2.78
+          },
+          {
+            "y": 0.27,
+            "z": 2.9484
+          },
+          {
+            "y": 0.5,
+            "z": 3.01
+          },
+          {
+            "y": 0.73,
+            "z": 2.9484
+          },
+          {
+            "y": 0.8984,
+            "z": 2.78
+          },
+          {
+            "y": 0.96,
+            "z": 2.55
+          },
+          {
+            "y": 0.96,
+            "z": -2.55
+          },
+          {
+            "y": 0.8984,
+            "z": -2.78
+          },
+          {
+            "y": 0.73,
+            "z": -2.9484
+          },
+          {
+            "y": 0.5,
+            "z": -3.01
+          },
+          {
+            "y": 0.27,
+            "z": -2.9484
+          },
+          {
+            "y": 0.1016,
+            "z": -2.78
+          },
+          {
+            "y": 0.04,
+            "z": -2.55
+          }
+        ]
       }
     ],
     "work_points": {
       "pile_point": {
-        "part": "$leader_lower",
+        "part": "$leader",
         "x": 0.0,
         "y": 1.2,
         "z": 3.5
@@ -366,5 +1487,133 @@
         "refusal_hardness": 30.0
       }
     }
-  }
+  },
+  "crawler_tracks": [
+    {
+      "part": "$belt_l",
+      "x": 1.525,
+      "link_spacing": 0.2511,
+      "path": [
+        {
+          "y": 0.04,
+          "z": 2.55
+        },
+        {
+          "y": 0.1016,
+          "z": 2.78
+        },
+        {
+          "y": 0.27,
+          "z": 2.9484
+        },
+        {
+          "y": 0.5,
+          "z": 3.01
+        },
+        {
+          "y": 0.73,
+          "z": 2.9484
+        },
+        {
+          "y": 0.8984,
+          "z": 2.78
+        },
+        {
+          "y": 0.96,
+          "z": 2.55
+        },
+        {
+          "y": 0.96,
+          "z": -2.55
+        },
+        {
+          "y": 0.8984,
+          "z": -2.78
+        },
+        {
+          "y": 0.73,
+          "z": -2.9484
+        },
+        {
+          "y": 0.5,
+          "z": -3.01
+        },
+        {
+          "y": 0.27,
+          "z": -2.9484
+        },
+        {
+          "y": 0.1016,
+          "z": -2.78
+        },
+        {
+          "y": 0.04,
+          "z": -2.55
+        }
+      ]
+    },
+    {
+      "part": "$belt_r",
+      "x": -1.525,
+      "link_spacing": 0.2511,
+      "path": [
+        {
+          "y": 0.04,
+          "z": 2.55
+        },
+        {
+          "y": 0.1016,
+          "z": 2.78
+        },
+        {
+          "y": 0.27,
+          "z": 2.9484
+        },
+        {
+          "y": 0.5,
+          "z": 3.01
+        },
+        {
+          "y": 0.73,
+          "z": 2.9484
+        },
+        {
+          "y": 0.8984,
+          "z": 2.78
+        },
+        {
+          "y": 0.96,
+          "z": 2.55
+        },
+        {
+          "y": 0.96,
+          "z": -2.55
+        },
+        {
+          "y": 0.8984,
+          "z": -2.78
+        },
+        {
+          "y": 0.73,
+          "z": -2.9484
+        },
+        {
+          "y": 0.5,
+          "z": -3.01
+        },
+        {
+          "y": 0.27,
+          "z": -2.9484
+        },
+        {
+          "y": 0.1016,
+          "z": -2.78
+        },
+        {
+          "y": 0.04,
+          "z": -2.55
+        }
+      ]
+    }
+  ]
 }

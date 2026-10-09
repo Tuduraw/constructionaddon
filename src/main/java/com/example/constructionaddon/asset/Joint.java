@@ -14,6 +14,15 @@ import java.util.Optional;
  *   <li>scale - factor along axis about pivot (a load heap, a rope);</li>
  *   <li>spin - value x factor degrees added every tick, unclamped (drum, auger, roller).</li>
  * </ul>
+ * Modes that follow other parts instead of a channel (hydraulic rams and crawler rollers):
+ * <ul>
+ *   <li>aim - turns about axis through pivot so that the pivot keeps pointing at {@code target}
+ *       (a point carried by another part), plus offset degrees (a ram's barrel);</li>
+ *   <li>reach - slides along axis by (distance from {@code anchor} to {@code target} - that
+ *       distance at rest) x factor + offset (a ram's rod, or each stage of a telescopic ram);</li>
+ *   <li>belt - rotates by factor x the belt travel of the crawler track named {@code belt}
+ *       (blocks, from the base mod) + offset degrees (rollers on a crawler that moves).</li>
+ * </ul>
  * A joint without a channel stays still but can parent others. Children apply on top of their
  * parent to any depth; inherit_rotation = false takes only the parent's displacement (a hook
  * hanging straight down). The same matrices drive drawing and work points. */
@@ -28,11 +37,14 @@ public record Joint(
 		float offset,
 		float min,
 		float max,
-		boolean inheritRotation
+		boolean inheritRotation,
+		Optional<WorkPoint> target,
+		Optional<WorkPoint> anchor,
+		Optional<String> belt
 ) {
 
 	public enum Mode {
-		ROTATE, SLIDE, SCALE, SPIN;
+		ROTATE, SLIDE, SCALE, SPIN, AIM, REACH, BELT;
 
 		static final Codec<Mode> CODEC = Codec.STRING.xmap(
 				s -> {
@@ -67,11 +79,14 @@ public record Joint(
 			Codec.FLOAT.optionalFieldOf("offset", Float.NaN).forGetter(Joint::offset),
 			Codec.FLOAT.optionalFieldOf("min", -1.0e6f).forGetter(Joint::min),
 			Codec.FLOAT.optionalFieldOf("max", 1.0e6f).forGetter(Joint::max),
-			Codec.BOOL.optionalFieldOf("inherit_rotation", true).forGetter(Joint::inheritRotation)
-	).apply(instance, (part, parent, g, mode, channel, factor, offset, min, max, inherit) ->
+			Codec.BOOL.optionalFieldOf("inherit_rotation", true).forGetter(Joint::inheritRotation),
+			WorkPoint.CODEC.optionalFieldOf("target").forGetter(Joint::target),
+			WorkPoint.CODEC.optionalFieldOf("anchor").forGetter(Joint::anchor),
+			Codec.STRING.optionalFieldOf("belt").forGetter(Joint::belt)
+	).apply(instance, (part, parent, g, mode, channel, factor, offset, min, max, inherit, target, anchor, belt) ->
 			new Joint(part, parent, g.pivotX, g.pivotY, g.pivotZ, g.axisX, g.axisY, g.axisZ,
 					mode, channel, factor,
 					// Absent offset: 1 for scale (unscaled at value 0 would be invisible), 0 otherwise.
 					Float.isNaN(offset) ? (mode == Mode.SCALE ? 1f : 0f) : offset,
-					min, max, inherit)));
+					min, max, inherit, target, anchor, belt)));
 }

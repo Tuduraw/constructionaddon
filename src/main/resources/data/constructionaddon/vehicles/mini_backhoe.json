@@ -1,11 +1,11 @@
 {
   "entity_type": "constructionaddon:construction_machine",
-  "model": "constructionaddon:models/obj/backhoe.obj",
+  "model": "constructionaddon:models/obj/mini_backhoe.obj",
   "texture": "constructionaddon:textures/vehicle/construction.png",
   "display_name": "Mini Backhoe",
-  "scale": 0.6,
-  "width": 3.0,
-  "height": 3.0,
+  "scale": 1.0,
+  "width": 1.8,
+  "height": 1.8,
   "max_speed": 0.28,
   "acceleration": 0.04,
   "turn_speed": 3.0,
@@ -22,13 +22,276 @@
     "display_name": "Mini Backhoe",
     "tier": 1
   },
-  "seats": [
+  "crawler_tracks": [
     {
-      "name": "operator",
-      "offset_x": 0.78,
-      "offset_y": 0.95,
-      "offset_z": 0.7,
-      "driver": true
+      "part": "$crawler_l",
+      "x": 0.651,
+      "link_spacing": 0.1199,
+      "path": [
+        {
+          "y": 0.021,
+          "z": 0.8016
+        },
+        {
+          "y": 0.1039,
+          "z": 1.1501
+        },
+        {
+          "y": 0.1691,
+          "z": 1.1937
+        },
+        {
+          "y": 0.246,
+          "z": 1.209
+        },
+        {
+          "y": 0.3229,
+          "z": 1.1937
+        },
+        {
+          "y": 0.3881,
+          "z": 1.1501
+        },
+        {
+          "y": 0.4317,
+          "z": 1.0849
+        },
+        {
+          "y": 0.447,
+          "z": 1.008
+        },
+        {
+          "y": 0.447,
+          "z": -1.008
+        },
+        {
+          "y": 0.4317,
+          "z": -1.0849
+        },
+        {
+          "y": 0.3881,
+          "z": -1.1501
+        },
+        {
+          "y": 0.3229,
+          "z": -1.1937
+        },
+        {
+          "y": 0.246,
+          "z": -1.209
+        },
+        {
+          "y": 0.1691,
+          "z": -1.1937
+        },
+        {
+          "y": 0.1039,
+          "z": -1.1501
+        },
+        {
+          "y": 0.021,
+          "z": -0.8016
+        }
+      ]
+    },
+    {
+      "part": "$crawler_r",
+      "x": -0.651,
+      "link_spacing": 0.1199,
+      "path": [
+        {
+          "y": 0.021,
+          "z": 0.8016
+        },
+        {
+          "y": 0.1039,
+          "z": 1.1501
+        },
+        {
+          "y": 0.1691,
+          "z": 1.1937
+        },
+        {
+          "y": 0.246,
+          "z": 1.209
+        },
+        {
+          "y": 0.3229,
+          "z": 1.1937
+        },
+        {
+          "y": 0.3881,
+          "z": 1.1501
+        },
+        {
+          "y": 0.4317,
+          "z": 1.0849
+        },
+        {
+          "y": 0.447,
+          "z": 1.008
+        },
+        {
+          "y": 0.447,
+          "z": -1.008
+        },
+        {
+          "y": 0.4317,
+          "z": -1.0849
+        },
+        {
+          "y": 0.3881,
+          "z": -1.1501
+        },
+        {
+          "y": 0.3229,
+          "z": -1.1937
+        },
+        {
+          "y": 0.246,
+          "z": -1.209
+        },
+        {
+          "y": 0.1691,
+          "z": -1.1937
+        },
+        {
+          "y": 0.1039,
+          "z": -1.1501
+        },
+        {
+          "y": 0.021,
+          "z": -0.8016
+        }
+      ]
+    }
+  ],
+  "track_roller_parts": [
+    {
+      "part": "$sprocket_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.246,
+      "pivot_z": -1.008,
+      "rotations_per_block": 0.8842
+    },
+    {
+      "part": "$idler_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.246,
+      "pivot_z": 1.008,
+      "rotations_per_block": 0.8842
+    },
+    {
+      "part": "$wheel0_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.114,
+      "pivot_z": -0.7656,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel1_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.114,
+      "pivot_z": -0.4594,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel2_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.114,
+      "pivot_z": -0.1531,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel3_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.114,
+      "pivot_z": 0.1531,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel4_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.114,
+      "pivot_z": 0.4594,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel5_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.114,
+      "pivot_z": 0.7656,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$carrier0_l",
+      "pivot_x": 0.651,
+      "pivot_y": 0.378,
+      "pivot_z": 0.0,
+      "rotations_per_block": 3.3157
+    },
+    {
+      "part": "$sprocket_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.246,
+      "pivot_z": -1.008,
+      "rotations_per_block": 0.8842
+    },
+    {
+      "part": "$idler_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.246,
+      "pivot_z": 1.008,
+      "rotations_per_block": 0.8842
+    },
+    {
+      "part": "$wheel0_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.114,
+      "pivot_z": -0.7656,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel1_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.114,
+      "pivot_z": -0.4594,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel2_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.114,
+      "pivot_z": -0.1531,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel3_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.114,
+      "pivot_z": 0.1531,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel4_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.114,
+      "pivot_z": 0.4594,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$wheel5_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.114,
+      "pivot_z": 0.7656,
+      "rotations_per_block": 2.2105
+    },
+    {
+      "part": "$carrier0_r",
+      "pivot_x": -0.651,
+      "pivot_y": 0.378,
+      "pivot_z": 0.0,
+      "rotations_per_block": 3.3157
     }
   ],
   "construction": {
@@ -37,7 +300,7 @@
       {
         "part": "$upper",
         "pivot_x": 0.0,
-        "pivot_y": 0.8,
+        "pivot_y": 0.48,
         "pivot_z": 0.0,
         "axis_x": 0,
         "axis_y": 1,
@@ -48,9 +311,9 @@
       {
         "part": "$boom",
         "parent": "$upper",
-        "pivot_x": -0.2,
-        "pivot_y": 1.3,
-        "pivot_z": 1.1,
+        "pivot_x": -0.12,
+        "pivot_y": 0.78,
+        "pivot_z": 0.66,
         "axis_x": -1,
         "axis_y": 0,
         "axis_z": 0,
@@ -60,9 +323,9 @@
       {
         "part": "$arm",
         "parent": "$boom",
-        "pivot_x": -0.2,
-        "pivot_y": 3.5,
-        "pivot_z": 3.4,
+        "pivot_x": -0.12,
+        "pivot_y": 2.1,
+        "pivot_z": 2.04,
         "axis_x": -1,
         "axis_y": 0,
         "axis_z": 0,
@@ -72,9 +335,9 @@
       {
         "part": "$bucket",
         "parent": "$arm",
-        "pivot_x": -0.2,
-        "pivot_y": 1.4,
-        "pivot_z": 4.4,
+        "pivot_x": -0.12,
+        "pivot_y": 0.84,
+        "pivot_z": 2.64,
         "axis_x": 1,
         "axis_y": 0,
         "axis_z": 0,
@@ -84,23 +347,105 @@
       {
         "part": "$bucket_load",
         "parent": "$bucket",
-        "pivot_x": -0.2,
-        "pivot_y": 0.7,
-        "pivot_z": 4.7,
+        "pivot_x": -0.12,
+        "pivot_y": 0.42,
+        "pivot_z": 2.82,
         "axis_x": 0,
         "axis_y": 1,
         "axis_z": 0,
         "mode": "scale",
         "channel": "load",
         "offset": 0.0
+      },
+      {
+        "part": "$boom_ram",
+        "parent": "$upper",
+        "pivot_x": -0.12,
+        "pivot_y": 0.66,
+        "pivot_z": 0.96,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$boom",
+          "x": -0.12,
+          "y": 1.47,
+          "z": 1.11
+        }
+      },
+      {
+        "part": "$boom_ram_s1",
+        "parent": "$boom_ram",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.9833,
+        "axis_z": 0.1821,
+        "mode": "reach",
+        "target": {
+          "part": "$boom",
+          "x": -0.12,
+          "y": 1.47,
+          "z": 1.11
+        },
+        "anchor": {
+          "part": "$boom_ram",
+          "x": -0.12,
+          "y": 0.66,
+          "z": 0.96
+        },
+        "factor": 1.0
+      },
+      {
+        "part": "$arm_ram",
+        "parent": "$boom",
+        "pivot_x": -0.12,
+        "pivot_y": 1.98,
+        "pivot_z": 0.9,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$arm",
+          "x": -0.12,
+          "y": 2.37,
+          "z": 1.77
+        }
+      },
+      {
+        "part": "$arm_ram_s1",
+        "parent": "$arm_ram",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.4091,
+        "axis_z": 0.9125,
+        "mode": "reach",
+        "target": {
+          "part": "$arm",
+          "x": -0.12,
+          "y": 2.37,
+          "z": 1.77
+        },
+        "anchor": {
+          "part": "$arm_ram",
+          "x": -0.12,
+          "y": 1.98,
+          "z": 0.9
+        },
+        "factor": 1.0
       }
     ],
     "work_points": {
       "bucket_tip": {
         "part": "$bucket",
-        "x": -0.2,
-        "y": 0.6,
-        "z": 4.95
+        "x": -0.12,
+        "y": 0.36,
+        "z": 2.97
       }
     },
     "seat_parts": [
@@ -132,5 +477,14 @@
         "refusal_hardness": 3.5
       }
     }
-  }
+  },
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.468,
+      "offset_y": 0.57,
+      "offset_z": 0.42,
+      "driver": true
+    }
+  ]
 }

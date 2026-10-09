@@ -43,8 +43,8 @@ import java.util.Locale;
  * down. A different column under the leader starts a new pile.
  *
  * <p>The leader's shape, crawler widening ("track_width") and roller spin ("travel", blocks per
- * tick) are purely JSON joints: a small machine folds the whole leader, a large one only its upper
- * section above a hinge. */
+ * tick) are purely JSON joints: the leader pivots on its foot pin (with backstay rams following the
+ * same channel). */
 public final class PileDriverModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"mast", "hammer", "rpm", "feed", "swing", "outrigger", "track_width", "travel"};
@@ -270,6 +270,8 @@ public final class PileDriverModule extends MachineModule {
 			return;
 		}
 		this.blows++;
+		// The pile sinks a step with every blow (the hammer rides on its head).
+		this.machine.setFloatChannel(FEED, MathHelper.clamp(this.blows / (float) Math.max(1, this.requiredBlows), 0f, 1f));
 		BlockPos head = new BlockPos(this.pileX, this.topY, this.pileZ);
 		world.playSound(null, head.getX() + 0.5, head.getY() + 1.0, head.getZ() + 0.5,
 				SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.9f, 0.55f);
