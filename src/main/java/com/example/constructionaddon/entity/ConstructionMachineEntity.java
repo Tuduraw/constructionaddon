@@ -12,6 +12,7 @@ import com.example.constructionaddon.machine.JointSolver;
 import com.example.constructionaddon.machine.MachineModule;
 import com.example.constructionaddon.machine.MachineType;
 import com.example.constructionaddon.network.WorkAxis;
+import com.example.constructionaddon.network.WorkButton;
 import com.example.tudursvehiclemod.asset.SeatDefinition;
 import com.example.tudursvehiclemod.asset.VehicleDefinition;
 import com.example.tudursvehiclemod.entity.CarEntity;
@@ -59,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul> */
 public class ConstructionMachineEntity extends CarEntity {
 
-	public static final int FLOAT_CHANNELS = 8;
+	public static final int FLOAT_CHANNELS = 13;
 	public static final int INT_CHANNELS = 4;
 
 	@SuppressWarnings("unchecked")
@@ -89,13 +90,11 @@ public class ConstructionMachineEntity extends CarEntity {
 	private final Map<String, Float> spinPhase = new HashMap<>();
 	private final Map<String, Float> prevSpinPhase = new HashMap<>();
 
-	private boolean primaryHeld;
-	private boolean secondaryHeld;
+	/** Work buttons (WorkButton bits): held now, held last tick, went down this tick. */
+	private int buttonsHeld;
+	private int lastButtonsHeld;
+	private int buttonsPressed;
 	private final float[] workAxes = new float[WorkAxis.values().length];
-	private boolean lastPrimaryHeld;
-	private boolean lastSecondaryHeld;
-	private boolean primaryPressed;
-	private boolean secondaryPressed;
 	private int swingSoundCooldown;
 
 	public ConstructionMachineEntity(EntityType<?> type, World world) {
@@ -299,9 +298,17 @@ public class ConstructionMachineEntity extends CarEntity {
 	// ------------------------------------------------------------------
 
 	/** From WorkInputPayload (server) - only the driver's keys count. */
-	public void setWorkInputs(boolean primary, boolean secondary) {
-		this.primaryHeld = primary;
-		this.secondaryHeld = secondary;
+	public void setWorkButtons(int buttons) {
+		this.buttonsHeld = buttons;
+	}
+
+	public boolean isHeld(WorkButton button) {
+		return (this.buttonsHeld & button.bit()) != 0;
+	}
+
+	/** True only on the tick the button went down. */
+	public boolean isPressed(WorkButton button) {
+		return (this.buttonsPressed & button.bit()) != 0;
 	}
 
 	/** From WorkAxisPayload (server) - only the driver's keys count. */
@@ -312,20 +319,20 @@ public class ConstructionMachineEntity extends CarEntity {
 	}
 
 	public boolean isPrimaryHeld() {
-		return this.primaryHeld;
+		return this.isHeld(WorkButton.PRIMARY);
 	}
 
 	public boolean isSecondaryHeld() {
-		return this.secondaryHeld;
+		return this.isHeld(WorkButton.SECONDARY);
 	}
 
 	/** True only on the tick the primary key went down. */
 	public boolean isPrimaryPressed() {
-		return this.primaryPressed;
+		return this.isPressed(WorkButton.PRIMARY);
 	}
 
 	public boolean isSecondaryPressed() {
-		return this.secondaryPressed;
+		return this.isPressed(WorkButton.SECONDARY);
 	}
 
 	/** Work mode = the base mod's manual-mode flag (hold M). Never blocks driving by itself. */
@@ -433,14 +440,11 @@ public class ConstructionMachineEntity extends CarEntity {
 
 		ServerPlayerEntity operator = this.operator();
 		if (operator == null) {
-			this.primaryHeld = false;
-			this.secondaryHeld = false;
+			this.buttonsHeld = 0;
 			java.util.Arrays.fill(this.workAxes, 0f);
 		}
-		this.primaryPressed = this.primaryHeld && !this.lastPrimaryHeld;
-		this.secondaryPressed = this.secondaryHeld && !this.lastSecondaryHeld;
-		this.lastPrimaryHeld = this.primaryHeld;
-		this.lastSecondaryHeld = this.secondaryHeld;
+		this.buttonsPressed = this.buttonsHeld & ~this.lastButtonsHeld;
+		this.lastButtonsHeld = this.buttonsHeld;
 
 		if (this.swingSoundCooldown > 0) {
 			this.swingSoundCooldown--;

@@ -53,7 +53,7 @@ public class ConstructionAddon implements ModInitializer {
 					// Only the driver operates the machine.
 					if (vehicle instanceof ConstructionMachineEntity machine
 							&& machine.getControllingPassenger() == context.player()) {
-						machine.setWorkInputs(payload.primary(), payload.secondary());
+						machine.setWorkButtons(payload.buttons());
 					}
 				}));
 

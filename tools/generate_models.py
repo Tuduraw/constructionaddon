@@ -668,29 +668,51 @@ SMALL_SWING_PIVOT = (0.0, 0.7, 0.0)
 SWING_ALARM = {"sound": "minecraft:block.note_block.bit", "volume": 0.6, "pitch": 1.8, "interval": 8}
 
 
-def jacks(m, x, z_inner, z_outer, y_beam, pad_half):
-    """Front ($jack_f, slides +Z) and rear ($jack_b, slides -Z) jack beams with pads, at +-x."""
-    for sx in (x, -x):
-        m.box("$jack_f", sx - 0.12, y_beam, z_inner, sx + 0.12, y_beam + 0.25, z_outer, 3)
-        m.box("$jack_f", sx - pad_half, 0.0, z_outer - 0.1, sx + pad_half, y_beam + 0.25, z_outer + 0.3, 1)
-        m.box("$jack_b", sx - 0.12, y_beam, -z_outer, sx + 0.12, y_beam + 0.25, -z_inner, 3)
-        m.box("$jack_b", sx - pad_half, 0.0, -z_outer - 0.3, sx + pad_half, y_beam + 0.25, -z_outer + 0.1, 1)
+def outriggers(m, mounts, y_beam, beam_h, stroke, pad_y, pad_r, rod_top, housing_top, parent="$upper"):
+    """Four outriggers on the underside of the upper structure, one at each corner, sliding out
+    diagonally and then pushing a jack down to the ground. They are children of the upper structure,
+    so they swing with it. `mounts` = [(name, (x, z) where the jack cylinder stands when stowed,
+    (sx, sz) outward diagonal)]. The beam (inside the upper structure when stowed) runs out over the
+    first half of "outrigger" and the jack (rod and pad, $<name>_leg) goes down over the second half.
+    Returns the joints."""
+    joints = []
+    drop = pad_y
+    w = beam_h * 1.3
+    hr = w * 0.65
+    for name, (x, z), (sx, sz) in mounts:
+        d = norm((sx, 0.0, sz))
+        outer = (x, y_beam, z)
+        inner = sub(outer, mul(d, stroke + 0.45))
+        g, leg = "$" + name, "$%s_leg" % name
+        m.beam(g, inner, outer, w, beam_h, 1)
+        m.prism(g, (x, y_beam - beam_h / 2 - 0.02, z), (x, housing_top, z), hr, 8, [0])     # jack cylinder
+        m.prism(leg, (x, pad_y + 0.06, z), (x, rod_top, z), hr * 0.55, 6, [10])           # rod
+        m.prism(leg, (x, pad_y, z), (x, pad_y + 0.06, z), pad_r, 10, [1])                 # pad
+        joints.append(joint(g, (0, 0, 0), tuple(round(v, 4) for v in d), mode="slide", channel="outrigger",
+                            parent=parent, factor=round(2 * stroke, 4), min=0.0, max=round(stroke, 4)))
+        joints.append(joint(leg, (0, 0, 0), (0, -1, 0), mode="slide", channel="outrigger", parent=g,
+                            factor=round(2 * drop, 4), offset=round(-drop, 4), min=0.0, max=round(drop, 4)))
+    return joints
 
 
-def jack_joints(travel):
-    return [
-        joint("$jack_f", (0, 0, 0), (0, 0, 1), mode="slide", channel="outrigger", factor=travel),
-        joint("$jack_b", (0, 0, 0), (0, 0, -1), mode="slide", channel="outrigger", factor=travel),
-    ]
+def corner_mounts(front, rear, x, offset):
+    """(name, (x, z), direction) for the four corners: front / rear z, half width x, pushed out by
+    `offset` along the diagonal."""
+    k = offset / math.sqrt(2)
+    out = []
+    for name, z, sz in (("outrigger_fl", front, 1), ("outrigger_fr", front, 1),
+                        ("outrigger_rl", rear, -1), ("outrigger_rr", rear, -1)):
+        sx = 1 if name.endswith("l") else -1
+        out.append((name, (sx * (x + k), z + sz * k), (sx, sz)))
+    return out
 
 
 def pile_driver_base(m):
     """Small pile driver: the leader is pinned at its foot and held by two backstays; for travel it is
-    laid back onto a rest over the upper structure. Returns (crawler JSON, backstay joints)."""
+    laid back onto a rest over the upper structure. Returns (crawler JSON, outrigger and backstay joints)."""
     top, _, _ = crawlers(m, 0.72, 1.45, 2.05, 0.68, r_end=0.27, wheel_r=0.11, n_wheels=6, carrier_r=0.07,
                          n_carrier=1, link_len=0.2)
     m.box("body", -0.72, 0.25, -1.3, 0.72, 0.68, 1.3, 3)
-    jacks(m, 0.55, 1.2, 2.0, 0.3, 0.17)   # between the crawlers
     m.box("$upper", -0.95, 0.7, -2.0, 0.95, 1.0, 1.3, 0)
     m.box("$upper", -0.9, 1.0, -1.8, -0.3, 1.7, 0.9, 0)    # engine hood (right, clear of the leader)
     m.box("$upper", -0.95, 0.8, -2.25, 0.95, 1.5, -1.9, 1)
@@ -699,14 +721,13 @@ def pile_driver_base(m):
     m.box("$upper", -0.35, 0.7, 1.2, 0.35, 1.2, 1.7, 3)  # mast foot
     m.box("$mast", -0.2, 1.0, 1.6, 0.2, 8.5, 1.9, 5)
     m.box("$mast", -0.35, 8.3, 1.5, 0.35, 8.6, 2.6, 3)  # crown
-    m.box("$mast", -0.25, 1.0, 1.9, 0.25, 1.3, 2.1, 3)  # lower guide
-    stays = []
-    for side, sx in (("l", 1), ("r", -1)):
-        m.box("$upper", sx * 0.2, 1.0, -0.55, sx * 0.36, 1.35, -0.25, 3)
-        m.box("$mast", sx * 0.2, 4.85, 1.5, sx * 0.36, 5.15, 1.62, 3)   # backstay lug
-        # held at about half the leader height (three-point support)
-        stays += ram(m, "backstay_" + side, "$upper", (sx * 0.28, 1.3, -0.4), (sx * 0.28, 5.0, 1.6), "$mast",
-                     MAST_PIVOT, (1, 0, 0), 0.0, 1.0, 0.1, factor=80.0, offset=-80.0)
+    # outriggers under the corners of the upper structure, out diagonally past the crawlers
+    stays = outriggers(m, corner_mounts(1.3, -2.0, 0.95, 0.15), 0.9, 0.12, 1.4, 0.74, 0.2, 1.7, 1.8)
+    # one thick raising cylinder on the centre line, from the deck to the back of the leader
+    m.box("$upper", -0.2, 1.0, -0.6, 0.2, 1.2, -0.2, 3)            # cylinder foot bracket
+    m.box("$mast", -0.14, 6.3, 1.45, 0.14, 6.7, 1.62, 3)            # cylinder lug
+    stays += ram(m, "backstay", "$upper", (0.0, 1.1, -0.4), (0.0, 6.5, 1.55), "$mast",
+                 MAST_PIVOT, (1, 0, 0), 0.0, 1.0, 0.24, factor=80.0, offset=-80.0)
     return top, stays
 
 
@@ -734,7 +755,7 @@ SMALL_SETUP = {"swing_speed": 1.5, "swing_limit": 0.0, "outrigger_speed": 0.04, 
 def small_joints(extra):
     return ([joint("$upper", SMALL_SWING_PIVOT, (0, 1, 0), channel="swing"),
              joint("$mast", MAST_PIVOT, (1, 0, 0), channel="mast", factor=80.0, offset=-80.0, parent="$upper")]
-            + jack_joints(0.6) + extra)
+            + extra)
 
 
 def pile_drivers():
@@ -757,7 +778,7 @@ def pile_drivers():
                                    joint("$hammer", (0, 0, 0), (0, 1, 0), mode="slide", channel="hammer",
                                          parent="$pile")] + stays),
                      point("$mast", PILE_POINT),
-                     dict(SMALL_SETUP, **{"mode": "hammer", "max_depth": 32, "default_depth": 8, "mast_speed": 0.02,
+                     dict(SMALL_SETUP, **{"mode": "hammer", "pile_block": "minecraft:iron_block", "max_depth": 32, "default_depth": 8, "mast_speed": 0.02,
                                           "blows_per_block": 2.0, "max_blows_per_block": 40, "lift_ticks": 20,
                                           "drop_ticks": 5, "lift_height": 2.0,
                                           "resistance": {"hardness_scale": 1.0, "refusal_hardness": 20.0}}),
@@ -765,35 +786,72 @@ def pile_drivers():
 
     m = Mesh()
     top, stays = pile_driver_base(m)
-    # rotary head high on the leader, gripping the top of the steel pipe pile (through the lower guide)
+    # rotary head on the leader (drawn with its grip at y 4.0); the drive rod passes through it
     m.box("$rotary_head", -0.4, 4.0, 1.95, 0.4, 4.8, 2.75, 3)
     m.box("$rotary_head", -0.3, 4.8, 2.05, 0.3, 5.2, 2.65, 1)
-    pile(m, (0.0, 2.35), 0.0, 4.0, 0.2)
+    rig = rotary_rig(m, "$mast", PILE_POINT[2], 4.0, 0.2, 0.25, "drive_rod", 2.5)
     m.write(os.path.join(OBJ_DIR, "pile_driver_rotary.obj"), "Rotary press-in pile driver")
-    pile_driver_json("Pile Driver (Rotary)", "pile_driver_rotary", 4,
-                     small_joints([joint("$rotary_head", (0, 0, 0), (0, 1, 0), mode="slide", channel="feed",
-                                         factor=-1.0, parent="$mast"),
-                                   joint("$pile", (0, 0, 2.35), (0, 1, 0), mode="spin", channel="rpm",
-                                         factor=0.3, parent="$rotary_head")] + stays),
+    pile_driver_json("Pile Driver (Rotary)", "pile_driver_rotary", 4, small_joints(rig + stays),
                      point("$mast", PILE_POINT),
-                     dict(SMALL_SETUP, **{"mode": "rotary", "max_depth": 40, "default_depth": 12, "mast_speed": 0.02,
+                     dict(SMALL_SETUP, **{"mode": "rotary", "pile_block": "minecraft:iron_block", "max_depth": 40, "mast_speed": 0.02,
                                           "ticks_per_block": 40.0, "rpm": 30.0, "min_rpm": 5.0, "rpm_response": 0.15,
+                                          # piles 2-5 blocks; head grip 1.4-5.75 above the ground; 2.5-block drive rod
+                                          "pile_length_min": 2, "pile_length_max": 5, "default_pile_length": 4,
+                                          "head_min": 1.4, "head_max": 5.75, "head_speed": 0.1, "cap_offset": 0.25,
+                                          "tool": "drive_rod", "tool_length": 2.5, "tool_speed": 0.05,
+                                          "load_ticks_per_block": 6, "extract_factor": 0.6, "grip_tolerance": 0.6,
                                           "resistance": {"hardness_scale": 1.0, "refusal_hardness": 25.0}}),
                      seat=dict(small_seat), **top)
 
     large_pile_driver()
 
 
-def pile(m, center_xz, y0, y1, radius):
-    """Steel pipe pile for rotary press-in: plain tube, pointed shoe and a tip wing ($pile spins)."""
-    cx, cz = center_xz
-    m.prism("$pile", (cx, y0 + 0.2, cz), (cx, y1, cz), radius, 8, [3, 10])
-    m.prism("$pile", (cx, y0, cz), (cx, y0 + 0.2, cz), radius * 0.5, 8, [3])
+def rotary_rig(m, parent, cz, grip, pile_r, cap, tool=None, tool_len=0.0):
+    """Joints (and pile / tool geometry) of a rotary rig. The head ($rotary_head, drawn by the caller
+    with its grip at y = grip) slides on the leader by "head" (grip height); the steel pipe pile hangs
+    from the cap, `cap` below the grip, at "pile_top" and is "pile_length" long: its shaft stretches
+    and its tip (shoe and wing) moves down, while $pile_spin turns both with "rpm". Tools:
+      - "drive_rod": always fitted; normally gripped low (its foot is the cap); "tool" 1 slides it
+        tool_len down, gripped at its top, so the cap reaches below the head;
+      - "follower" (ヤットコ): set under the head like a pile when "tool" goes to 1 (it grows out of
+        the head), tool_len long."""
+    top = grip - cap
+    tip_h = 0.75
+    shaft = top - tip_h
+    m.prism("$pile_shaft", (0, tip_h, cz), (0, top, cz), pile_r, 8, [3, 10])
+    m.prism("$pile_shaft", (0, top - 0.12, cz), (0, top, cz), pile_r * 1.08, 8, [10])
+    m.prism("$pile_tip", (0, 0.0, cz), (0, 0.22, cz), pile_r * 0.5, 8, [3])
+    m.prism("$pile_tip", (0, 0.22, cz), (0, tip_h + 0.02, cz), pile_r, 8, [3, 10])
     for i in range(8):                       # tip wing: about one turn of blade around the shoe
         a = i * 2 * math.pi / 7
-        y = y0 + 0.2 + i * 0.06
-        ox, oz = math.cos(a) * radius * 1.5, math.sin(a) * radius * 1.5
-        m.box("$pile", cx + ox - 0.12, y, cz + oz - 0.12, cx + ox + 0.12, y + 0.05, cz + oz + 0.12, 3)
+        y = 0.22 + i * 0.06
+        ox, oz = math.cos(a) * pile_r * 1.45, math.sin(a) * pile_r * 1.45
+        m.box("$pile_tip", ox - pile_r * 0.6, y, cz + oz - pile_r * 0.6, ox + pile_r * 0.6, y + 0.05,
+              cz + oz + pile_r * 0.6, 3)
+    joints = [
+        joint("$rotary_head", (0, 0, 0), (0, 1, 0), mode="slide", channel="head", offset=round(-grip, 4), parent=parent),
+        joint("$pile", (0, 0, 0), (0, 1, 0), mode="slide", channel="pile_top", offset=round(-top, 4), parent=parent),
+        joint("$pile_spin", (0, 0, cz), (0, 1, 0), mode="spin", channel="rpm", factor=0.3, parent="$pile"),
+        joint("$pile_shaft", (0, top, cz), (0, 1, 0), mode="scale", channel="pile_length", factor=round(1 / shaft, 5),
+              offset=round(-tip_h / shaft, 5), min=0.02, parent="$pile_spin"),
+        joint("$pile_tip", (0, 0, 0), (0, 1, 0), mode="slide", channel="pile_length", factor=-1.0, offset=round(top, 4),
+              parent="$pile_spin"),
+    ]
+    if tool == "drive_rod":
+        foot = top
+        m.prism("$drive_rod", (0, foot, cz), (0, foot + 0.15, cz), pile_r * 1.25, 8, [1])          # cap
+        m.prism("$drive_rod", (0, foot + 0.15, cz), (0, foot + tool_len + 0.6, cz), pile_r * 0.6, 8, [10])
+        for y in (foot + 0.45, foot + tool_len + 0.45):                                           # grip collars
+            m.prism("$drive_rod", (0, y, cz), (0, y + 0.12, cz), pile_r * 0.8, 8, [1])
+        joints.append(joint("$drive_rod", (0, 0, 0), (0, 1, 0), mode="slide", channel="tool", factor=round(-tool_len, 4),
+                            parent="$rotary_head"))
+    elif tool == "follower":
+        hide = grip + 0.3
+        m.prism("$follower", (0, top - tool_len, cz), (0, top - tool_len + 0.18, cz), pile_r * 1.2, 10, [1])
+        m.prism("$follower", (0, top - tool_len + 0.18, cz), (0, hide, cz), pile_r * 1.05, 10, [5, 1])
+        joints.append(joint("$follower", (0, hide, cz), (0, 1, 0), mode="scale", channel="tool", min=0.02,
+                            parent="$rotary_head"))
+    return joints
 
 
 # Large pile driver geometry
@@ -810,14 +868,13 @@ def large_pile_driver():
     - the crawlers widen sideways ("track_width"); since they move, this addon draws them itself
       (links, idler, sprocket, road wheels and carrier rollers ride on $track_l / $track_r and follow the
       belt travel the base mod measures for two geometry-less tracks, $belt_l / $belt_r);
-    - four jacks between the crawlers ("outrigger");
+    - four outriggers under the corners of the upper structure, out diagonally ("outrigger");
     - the leader is pinned at its foot and held by two backstays (three-point support); "mast"
       raises it or lays it back onto the rest; the backstays hold it at about half its height; the
       rotary head sits high on the leader and turns / presses in a steel pipe pile through the guide.
     """
     m = Mesh()
     m.box("body", -1.0, 0.45, -2.4, 1.0, 1.0, 2.4, 3)
-    jacks(m, 0.68, 2.2, 3.1, 0.5, 0.24)
     joints_list = []
     for side, sign in (("l", 1), ("r", -1)):
         g = "$track_" + side
@@ -843,36 +900,38 @@ def large_pile_driver():
     for y in (4.5, 8.0, 11.5):
         m.box("$leader", -0.4, y - 0.06, 2.35, 0.4, y + 0.06, 3.05, 5)   # section flanges
     m.box("$leader", -0.5, 14.3, 2.2, 0.5, 14.8, 3.6, 3)    # crown sheaves
-    m.box("$leader", -0.45, 1.2, 3.0, 0.45, 1.5, 4.0, 3)    # pile guide at the foot
     stays = []
     for side, sx in (("l", 1), ("r", -1)):
-        m.box("$upper", sx * 0.45, 2.3, -3.45, sx * 0.85, 2.5, -3.15, 3)
-        m.box("$leader", sx * 0.2, 7.8, 2.25, sx * 0.4, 8.2, 2.42, 3)   # backstay lug
-        # held at about half the leader height (three-point support)
-        stays += ram(m, "backstay_" + side, "$upper", (sx * 0.65, 2.4, -3.3), (sx * 0.3, 8.0, 2.4), "$leader",
-                     L_FOOT, (1, 0, 0), 0.0, 1.0, 0.16, factor=L_DOWN, offset=-L_DOWN)
-    # Rotary head high on the leader, gripping the top of the steel pipe pile (through the guide).
+        # two-stage backstays (barrel and rod) from brackets on the deck behind the cab to lugs on the
+        # back of the leader; mounted so they always have leverage about the foot pin
+        m.box("$upper", sx * 0.24, 1.4, -0.35, sx * 0.48, 1.65, 0.15, 3)
+        m.box("$leader", sx * 0.28, 8.8, 2.25, sx * 0.44, 9.2, 2.42, 3)   # backstay lug
+        stays += ram(m, "backstay_" + side, "$upper", (sx * 0.36, 1.55, -0.1), (sx * 0.36, 9.0, 2.4), "$leader",
+                     L_FOOT, (1, 0, 0), 0.0, 1.0, 0.17, factor=L_DOWN, offset=-L_DOWN)
+    # Rotary head on the leader (drawn with its grip at y 7.0); a follower (ヤットコ) can be set under it.
     m.box("$rotary_head", -0.6, 7.0, 3.0, 0.6, 8.2, 4.0, 3)
     m.box("$rotary_head", -0.45, 8.2, 3.1, 0.45, 8.8, 3.9, 1)
     m.box("$rotary_head", -0.2, 7.3, 2.9, 0.2, 7.9, 3.1, 1)
-    pile(m, (0.0, L_PILE_Z), 0.0, 7.0, 0.3)
+    rig = rotary_rig(m, "$leader", L_PILE_Z, 7.0, 0.3, 0.2, "follower", 4.0)
+    # outriggers under the corners of the upper structure, out diagonally past the widened crawlers
+    joints_list += outriggers(m, corner_mounts(1.8, -3.2, 1.6, 0.22), 1.23, 0.16, 2.05, 1.08, 0.3, 2.4, 2.5)
     m.write(os.path.join(OBJ_DIR, "pile_driver_large.obj"), "Large rotary pile driver")
 
-    joints_list += jack_joints(0.8)
     joints_list += [
         joint("$upper", L_SWING_PIVOT, (0, 1, 0), channel="swing"),
         joint("$leader", L_FOOT, (1, 0, 0), channel="mast", factor=L_DOWN, offset=-L_DOWN, parent="$upper"),
-        joint("$rotary_head", (0, 0, 0), (0, 1, 0), mode="slide", channel="feed", factor=-1.0,
-              parent="$leader"),
-        joint("$pile", (0, 0, L_PILE_Z), (0, 1, 0), mode="spin", channel="rpm", factor=0.3,
-              parent="$rotary_head"),
-    ] + stays
+    ] + rig + stays
     pile_driver_json("Large Pile Driver (Rotary)", "pile_driver_large", 5, joints_list,
                      point("$leader", L_PILE_POINT),
-                     {"mode": "rotary", "max_depth": 60, "default_depth": 16, "mast_speed": 0.012,
+                     {"mode": "rotary", "pile_block": "minecraft:iron_block", "max_depth": 60, "mast_speed": 0.012,
                       "swing_speed": 1.0, "outrigger_speed": 0.03, "require_outriggers": True,
                       "crawler_extension": True, "track_width_speed": 0.02,
                       "ticks_per_block": 30.0, "rpm": 25.0, "min_rpm": 4.0, "rpm_response": 0.1,
+                      # piles 3-12 blocks; head grip 1.6-12.5 above the ground; 4-block follower
+                      "pile_length_min": 3, "pile_length_max": 12, "default_pile_length": 8,
+                      "head_min": 1.6, "head_max": 12.5, "head_speed": 0.12, "cap_offset": 0.2,
+                      "tool": "follower", "tool_length": 4.0, "tool_speed": 0.04,
+                      "load_ticks_per_block": 5, "extract_factor": 0.6, "grip_tolerance": 0.6,
                       "resistance": {"hardness_scale": 0.8, "refusal_hardness": 30.0}},
                      seat={"name": "operator", "offset_x": 0.95, "offset_y": 1.4, "offset_z": 0.9, "driver": True},
                      max_speed=0.2, turn_speed=1.5, max_health=220.0, inventory_size=27,

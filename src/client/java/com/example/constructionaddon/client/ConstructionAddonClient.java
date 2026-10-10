@@ -5,8 +5,10 @@ import com.example.constructionaddon.entity.ConstructionMachineEntity;
 import com.example.constructionaddon.machine.BulldozerModule;
 import com.example.constructionaddon.machine.ExcavatorModule;
 import com.example.constructionaddon.machine.MachineType;
+import com.example.constructionaddon.machine.PileDriverModule;
 import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.network.WorkAxisPayload;
+import com.example.constructionaddon.network.WorkButton;
 import com.example.constructionaddon.network.WorkInputPayload;
 import com.example.tudursvehiclemod.client.render.VehicleEntityRenderer;
 import com.example.tudursvehiclemod.entity.AbstractVehicleEntity;
@@ -27,14 +29,30 @@ import org.lwjgl.glfw.GLFW;
  * harmless, as each only acts on its own machine. */
 public class ConstructionAddonClient implements ClientModInitializer {
 
-	private static KeyBinding primaryKey;
-	private static KeyBinding secondaryKey;
+	/** [button.ordinal()]. */
+	private static final KeyBinding[] BUTTON_KEYS = new KeyBinding[WorkButton.values().length];
 	/** [axis.ordinal()][0 = positive, 1 = negative]. */
 	private static final KeyBinding[][] AXIS_KEYS = new KeyBinding[WorkAxis.values().length][2];
 
-	private static boolean lastPrimary;
-	private static boolean lastSecondary;
+	private static int lastButtons;
 	private static int lastAxisMask;
+	/** True while the vanilla mouse actions (attack / use) are held back - the rotary pile driver's
+	 * operator uses the mouse buttons to drive and pull piles. */
+	private static boolean suppressMouse;
+
+	public static boolean suppressVanillaMouse() {
+		return suppressMouse;
+	}
+
+	private static InputUtil.Key defaultKey(WorkButton button) {
+		return switch (button) {
+			case PRIMARY -> InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_Z);
+			case SECONDARY -> InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_X);
+			case PENETRATE -> InputUtil.Type.MOUSE.createFromCode(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+			case EXTRACT -> InputUtil.Type.MOUSE.createFromCode(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+			case TOOL -> InputUtil.Type.KEYSYM.createFromCode(GLFW.GLFW_KEY_I);
+		};
+	}
 
 	/** Default keys per axis: {positive, negative}. */
 	private static int[] defaultKeys(WorkAxis axis) {
@@ -51,10 +69,11 @@ public class ConstructionAddonClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ConstructionAddon.CONSTRUCTION_MACHINE, VehicleEntityRenderer::new);
 
 		KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(ConstructionAddon.MOD_ID, "construction"));
-		primaryKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_primary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Z, category));
-		secondaryKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.constructionaddon.work_secondary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, category));
+		for (WorkButton button : WorkButton.values()) {
+			InputUtil.Key key = defaultKey(button);
+			BUTTON_KEYS[button.ordinal()] = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+					button.translationKey(), key.getCategory(), key.getCode(), category));
+		}
 		for (WorkAxis axis : WorkAxis.values()) {
 			int[] keys = defaultKeys(axis);
 			AXIS_KEYS[axis.ordinal()][0] = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -65,9 +84,9 @@ public class ConstructionAddonClient implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (client.player == null) {
-				lastPrimary = false;
-				lastSecondary = false;
+				lastButtons = 0;
 				lastAxisMask = 0;
+				suppressMouse = false;
 				return;
 			}
 			AbstractVehicleEntity vehicle = AbstractVehicleEntity.tudursvehiclemod$getEffectiveVehicle(client.player);
@@ -75,12 +94,24 @@ public class ConstructionAddonClient implements ClientModInitializer {
 			boolean operating = machine != null && machine.getControllingPassenger() == client.player
 					&& client.currentScreen == null;
 
-			boolean primary = operating && primaryKey.isPressed();
-			boolean secondary = operating && secondaryKey.isPressed();
-			if (primary != lastPrimary || secondary != lastSecondary) {
-				lastPrimary = primary;
-				lastSecondary = secondary;
-				ClientPlayNetworking.send(new WorkInputPayload(primary, secondary));
+			boolean piling = operating && machine.settings().machine() == MachineType.PILE_DRIVER
+					&& machine.settings().machineSettings(PileDriverModule.Settings.class, PileDriverModule.Settings.DEFAULT).rotaryMode();
+			// With the leader up, the mouse buttons work the head instead of attacking / using items.
+			suppressMouse = piling && machine.channel("mast") >= 0.999f;
+			int buttons = 0;
+			if (operating) {
+				for (WorkButton button : WorkButton.values()) {
+					boolean mouseButton = button == WorkButton.PENETRATE || button == WorkButton.EXTRACT;
+					// The mouse buttons only work the rotary pile driver, and only with its leader up.
+					if (BUTTON_KEYS[button.ordinal()].isPressed() && (!mouseButton || suppressMouse)) {
+						buttons |= button.bit();
+					}
+				}
+			}
+			boolean primary = (buttons & WorkButton.PRIMARY.bit()) != 0;
+			if (buttons != lastButtons) {
+				lastButtons = buttons;
+				ClientPlayNetworking.send(new WorkInputPayload(buttons));
 			}
 
 			float[] axes = new float[WorkAxis.values().length];
@@ -127,6 +158,7 @@ public class ConstructionAddonClient implements ClientModInitializer {
 		}
 		if (type == MachineType.PILE_DRIVER && machine.isWorkMode()
 				&& machine.channel("mast") <= 0.001f && machine.channel("track_width") <= 0.001f) {
+			// Leader toggle is the same key (work_secondary) in both hammer and rotary modes.
 			return Text.translatable("status.constructionaddon.pile_driver.leader_down",
 					KeyBindingUtil.boundKeyText("key.constructionaddon.work_secondary"));
 		}
