@@ -146,6 +146,12 @@ public final class JointSolver {
 					float travel = joint.belt().map(this.belts::travel).orElse(0f);
 					own.rotate((float) Math.toRadians(joint.factor() * travel + joint.offset()), axis);
 				}
+				case SHOW -> {
+					// Hidden: shrunk evenly into the pivot (uniform, so the normals stay well defined).
+					if (clampedValue(joint, this.channels) < 0.999f) {
+						own.scale(1.0e-3f);
+					}
+				}
 			}
 			own.translate(-joint.pivotX(), -joint.pivotY(), -joint.pivotZ());
 

@@ -570,9 +570,8 @@
         "axis_x": 0,
         "axis_y": 1,
         "axis_z": 0,
-        "mode": "scale",
-        "channel": "tool",
-        "min": 0.02
+        "mode": "show",
+        "channel": "tool"
       },
       {
         "part": "$backstay_l",

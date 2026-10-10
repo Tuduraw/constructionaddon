@@ -21,7 +21,10 @@ import java.util.Optional;
  *   <li>reach - slides along axis by (distance from {@code anchor} to {@code target} - that
  *       distance at rest) x factor + offset (a ram's rod, or each stage of a telescopic ram);</li>
  *   <li>belt - rotates by factor x the belt travel of the crawler track named {@code belt}
- *       (blocks, from the base mod) + offset degrees (rollers on a crawler that moves).</li>
+ *       (blocks, from the base mod) + offset degrees (rollers on a crawler that moves);</li>
+ *   <li>show - shown while channel x factor + offset is 1 or more, otherwise hidden (shrunk to
+ *       nothing at the pivot - put the pivot inside the parent). For parts that appear and
+ *       disappear rather than move or grow (a follower set under a pile driver's head).</li>
  * </ul>
  * A joint without a channel stays still but can parent others. Children apply on top of their
  * parent to any depth; inherit_rotation = false takes only the parent's displacement (a hook
@@ -44,7 +47,7 @@ public record Joint(
 ) {
 
 	public enum Mode {
-		ROTATE, SLIDE, SCALE, SPIN, AIM, REACH, BELT;
+		ROTATE, SLIDE, SCALE, SPIN, AIM, REACH, BELT, SHOW;
 
 		static final Codec<Mode> CODEC = Codec.STRING.xmap(
 				s -> {

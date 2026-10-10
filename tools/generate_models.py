@@ -763,24 +763,32 @@ def pile_drivers():
 
     m = Mesh()
     top, stays = pile_driver_base(m)
-    # Steel pipe pile under the hammer. "feed" is how far the current block has been driven (0..1, the
-    # module counts blows), so the pile sinks one block and the next one takes its place; the hammer
-    # rides on the pile and is lifted off it by "hammer".
+    # Drop hammer rig: the same pile handling as the rotary rig. The helmet (cap) slides on the leader by
+    # "head" and sits on the pile; the hammer rests on the helmet and is lifted off it by "hammer". A
+    # follower (ヤットコ) can be set under the helmet to drive below the helmet's reach.
     cz = PILE_POINT[2]
-    m.prism("$pile", (0, 0.0, cz), (0, 1.55, cz), 0.2, 8, [3, 10])
-    m.prism("$pile", (0, 1.55, cz), (0, 1.7, cz), 0.26, 8, [1])          # drive cap
-    m.box("$hammer", -0.3, 1.7, cz - 0.3, 0.3, 2.7, cz + 0.3, 1)
-    m.box("$hammer", -0.05, 2.7, cz - 0.05, 0.05, 6.2, cz + 0.05, 3)    # winch rope (rides with the hammer)
+    grip = 4.0
+    m.box("$helmet", -0.32, grip - 0.25, cz - 0.32, 0.32, grip, cz + 0.32, 1)
+    m.box("$helmet", -0.25, grip - 0.2, cz - 0.42, 0.25, grip - 0.05, cz - 0.3, 3)        # guide shoe on the leader
+    m.box("$hammer", -0.28, grip, cz - 0.28, 0.28, grip + 0.9, cz + 0.28, 3)
+    m.box("$hammer", -0.22, grip + 0.15, cz - 0.4, 0.22, grip + 0.75, cz - 0.28, 3)       # guide shoe
+    m.box("$hammer", -0.07, grip + 0.9, cz - 0.07, 0.07, grip + 1.05, cz + 0.07, 1)       # lifting eye
+    rig = rotary_rig(m, "$mast", cz, grip, 0.2, 0.25, "follower", 2.5, head="$helmet", wing=False,
+                     hide_in=grip - 0.12)
+    rig.append(joint("$hammer", (0, 0, 0), (0, 1, 0), mode="slide", channel="hammer", parent="$helmet"))
     m.write(os.path.join(OBJ_DIR, "pile_driver_hammer.obj"), "Drop hammer pile driver")
-    pile_driver_json("Pile Driver (Drop Hammer)", "pile_driver_hammer", 3,
-                     small_joints([joint("$pile", (0, 0, 0), (0, 1, 0), mode="slide", channel="feed", factor=-1.0,
-                                         parent="$mast"),
-                                   joint("$hammer", (0, 0, 0), (0, 1, 0), mode="slide", channel="hammer",
-                                         parent="$pile")] + stays),
+    pile_driver_json("Pile Driver (Drop Hammer)", "pile_driver_hammer", 3, small_joints(rig + stays),
                      point("$mast", PILE_POINT),
-                     dict(SMALL_SETUP, **{"mode": "hammer", "pile_block": "minecraft:iron_block", "max_depth": 32, "default_depth": 8, "mast_speed": 0.02,
+                     dict(SMALL_SETUP, **{"mode": "hammer", "pile_block": "minecraft:iron_block", "max_depth": 32, "mast_speed": 0.02,
                                           "blows_per_block": 2.0, "max_blows_per_block": 40, "lift_ticks": 20,
-                                          "drop_ticks": 5, "lift_height": 2.0,
+                                          "drop_ticks": 5, "lift_height": 1.2,
+                                          # pulling a pile out with the winch: ticks per block
+                                          "ticks_per_block": 40.0,
+                                          # piles 2-5 blocks; helmet 1.4-5.75 above the ground; 2.5-block follower
+                                          "pile_length_min": 2, "pile_length_max": 5, "default_pile_length": 4,
+                                          "head_min": 1.4, "head_max": 5.75, "head_speed": 0.1, "cap_offset": 0.25,
+                                          "tool": "follower", "tool_length": 2.5, "tool_speed": 0.05,
+                                          "load_ticks_per_block": 6, "extract_factor": 0.6, "grip_tolerance": 0.6,
                                           "resistance": {"hardness_scale": 1.0, "refusal_hardness": 20.0}}),
                      seat=dict(small_seat), **top)
 
@@ -806,15 +814,17 @@ def pile_drivers():
     large_pile_driver()
 
 
-def rotary_rig(m, parent, cz, grip, pile_r, cap, tool=None, tool_len=0.0):
+def rotary_rig(m, parent, cz, grip, pile_r, cap, tool=None, tool_len=0.0, head="$rotary_head", wing=True, hide_in=None):
     """Joints (and pile / tool geometry) of a rotary rig. The head ($rotary_head, drawn by the caller
     with its grip at y = grip) slides on the leader by "head" (grip height); the steel pipe pile hangs
     from the cap, `cap` below the grip, at "pile_top" and is "pile_length" long: its shaft stretches
     and its tip (shoe and wing) moves down, while $pile_spin turns both with "rpm". Tools:
       - "drive_rod": always fitted; normally gripped low (its foot is the cap); "tool" 1 slides it
         tool_len down, gripped at its top, so the cap reaches below the head;
-      - "follower" (ヤットコ): set under the head like a pile when "tool" goes to 1 (it grows out of
-        the head), tool_len long."""
+      - "follower" (ヤットコ): set under the head like a pile - it appears (joint mode "show") when
+        "tool" reaches 1, tool_len long, and disappears when it goes back.
+    The drop hammer rig uses the same joints with head = its helmet (the cap that sits on the pile; the
+    hammer rides on it) and a plain pipe pile (wing=False)."""
     top = grip - cap
     tip_h = 0.75
     shaft = top - tip_h
@@ -822,14 +832,14 @@ def rotary_rig(m, parent, cz, grip, pile_r, cap, tool=None, tool_len=0.0):
     m.prism("$pile_shaft", (0, top - 0.12, cz), (0, top, cz), pile_r * 1.08, 8, [10])
     m.prism("$pile_tip", (0, 0.0, cz), (0, 0.22, cz), pile_r * 0.5, 8, [3])
     m.prism("$pile_tip", (0, 0.22, cz), (0, tip_h + 0.02, cz), pile_r, 8, [3, 10])
-    for i in range(8):                       # tip wing: about one turn of blade around the shoe
+    for i in range(8 if wing else 0):        # tip wing: about one turn of blade around the shoe
         a = i * 2 * math.pi / 7
         y = 0.22 + i * 0.06
         ox, oz = math.cos(a) * pile_r * 1.45, math.sin(a) * pile_r * 1.45
         m.box("$pile_tip", ox - pile_r * 0.6, y, cz + oz - pile_r * 0.6, ox + pile_r * 0.6, y + 0.05,
               cz + oz + pile_r * 0.6, 3)
     joints = [
-        joint("$rotary_head", (0, 0, 0), (0, 1, 0), mode="slide", channel="head", offset=round(-grip, 4), parent=parent),
+        joint(head, (0, 0, 0), (0, 1, 0), mode="slide", channel="head", offset=round(-grip, 4), parent=parent),
         joint("$pile", (0, 0, 0), (0, 1, 0), mode="slide", channel="pile_top", offset=round(-top, 4), parent=parent),
         joint("$pile_spin", (0, 0, cz), (0, 1, 0), mode="spin", channel="rpm", factor=0.3, parent="$pile"),
         joint("$pile_shaft", (0, top, cz), (0, 1, 0), mode="scale", channel="pile_length", factor=round(1 / shaft, 5),
@@ -844,13 +854,14 @@ def rotary_rig(m, parent, cz, grip, pile_r, cap, tool=None, tool_len=0.0):
         for y in (foot + 0.45, foot + tool_len + 0.45):                                           # grip collars
             m.prism("$drive_rod", (0, y, cz), (0, y + 0.12, cz), pile_r * 0.8, 8, [1])
         joints.append(joint("$drive_rod", (0, 0, 0), (0, 1, 0), mode="slide", channel="tool", factor=round(-tool_len, 4),
-                            parent="$rotary_head"))
+                            parent=head))
     elif tool == "follower":
-        hide = grip + 0.3
+        # shown only once it is set (tool 1); hidden (shrunk into this point inside the head) otherwise
+        hide = grip + 0.3 if hide_in is None else hide_in
         m.prism("$follower", (0, top - tool_len, cz), (0, top - tool_len + 0.18, cz), pile_r * 1.2, 10, [1])
         m.prism("$follower", (0, top - tool_len + 0.18, cz), (0, hide, cz), pile_r * 1.05, 10, [5, 1])
-        joints.append(joint("$follower", (0, hide, cz), (0, 1, 0), mode="scale", channel="tool", min=0.02,
-                            parent="$rotary_head"))
+        joints.append(joint("$follower", (0, hide, cz), (0, 1, 0), mode="show", channel="tool",
+                            parent=head))
     return joints
 
 

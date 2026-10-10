@@ -5,7 +5,6 @@ import com.example.constructionaddon.entity.ConstructionMachineEntity;
 import com.example.constructionaddon.machine.BulldozerModule;
 import com.example.constructionaddon.machine.ExcavatorModule;
 import com.example.constructionaddon.machine.MachineType;
-import com.example.constructionaddon.machine.PileDriverModule;
 import com.example.constructionaddon.network.WorkAxis;
 import com.example.constructionaddon.network.WorkAxisPayload;
 import com.example.constructionaddon.network.WorkButton;
@@ -94,15 +93,14 @@ public class ConstructionAddonClient implements ClientModInitializer {
 			boolean operating = machine != null && machine.getControllingPassenger() == client.player
 					&& client.currentScreen == null;
 
-			boolean piling = operating && machine.settings().machine() == MachineType.PILE_DRIVER
-					&& machine.settings().machineSettings(PileDriverModule.Settings.class, PileDriverModule.Settings.DEFAULT).rotaryMode();
+			boolean piling = operating && machine.settings().machine() == MachineType.PILE_DRIVER;
 			// With the leader up, the mouse buttons work the head instead of attacking / using items.
 			suppressMouse = piling && machine.channel("mast") >= 0.999f;
 			int buttons = 0;
 			if (operating) {
 				for (WorkButton button : WorkButton.values()) {
 					boolean mouseButton = button == WorkButton.PENETRATE || button == WorkButton.EXTRACT;
-					// The mouse buttons only work the rotary pile driver, and only with its leader up.
+					// The mouse buttons only work a pile driver (either mode), and only with its leader up.
 					if (BUTTON_KEYS[button.ordinal()].isPressed() && (!mouseButton || suppressMouse)) {
 						buttons |= button.bit();
 					}

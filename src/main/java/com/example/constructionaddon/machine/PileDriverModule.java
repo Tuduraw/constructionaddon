@@ -31,13 +31,16 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Locale;
 
-/** Pile driver. The driving method ("mode") decides how it works:
+/** Pile driver: a real pile of set length, set under the head from the cargo, gripped, driven in or
+ * pulled out, let go and gripped again, joined onto a pile already in the ground, and driven below the
+ * head's reach with a drive rod / follower (see "The rig" below). The driving method ("mode") is the
+ * only difference:
  * <ul>
- *   <li>hammer - drives the first block item in its cargo, block by block, into the ground under the
- *       leader; blows needed per block = blows_per_block x factor, refusal above max_blows_per_block.
- *       Secondary (X) raises / folds the leader, vertical keys set the target depth, primary (Z)
- *       drives. A different column under the leader starts a new pile.</li>
- *   <li>rotary - a real pile of set length: see the "Rotary" section below.</li>
+ *   <li>rotary - the head turns the pile and presses it in (rpm falls with the ground's resistance;
+ *       refusal below min_rpm);</li>
+ *   <li>hammer - a drop hammer resting on the cap is lifted and dropped; every blow drives the pile a
+ *       share of a block (blows_per_block x the ground's factor blows per block; refusal above
+ *       max_blows_per_block). Pulling a pile out is done by the hammer's winch.</li>
  * </ul>
  * Both: travel with the leader up is fine (with crawler_extension the crawlers widen first); work
  * mode deploys the jacks (driving is held while they are down); swing keys slew the upper structure.
@@ -169,27 +172,15 @@ public final class PileDriverModule extends MachineModule {
 	private enum Status { IDLE, MAST, LEADER_DOWN, JACKS, READY, DRIVING, DONE, REFUSED, NO_PILE, NO_GROUND, PROTECTED,
 		FREE, LOADING, HOLDING, EXTRACTING, HEAD_BOTTOM, HEAD_TOP, TOO_LONG, LEADER_LOCKED, MAX_DEPTH, JOINED }
 
-	// Current pile ("session").
-	private boolean hasSession;
-	private int pileX;
-	private int pileZ;
-	private int topY;
-	private int depth;
-	private int targetDepth = -1;
 	/** Leader up (target) - toggled by the secondary key. */
 	private boolean leaderUp;
 
-	// The block the pile is currently entering.
-	private BlockPos currentPos;
-	private float currentFactor;
-	private int requiredBlows;
-	private float targetRpm;
-	private int blows;
-	private float progress;
-
+	/** Hammer: ticks into the current blow (0 = resting on the cap), the ground factor of the block the
+	 * pile is entering, blows struck into it so far. */
 	private int hammerTick;
+	private float blowFactor;
+	private int blowsDone;
 	private float rpm;
-	private int depthKeyCooldown;
 	private Status status = Status.IDLE;
 	private float refusedHardness;
 	private Text refusedBlock = Text.empty();
@@ -249,67 +240,7 @@ public final class PileDriverModule extends MachineModule {
 
 	@Override
 	public void serverTick(ServerWorld world, ServerPlayerEntity operator) {
-		Settings s = this.settings();
-		if (s.rotaryMode()) {
-			this.tickRotaryRig(world, operator, s);
-			return;
-		}
-		Setup setup = s.setup();
-		if (this.targetDepth < 0) {
-			this.targetDepth = MathHelper.clamp(s.common().defaultDepth(), 1, Math.max(1, s.common().maxDepth()));
-		}
-
-		if (operator != null && this.machine.isSecondaryPressed()) {
-			this.leaderUp = !this.leaderUp;
-		}
-
-		// Crawlers widen before the leader rises and retract only after it has folded (no
-		// widening at all without crawler_extension).
-		float mast = this.machine.getFloatChannel(MAST);
-		float width = this.machine.getFloatChannel(TRACK_WIDTH);
-		if (!setup.crawlerExtension()) {
-			this.machine.setFloatChannel(TRACK_WIDTH, 0f);
-			mast = this.approach(MAST, this.leaderUp ? 1f : 0f, s.common().mastSpeed());
-		} else if (this.leaderUp) {
-			if (width < 1f) {
-				this.approach(TRACK_WIDTH, 1f, setup.trackWidthSpeed());
-			} else {
-				mast = this.approach(MAST, 1f, s.common().mastSpeed());
-			}
-		} else if (mast > 0f) {
-			mast = this.approach(MAST, 0f, s.common().mastSpeed());
-		} else {
-			this.approach(TRACK_WIDTH, 0f, setup.trackWidthSpeed());
-		}
-
-		float outrigger = this.approach(OUTRIGGER, this.machine.isWorkMode() ? 1f : 0f, setup.outriggerSpeed());
-
-		// Rollers: signed travel, blocks per tick.
-		this.machine.setFloatChannel(TRAVEL, this.machine.getCruiseSpeedValue());
-
-		if (operator != null) {
-			this.workSwing(SWING, setup.swingSpeed(), setup.swingLimit());
-			int lift = (int) this.machine.workAxis(WorkAxis.VERTICAL);
-			if (lift != 0 && --this.depthKeyCooldown <= 0) {
-				this.depthKeyCooldown = 4;
-				this.targetDepth = MathHelper.clamp(this.targetDepth + lift, 1, Math.max(1, s.common().maxDepth()));
-			} else if (lift == 0) {
-				this.depthKeyCooldown = 0;
-			}
-		}
-
-		boolean leaderReady = mast >= 0.999f;
-		boolean jacksReady = !setup.requireOutriggers() || outrigger >= 0.999f;
-		if (!leaderReady) {
-			this.status = this.leaderUp ? Status.MAST : (this.machine.isWorkMode() ? Status.LEADER_DOWN : Status.IDLE);
-		} else if (!jacksReady) {
-			this.status = Status.JACKS;
-		} else if (!this.machine.isPrimaryHeld()) {
-			this.status = Status.READY;
-		}
-		boolean driving = operator != null && leaderReady && jacksReady && this.machine.isPrimaryHeld();
-
-		this.tickHammer(world, operator, s, driving);
+		this.tickRig(world, operator, this.settings());
 	}
 
 	/** Leader (raised / folded, with crawler widening first) and jacks - shared by both modes. Returns
@@ -338,68 +269,23 @@ public final class PileDriverModule extends MachineModule {
 	}
 
 	// ------------------------------------------------------------------
-	// Hammer
-	// ------------------------------------------------------------------
-
-	private void tickHammer(ServerWorld world, ServerPlayerEntity operator, Settings s, boolean driving) {
-		Hammer h = s.hammer();
-		int lift = Math.max(1, h.liftTicks());
-		int drop = Math.max(1, h.dropTicks());
-		if (this.hammerTick == 0) {
-			// A new blow only starts if the pile can actually advance.
-			if (!driving || !this.prepare(world, operator, s)) {
-				this.machine.setFloatChannel(HAMMER, 0f);
-				return;
-			}
-		}
-		this.hammerTick++;
-		float height;
-		if (this.hammerTick <= lift) {
-			height = h.liftHeight() * this.hammerTick / lift;
-		} else {
-			float t = (this.hammerTick - lift) / (float) drop;
-			height = h.liftHeight() * (1f - t * t); // free fall
-		}
-		this.machine.setFloatChannel(HAMMER, Math.max(0f, height));
-		if (this.hammerTick >= lift + drop) {
-			this.hammerTick = 0;
-			this.machine.setFloatChannel(HAMMER, 0f);
-			this.blow(world, operator, s);
-		}
-	}
-
-	private void blow(ServerWorld world, ServerPlayerEntity operator, Settings s) {
-		if (this.currentPos == null) {
-			return;
-		}
-		this.blows++;
-		// The pile sinks a step with every blow (the hammer rides on its head).
-		this.machine.setFloatChannel(FEED, MathHelper.clamp(this.blows / (float) Math.max(1, this.requiredBlows), 0f, 1f));
-		BlockPos head = new BlockPos(this.pileX, this.topY, this.pileZ);
-		world.playSound(null, head.getX() + 0.5, head.getY() + 1.0, head.getZ() + 0.5,
-				SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.9f, 0.55f);
-		BlockWork.effects(world, head, world.getBlockState(head), 12);
-		if (this.blows >= this.requiredBlows) {
-			this.advance(world, operator, s);
-		}
-	}
-
-	// ------------------------------------------------------------------
-	// Rotary: a real pile of set length
+	// The rig (both modes): a real pile of set length
 	//
 	// The head (HEAD) runs up and down the leader between head_min and head_max. With no pile held,
 	// Z sets a new pile under it (pile_length blocks from the cargo, like reloading; the head first
 	// rises far enough for the pile to hang clear of the ground), or grips the head of a pile already
-	// there. Holding a pile, PENETRATE turns it in and EXTRACT turns it back out; a block of pile goes
+	// there. Holding a pile, PENETRATE drives it in (rotary: turns it in; hammer: blow by blow) and
+	// EXTRACT pulls it back out (rotary: turns it out; hammer: its winch); a block of pile goes
 	// into / comes out of the world for every block the pile moves, and the head follows the pile's
 	// top, so the pile stops when the head reaches head_min. Z lets go: the part standing out of the
 	// ground becomes blocks too, and the pile is remembered (PileRegistry) so it can be gripped again.
 	// A pile driven down onto another pile's head joins it into one pile. The tool (drive rod /
 	// follower) puts the cap tool_length lower, so a pile can be driven below the head's reach.
-	// X (the same key as the hammer rig) raises and folds the leader.
+	// X raises and folds the leader. The head is the rotary head, or the drop hammer's helmet (cap) with
+	// the hammer resting on it ("hammer" = how high the hammer is lifted off it).
 	// ------------------------------------------------------------------
 
-	private void tickRotaryRig(ServerWorld world, ServerPlayerEntity operator, Settings s) {
+	private void tickRig(ServerWorld world, ServerPlayerEntity operator, Settings s) {
 		Piling p = s.piling();
 		Rotary r = s.rotary();
 		int minLength = Math.max(1, p.pileLengthMin());
@@ -489,6 +375,10 @@ public final class PileDriverModule extends MachineModule {
 			}
 		}
 
+		if (!this.holding) {
+			this.hammerTick = 0;
+			this.machine.setFloatChannel(HAMMER, 0f);
+		}
 		if (this.loading) {
 			this.spinDown(r, 0f);
 			this.tickLoad(p);
@@ -765,6 +655,11 @@ public final class PileDriverModule extends MachineModule {
 	private void tickHeldPile(ServerWorld world, ServerPlayerEntity operator, Settings s, int dir) {
 		Piling p = s.piling();
 		Rotary r = s.rotary();
+		if (!s.rotaryMode() && (dir > 0 || this.hammerTick > 0)) {
+			// Drop hammer: driven blow by blow (a blow under way always finishes).
+			this.tickBlows(world, operator, s, dir > 0);
+			return;
+		}
 		if (dir == 0) {
 			this.spinDown(r, 0f);
 			this.status = Status.HOLDING;
@@ -783,15 +678,24 @@ public final class PileDriverModule extends MachineModule {
 			factor = 0.5f;
 		}
 		float rpmNeeded = r.rpm() / Math.max(1f, factor);
-		this.spinDown(r, dir * rpmNeeded);
-		float speedRatio = MathHelper.clamp(Math.abs(this.rpm) / Math.max(0.01f, rpmNeeded), 0f, 1f);
+		float speedRatio = 1f;
+		if (s.rotaryMode()) {
+			this.spinDown(r, dir * rpmNeeded);
+			speedRatio = MathHelper.clamp(Math.abs(this.rpm) / Math.max(0.01f, rpmNeeded), 0f, 1f);
+		}
 		float ticks = Math.max(1f, r.ticksPerBlock() * factor * (dir < 0 ? p.extractFactor() : 1f));
 		this.stepOffset += dir * speedRatio / ticks;
 		this.status = dir > 0 ? Status.DRIVING : Status.EXTRACTING;
 		if (this.machine.age % 8 == 0) {
-			world.playSound(null, this.holdX + 0.5, this.holdSurface + 1.0, this.holdZ + 0.5,
-					SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.6f,
-					0.5f + 0.5f * MathHelper.clamp(Math.abs(this.rpm) / Math.max(1f, r.rpm()), 0f, 1f));
+			if (s.rotaryMode()) {
+				world.playSound(null, this.holdX + 0.5, this.holdSurface + 1.0, this.holdZ + 0.5,
+						SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.6f,
+						0.5f + 0.5f * MathHelper.clamp(Math.abs(this.rpm) / Math.max(1f, r.rpm()), 0f, 1f));
+			} else {
+				// the hammer's winch pulls the pile out
+				world.playSound(null, this.holdX + 0.5, this.holdSurface + 1.0, this.holdZ + 0.5,
+						SoundEvents.BLOCK_CHAIN_STEP, SoundCategory.BLOCKS, 0.6f, 0.7f);
+			}
 		}
 		// A finished block starts the next one from scratch: it has its own checks.
 		if (this.stepOffset >= 1f) {
@@ -800,6 +704,62 @@ public final class PileDriverModule extends MachineModule {
 		} else if (this.stepOffset <= -1f) {
 			this.stepUp(world);
 			this.stepOffset = 0f;
+		}
+	}
+
+	private int blowsNeeded(Hammer h) {
+		return Math.max(1, MathHelper.ceil(h.blowsPerBlock() * Math.max(this.blowFactor, 0.25f)));
+	}
+
+	/** Drop hammer: lift the hammer off the cap and drop it; each blow drives the held pile a share of a
+	 * block (blows_per_block x the ground's factor blows per block). A blow only starts when the pile can
+	 * go on into the next block (same checks as turning it in); one under way always falls. */
+	private void tickBlows(ServerWorld world, ServerPlayerEntity operator, Settings s, boolean drive) {
+		Hammer h = s.hammer();
+		int lift = Math.max(1, h.liftTicks());
+		int drop = Math.max(1, h.dropTicks());
+		if (this.hammerTick == 0) {
+			if (!drive) {
+				this.machine.setFloatChannel(HAMMER, 0f);
+				this.status = Status.HOLDING;
+				return;
+			}
+			float factor = this.stepOffset < 0f ? 0.5f : this.checkDown(world, operator, s);
+			if (factor <= 0f) {
+				this.machine.setFloatChannel(HAMMER, 0f);
+				return;
+			}
+			this.blowFactor = factor;
+			// (after pulling the pile up a little, the blows already struck into this block are fewer)
+			this.blowsDone = Math.max(0, Math.round(Math.max(0f, this.stepOffset) * this.blowsNeeded(h)));
+		}
+		this.hammerTick++;
+		float height;
+		if (this.hammerTick <= lift) {
+			height = h.liftHeight() * this.hammerTick / lift;
+		} else {
+			float t = (this.hammerTick - lift) / (float) drop;
+			height = h.liftHeight() * (1f - t * t); // free fall
+		}
+		this.machine.setFloatChannel(HAMMER, Math.max(0f, height));
+		this.status = Status.DRIVING;
+		if (this.hammerTick < lift + drop) {
+			return;
+		}
+		// Impact.
+		this.hammerTick = 0;
+		this.machine.setFloatChannel(HAMMER, 0f);
+		BlockPos head = new BlockPos(this.holdX, Math.max(this.holdBottom + this.holdLength - 1, this.holdSurface), this.holdZ);
+		world.playSound(null, head.getX() + 0.5, head.getY() + 1.0, head.getZ() + 0.5,
+				SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.9f, 0.55f);
+		BlockWork.effects(world, new BlockPos(this.holdX, this.holdSurface, this.holdZ),
+				world.getBlockState(new BlockPos(this.holdX, this.holdSurface, this.holdZ)), 12);
+		this.blowsDone++;
+		this.stepOffset += 1f / this.blowsNeeded(h);
+		if (this.stepOffset >= 1f - 1.0e-4f) {
+			this.stepDown(world);
+			this.stepOffset = 0f;
+			this.blowsDone = 0;
 		}
 	}
 
@@ -861,7 +821,10 @@ public final class PileDriverModule extends MachineModule {
 		}
 		GroundResistance.Result resistance = GroundResistance.evaluate(world, pos, state, s.resistance());
 		float factor = resistance.passable() ? 0.25f : resistance.factor();
-		if (resistance.refused() || s.rotary().rpm() / Math.max(1f, factor) < s.rotary().minRpm()) {
+		boolean tooHard = s.rotaryMode()
+				? s.rotary().rpm() / Math.max(1f, factor) < s.rotary().minRpm()
+				: MathHelper.ceil(s.hammer().blowsPerBlock() * factor) > s.hammer().maxBlowsPerBlock();
+		if (resistance.refused() || tooHard) {
 			this.status = Status.REFUSED;
 			this.refusedHardness = resistance.hardness();
 			this.refusedBlock = state.getBlock().getName();
@@ -973,121 +936,6 @@ public final class PileDriverModule extends MachineModule {
 		}
 	}
 
-	// ------------------------------------------------------------------
-	// Shared: which block is next, can it be entered, and entering it
-	// ------------------------------------------------------------------
-
-	/** Sets up (or keeps) the block the pile will enter next. False, with a status, when it can't. */
-	private boolean prepare(ServerWorld world, ServerPlayerEntity operator, Settings s) {
-		Vec3d point = this.machine.workPoint(s.common().pilePoint());
-		int x = MathHelper.floor(point.x);
-		int z = MathHelper.floor(point.z);
-		if (!this.hasSession || x != this.pileX || z != this.pileZ) {
-			this.startSession(world, x, MathHelper.floor(point.y), z, s);
-			if (!this.hasSession) {
-				this.status = Status.NO_GROUND;
-				return false;
-			}
-		}
-		for (int guard = 0; guard < 4; guard++) {
-			if (this.depth >= this.targetDepth) {
-				this.status = Status.DONE;
-				return false;
-			}
-			BlockPos pos = new BlockPos(this.pileX, this.topY - this.depth, this.pileZ);
-			if (world.isOutOfHeightLimit(pos)) {
-				this.status = Status.REFUSED;
-				this.refusedHardness = -1f;
-				this.refusedBlock = Text.translatable("status.constructionaddon.pile_driver.world_bottom");
-				return false;
-			}
-			Block pileBlock = this.findPileBlock(operator, s);
-			if (pileBlock == null) {
-				this.status = Status.NO_PILE;
-				return false;
-			}
-			BlockState state = world.getBlockState(pos);
-			if (state.getBlock() == pileBlock) {
-				// Already part of this (or an earlier) pile - carry on below it.
-				this.depth++;
-				this.resetBlockProgress();
-				continue;
-			}
-			if (pos.equals(this.currentPos)) {
-				this.status = Status.DRIVING;
-				return true;
-			}
-			GroundResistance.Result resistance = GroundResistance.evaluate(world, pos, state, s.resistance());
-			float factor = resistance.passable() ? 0.25f : resistance.factor();
-			int blowsNeeded = Math.max(1, MathHelper.ceil(s.hammer().blowsPerBlock() * factor));
-			float rpmNeeded = s.rotary().rpm() / Math.max(1f, factor);
-			boolean refused = resistance.refused()
-					|| (!s.rotaryMode() && blowsNeeded > s.hammer().maxBlowsPerBlock())
-					|| (s.rotaryMode() && rpmNeeded < s.rotary().minRpm());
-			if (refused) {
-				this.status = Status.REFUSED;
-				this.refusedHardness = resistance.hardness();
-				this.refusedBlock = state.getBlock().getName();
-				return false;
-			}
-			boolean permitted = resistance.passable()
-					? BlockWork.canPlace(world, operator, pos)
-					: BlockWork.canBreak(world, operator, pos, state) && BlockWork.canPlace(world, operator, pos);
-			if (!permitted) {
-				this.status = Status.PROTECTED;
-				return false;
-			}
-			this.resetBlockProgress();
-			this.currentPos = pos;
-			this.currentFactor = factor;
-			this.requiredBlows = blowsNeeded;
-			this.targetRpm = rpmNeeded;
-			this.status = Status.DRIVING;
-			return true;
-		}
-		return false;
-	}
-
-	/** Finds the ground under the mast: the first solid block within surface_search below it. The
-	 * pile's head will sit flush in place of that block. */
-	private void startSession(ServerWorld world, int x, int fromY, int z, Settings s) {
-		this.hasSession = false;
-		this.resetBlockProgress();
-		for (int dy = 0; dy <= s.common().surfaceSearch(); dy++) {
-			BlockPos pos = new BlockPos(x, fromY - dy, z);
-			if (!PourSpreader.free(world, pos) && !world.isOutOfHeightLimit(pos)) {
-				this.hasSession = true;
-				this.pileX = x;
-				this.pileZ = z;
-				this.topY = pos.getY();
-				this.depth = 0;
-				return;
-			}
-		}
-	}
-
-	private void resetBlockProgress() {
-		this.currentPos = null;
-		this.blows = 0;
-		this.progress = 0f;
-		this.machine.setFloatChannel(FEED, 0f);
-	}
-
-	private void advance(ServerWorld world, ServerPlayerEntity operator, Settings s) {
-		if (this.currentPos == null) {
-			return;
-		}
-		Block pileBlock = this.consumePileBlock(operator, s);
-		if (pileBlock == null) {
-			this.status = Status.NO_PILE;
-			return;
-		}
-		// The ground the pile displaces is pushed aside, not collected - nothing drops.
-		world.setBlockState(this.currentPos, pileBlock.getDefaultState());
-		this.depth++;
-		this.resetBlockProgress();
-	}
-
 	/** The block piles are made of (pile_block: iron for steel pipe piles, concrete for concrete
 	 * piles - whatever the model shows). */
 	private Block pileBlock(Settings s) {
@@ -1102,41 +950,12 @@ public final class PileDriverModule extends MachineModule {
 		return ConstructionMachineEntity.isCreative(operator) || this.countBlocks(block) > 0 ? block : null;
 	}
 
-	private Block consumePileBlock(ServerPlayerEntity operator, Settings s) {
-		Block block = this.findPileBlock(operator, s);
-		if (block != null && !ConstructionMachineEntity.isCreative(operator)) {
-			this.takeBlocks(block, 1);
-		}
-		return block;
-	}
-
 	@Override
 	public Text status() {
-		Settings s = this.settings();
-		if (s.rotaryMode()) {
-			return this.rotaryStatus(s);
-		}
-		return switch (this.status) {
-			case IDLE -> null;
-			case MAST -> Text.translatable("status.constructionaddon.pile_driver.mast", this.targetDepth);
-			// Names a key: built client-side (ConstructionAddonClient).
-			case LEADER_DOWN -> null;
-			case JACKS -> Text.translatable("status.constructionaddon.pile_driver.jacks", this.depth, this.targetDepth);
-			case READY -> Text.translatable("status.constructionaddon.pile_driver.ready", this.depth, this.targetDepth);
-			case DONE -> Text.translatable("status.constructionaddon.pile_driver.done", this.depth, this.targetDepth);
-			case NO_PILE -> Text.translatable("status.constructionaddon.pile_driver.no_pile", this.pileBlock(s).getName());
-			case NO_GROUND -> Text.translatable("status.constructionaddon.pile_driver.no_ground");
-			case PROTECTED -> Text.translatable("status.constructionaddon.protected");
-			case REFUSED -> Text.translatable("status.constructionaddon.pile_driver.refused", this.refusedBlock,
-					this.refusedHardness < 0f ? "-" : String.format(Locale.ROOT, "%.1f", this.refusedHardness),
-					this.depth, this.targetDepth);
-			case DRIVING -> Text.translatable("status.constructionaddon.pile_driver.hammer", this.depth, this.targetDepth,
-					this.blows, this.requiredBlows);
-			default -> null;
-		};
+		return this.rigStatus(this.settings());
 	}
 
-	private Text rotaryStatus(Settings s) {
+	private Text rigStatus(Settings s) {
 		Piling p = s.piling();
 		Text tool = !p.hasTool() ? Text.empty()
 				: Text.translatable("status.constructionaddon.pile_driver.tool." + (p.follower() ? "follower" : "drive_rod")
@@ -1154,10 +973,16 @@ public final class PileDriverModule extends MachineModule {
 					this.loadProgressPercent(s));
 			case HOLDING, JOINED -> Text.translatable("status.constructionaddon.pile_driver.rotary."
 					+ (shown == Status.JOINED ? "joined" : "holding"), this.holdLength, this.embedment(), tool);
-			case DRIVING -> Text.translatable("status.constructionaddon.pile_driver.rotary.driving", this.holdLength,
-					this.embedment(), Math.round(Math.abs(this.rpm)), pct);
-			case EXTRACTING -> Text.translatable("status.constructionaddon.pile_driver.rotary.extracting", this.holdLength,
-					this.embedment(), Math.round(Math.abs(this.rpm)), pct);
+			case DRIVING -> s.rotaryMode()
+					? Text.translatable("status.constructionaddon.pile_driver.rotary.driving", this.holdLength,
+							this.embedment(), Math.round(Math.abs(this.rpm)), pct)
+					: Text.translatable("status.constructionaddon.pile_driver.rotary.hammering", this.holdLength,
+							this.embedment(), this.blowsDone, this.blowsNeeded(s.hammer()));
+			case EXTRACTING -> s.rotaryMode()
+					? Text.translatable("status.constructionaddon.pile_driver.rotary.extracting", this.holdLength,
+							this.embedment(), Math.round(Math.abs(this.rpm)), pct)
+					: Text.translatable("status.constructionaddon.pile_driver.rotary.pulling", this.holdLength,
+							this.embedment(), pct);
 			case HEAD_BOTTOM -> Text.translatable("status.constructionaddon.pile_driver.rotary.head_bottom", this.embedment());
 			case HEAD_TOP -> Text.translatable("status.constructionaddon.pile_driver.rotary.head_top");
 			case TOO_LONG -> Text.translatable("status.constructionaddon.pile_driver.rotary.too_long", this.pileLengthSet);
@@ -1174,13 +999,7 @@ public final class PileDriverModule extends MachineModule {
 
 	@Override
 	public void writeData(WriteView view) {
-		view.putInt("PileTargetDepth", this.targetDepth);
 		view.putBoolean("PileLeaderUp", this.leaderUp);
-		view.putBoolean("PileSession", this.hasSession);
-		view.putInt("PileX", this.pileX);
-		view.putInt("PileZ", this.pileZ);
-		view.putInt("PileTopY", this.topY);
-		view.putInt("PileDepth", this.depth);
 		view.putInt("PileLengthSet", this.pileLengthSet);
 		view.putBoolean("PileToolOut", this.toolOut);
 		Block held = this.holding ? this.holdBlock : this.loading ? this.loadBlock : null;
@@ -1197,13 +1016,7 @@ public final class PileDriverModule extends MachineModule {
 
 	@Override
 	public void readData(ReadView view) {
-		this.targetDepth = view.getInt("PileTargetDepth", -1);
 		this.leaderUp = view.getBoolean("PileLeaderUp", false);
-		this.hasSession = view.getBoolean("PileSession", false);
-		this.pileX = view.getInt("PileX", 0);
-		this.pileZ = view.getInt("PileZ", 0);
-		this.topY = view.getInt("PileTopY", 0);
-		this.depth = view.getInt("PileDepth", 0);
 		this.pileLengthSet = view.getInt("PileLengthSet", -1);
 		this.toolOut = view.getBoolean("PileToolOut", false);
 		this.holding = false;
