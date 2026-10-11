@@ -489,8 +489,16 @@ public class ConstructionMachineEntity extends CarEntity {
 		}
 		SeatDefinition seat = def.seats().get(seatIndex);
 		float scale = def.scale();
-		float eyeHeight = eye ? passenger.getStandingEyeHeight() / Math.max(1.0e-4f, scale) : 0f;
-		Vector3f rest = new Vector3f((float) seat.offsetX(), (float) seat.offsetY() + eyeHeight, (float) seat.offsetZ());
+		Vector3f rest;
+		if (eye && seat.cameraPositions().size() == 1) {
+			// The camera is where the seat's camera_positions entry says (usually the eye of a rider
+			// shrunk by passenger_display), not at standing eye height above the seat.
+			var camera = seat.cameraPositions().get(0);
+			rest = new Vector3f((float) camera.x(), (float) camera.y(), (float) camera.z());
+		} else {
+			float eyeHeight = eye ? passenger.getStandingEyeHeight() / Math.max(1.0e-4f, scale) : 0f;
+			rest = new Vector3f((float) seat.offsetX(), (float) seat.offsetY() + eyeHeight, (float) seat.offsetZ());
+		}
 		Vector3f moved = matrix.transformPosition(new Vector3f(rest));
 		Vector3f shift = moved.sub(rest).mul(scale);
 		Quaternionf rotation = eye ? this.getSeatRotationInterpolated(tickDelta) : this.getSeatRotationCurrent();

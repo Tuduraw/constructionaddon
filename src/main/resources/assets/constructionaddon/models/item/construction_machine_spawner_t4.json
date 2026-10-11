@@ -1,6 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "constructionaddon:item/construction_machine_spawner"
+    "layer0": "constructionaddon:item/construction_machine_spawner",
+    "layer1": "tudursvehiclemod:item/tier_border_t4"
   }
 }

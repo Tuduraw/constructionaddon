@@ -26,11 +26,22 @@
     {
       "name": "driver",
       "offset_x": -0.6,
-      "offset_y": 1.2,
-      "offset_z": 2.4,
-      "driver": true
+      "offset_y": 0.73,
+      "offset_z": 1.92,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": -0.6,
+          "y": 2.35,
+          "z": 1.92
+        }
+      ]
     }
   ],
+  "passenger_display": {
+    "entity_width": 1.0,
+    "entity_height": 1.0
+  },
   "construction": {
     "machine": "mixer_truck",
     "joints": [

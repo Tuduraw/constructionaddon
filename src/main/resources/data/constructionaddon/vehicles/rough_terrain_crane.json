@@ -25,12 +25,23 @@
   "seats": [
     {
       "name": "operator",
-      "offset_x": 0.72,
-      "offset_y": 1.75,
-      "offset_z": 0.35,
-      "driver": true
+      "offset_x": 0.845,
+      "offset_y": 1.45,
+      "offset_z": -0.03,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.845,
+          "y": 2.746,
+          "z": -0.03
+        }
+      ]
     }
   ],
+  "passenger_display": {
+    "entity_width": 0.8,
+    "entity_height": 0.8
+  },
   "construction": {
     "machine": "crane",
     "joints": [

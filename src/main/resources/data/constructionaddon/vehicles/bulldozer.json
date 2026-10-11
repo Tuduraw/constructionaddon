@@ -26,11 +26,22 @@
     {
       "name": "operator",
       "offset_x": 0.0,
-      "offset_y": 1.65,
-      "offset_z": -0.8,
-      "driver": true
+      "offset_y": 1.313,
+      "offset_z": -1.111,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.0,
+          "y": 2.7305,
+          "z": -1.111
+        }
+      ]
     }
   ],
+  "passenger_display": {
+    "entity_width": 0.875,
+    "entity_height": 0.875
+  },
   "construction": {
     "machine": "bulldozer",
     "joints": [

@@ -482,9 +482,20 @@
     {
       "name": "operator",
       "offset_x": 0.78,
-      "offset_y": 0.95,
-      "offset_z": 0.7,
-      "driver": true
+      "offset_y": 0.75,
+      "offset_z": 0.37,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.78,
+          "y": 2.046,
+          "z": 0.37
+        }
+      ]
     }
-  ]
+  ],
+  "passenger_display": {
+    "entity_width": 0.8,
+    "entity_height": 0.8
+  }
 }

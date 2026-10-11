@@ -26,9 +26,16 @@
     {
       "name": "operator",
       "offset_x": 0.95,
-      "offset_y": 1.4,
-      "offset_z": 0.9,
-      "driver": true
+      "offset_y": 1.125,
+      "offset_z": 0.583,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.95,
+          "y": 2.502,
+          "z": 0.583
+        }
+      ]
     }
   ],
   "construction": {
@@ -838,6 +845,10 @@
         "refusal_hardness": 30.0
       }
     }
+  },
+  "passenger_display": {
+    "entity_width": 0.85,
+    "entity_height": 0.85
   },
   "crawler_tracks": [
     {

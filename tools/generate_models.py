@@ -28,7 +28,7 @@ PALETTE = [
     (58, 58, 58),     # 1 dark grey (tracks, chassis)
     (21, 21, 21),     # 2 tyre black
     (138, 143, 150),  # 3 steel
-    (111, 168, 200),  # 4 glass
+    (111, 168, 200),  # 4 glass (faces use the dithered glass area instead, see GLASS_*)
     (224, 106, 27),   # 5 orange
     (232, 232, 232),  # 6 white
     (122, 82, 48),    # 7 earth
@@ -37,13 +37,37 @@ PALETTE = [
     (200, 200, 200),  # 10 light steel
     (156, 122, 72),   # 11 wood
 ]
-GRID = 8  # 8 x 8 cells of 8 px on a 64 x 64 texture
+GRID = 8  # 8 x 8 cells of 8 px in the top-left 64 x 64 of the texture
+TEX = 512
+GLASS = 4
+# Glass: the base mod only dithers translucency into addon-pack textures, not into a mod's own
+# (jar) textures, which render as plain cutout. So the dither is baked here: a 384 px area of
+# glass-coloured and fully transparent texels in a 4x4 ordered (Bayer) pattern, ~56 % covered
+# (the pack's glass is alpha 150). Glass faces are mapped onto it at GLASS_DENSITY texels per metre.
+GLASS_AREA = (128, 0, 384)          # x0, y0, size in pixels
+GLASS_DENSITY = 160.0
+BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+GLASS_COVER = 150 / 255.0
 
 
 def uv(color):
-    cx = (color % GRID + 0.5) / GRID
-    cy = (color // GRID + 0.5) / GRID
+    cx = ((color % GRID) * 8 + 4) / TEX
+    cy = ((color // GRID) * 8 + 4) / TEX
     return cx, 1.0 - cy
+
+
+def glass_uvs(face):
+    """Planar UVs for a glass face on the dithered glass area, at GLASS_DENSITY texels per metre
+    (less for a pane too big for the area)."""
+    n = norm(cross(sub(face[1], face[0]), sub(face[2], face[0])))
+    a = norm(sub(face[1], face[0]))
+    b = norm(cross(n, a))
+    pa = [sum(x * y for x, y in zip(sub(v, face[0]), a)) for v in face]
+    pb = [sum(x * y for x, y in zip(sub(v, face[0]), b)) for v in face]
+    span = max(max(pa) - min(pa), max(pb) - min(pb), 1e-6)
+    x0, y0, size = GLASS_AREA
+    f = min(GLASS_DENSITY, (size - 4) / span)
+    return [((x0 + 2 + (u - min(pa)) * f) / TEX, 1.0 - (y0 + 2 + (w - min(pb)) * f) / TEX) for u, w in zip(pa, pb)]
 
 
 def write_texture():
@@ -52,12 +76,17 @@ def write_texture():
     except ImportError:
         print("Pillow not installed - texture not written")
         return
-    img = Image.new("RGBA", (64, 64), (255, 0, 255, 255))
+    img = Image.new("RGBA", (TEX, TEX), (255, 0, 255, 255))
     for i, c in enumerate(PALETTE):
         x0, y0 = (i % GRID) * 8, (i // GRID) * 8
         for x in range(x0, x0 + 8):
             for y in range(y0, y0 + 8):
                 img.putpixel((x, y), c + (255,))
+    gx, gy, size = GLASS_AREA
+    for x in range(gx, gx + size):
+        for y in range(gy, gy + size):
+            on = (BAYER[y % 4][x % 4] + 0.5) / 16.0 < GLASS_COVER
+            img.putpixel((x, y), PALETTE[GLASS] + ((255,) if on else (0,)))
     os.makedirs(TEX_DIR, exist_ok=True)
     img.save(os.path.join(TEX_DIR, "construction.png"))
 
@@ -162,6 +191,14 @@ class Mesh:
                 n = norm(cross(sub(face[1], face[0]), sub(face[2], face[0])))
                 normals.append(n)
                 ni = len(normals)
+                if color == GLASS:
+                    idx = []
+                    for v, t in zip(face, glass_uvs(face)):
+                        verts.append(v)
+                        uvs.append(t)
+                        idx.append("%d/%d/%d" % (len(verts), len(uvs), ni))
+                    body.append("f " + " ".join(idx))
+                    continue
                 if color not in uv_index:
                     uvs.append(uv(color))
                     uv_index[color] = len(uvs)
@@ -205,13 +242,93 @@ def scaled(data, k):
     return out
 
 
-def cab(m, group, x0, x1, y0, y1, z0, z1, color=0, front=True, side_sign=1):
-    m.box(group, x0, y0, z0, x1, y1, z1, color)
-    gy0 = y0 + (y1 - y0) * 0.45
-    if front:
-        m.box(group, x0 + 0.05, gy0, z1, x1 - 0.05, y1 - 0.1, z1 + 0.03, 4)
-    side = x1 if side_sign > 0 else x0
-    m.box(group, side, gy0, z0 + 0.1, side + 0.03 * side_sign, y1 - 0.1, z1 - 0.1, 4)
+# ---------------------------------------------------------------- operator cab and its rider
+# The rider is the vanilla player model in its riding pose, placed by the base mod with its feet
+# origin at the seat offset and facing +z. Measured from that origin (unscaled):
+#   thighs (legs forward) 0.5 - 0.88 high, reaching 0.86 forward; thigh underside 0.625
+#   torso 0.75 - 1.5, head 1.5 - 2.0 (0.5 cube), arms out to x +-0.5 and 0.45 forward
+#   eye 1.62 (the base mod's camera height when no camera_positions are given)
+# Cabs are sized for real operators, so the rider is shrunk with passenger_display
+# (entity_width / entity_height, applied about the origin) and the camera is moved to the
+# shrunken eye with camera_positions.
+RIDER_WIDTH = 1.0          # arm to arm
+RIDER_BACK = 0.25          # back of the head behind the origin
+RIDER_FRONT = 0.86         # knees in front of the origin
+RIDER_LEG_LOW = 0.5        # underside of the thighs at the knee
+RIDER_SEAT = 0.625         # underside of the thighs at the hip (sits on the cushion)
+RIDER_TOP = 2.0
+RIDER_EYE = 1.62
+CAB_WALL = 0.05
+
+
+def fit_rider(ix0, ix1, floor, roof, iz0, iz1, pref_x, max_scale=1.0):
+    """Largest uniform rider scale (2.5 % steps) that sits inside the cab interior
+    [ix0, ix1] x [floor, roof] x [iz0 (rear wall), iz1 (front wall)], with a backrest behind the
+    torso, the head clear of the roof and of the rear wall, and the knees clear of the front wall.
+    Returns (origin, scale)."""
+    s = max_scale
+    while s > 0.3:
+        width_ok = RIDER_WIDTH * s <= (ix1 - ix0) - 0.04
+        height_ok = (RIDER_TOP - RIDER_LEG_LOW) * s + 0.05 + 0.1 <= roof - floor
+        back = max(0.13 * s + 0.1, RIDER_BACK * s + 0.02)       # backrest, or the head, against the rear wall
+        depth_ok = back + RIDER_FRONT * s + 0.03 <= iz1 - iz0
+        if width_ok and height_ok and depth_ok:
+            break
+        s = round(s - 0.025, 3)
+    slack = (roof - floor) - ((RIDER_TOP - RIDER_LEG_LOW) * s + 0.05 + 0.1)
+    oy = roof - 0.05 - min(slack, 0.15) - RIDER_TOP * s          # head 5 cm (+ up to 15) under the roof
+    oz = iz0 + max(0.13 * s + 0.1, RIDER_BACK * s + 0.02)
+    half = RIDER_WIDTH * s / 2 + 0.02
+    ox = min(max(pref_x, ix0 + half), ix1 - half)
+    return (round(ox, 3), round(oy, 3), round(oz, 3)), s
+
+
+def cab(m, group, x0, x1, y0, y1, z0, z1, color=0, side_sign=1, seat_x=None, name="operator"):
+    """A hollow operator cab: floor, waist-high tub, corner pillars, roof, translucent glass at the
+    front and both sides, a seat and a dashboard. The rider is fitted inside it (see fit_rider).
+    side_sign picks the door side. Returns (seat JSON, passenger_display JSON) in model units."""
+    t = CAB_WALL
+    belt = y0 + (y1 - y0) * 0.45
+    roof_t = 0.07
+    # floor, tub walls and the rear wall (full height)
+    m.box(group, x0, y0, z0, x1, y0 + t, z1, color)
+    m.box(group, x0, y0, z1 - t, x1, belt, z1, color)
+    m.box(group, x0, y0, z0, x1, y1 - roof_t, z0 + t, color)
+    for x in (x0, x1 - t):
+        m.box(group, x, y0, z0, x + t, belt, z1, color)
+    # corner and door pillars, roof
+    for x in (x0, x1 - t):
+        for z in (z0, z1 - t):
+            m.box(group, x, belt, z, x + t, y1 - roof_t, z + t, color)
+    door_x = x1 - t if side_sign > 0 else x0
+    zd = z0 + (z1 - z0) * 0.45
+    m.box(group, door_x, belt, zd - t / 2, door_x + t, y1 - roof_t, zd + t / 2, color)
+    m.box(group, x0 - 0.02, y1 - roof_t, z0 - 0.02, x1 + 0.02, y1, z1 + 0.02, color)
+    # glass, set in the pillar line
+    m.box(group, x0 + t, belt, z1 - 0.03, x1 - t, y1 - roof_t, z1 - 0.01, 4)
+    for x in (x0 + 0.01, x1 - 0.03):
+        m.box(group, x, belt, z0 + t, x + 0.02, y1 - roof_t, z1 - t, 4)
+    # rider, seat and dashboard
+    k = m.k
+    pref = (x0 + x1) / 2 if seat_x is None else seat_x
+    o, s = fit_rider((x0 + t) * k, (x1 - t) * k, (y0 + t) * k, (y1 - roof_t) * k, (z0 + t) * k, (z1 - t) * k,
+                     pref * k)
+    ox, oy, oz = (v / k for v in o)
+    sk = s / k                                    # rider scale in model units
+    cushion = oy + RIDER_SEAT * sk
+    m.box(group, ox - 0.22 * sk, y0 + t, oz - 0.13 * sk - 0.02, ox + 0.22 * sk, cushion,
+          oz + 0.35 * sk, 1)                      # cushion
+    m.box(group, ox - 0.22 * sk, cushion, oz - 0.13 * sk - 0.1, ox + 0.22 * sk, oy + 1.4 * sk,
+          oz - 0.13 * sk, 1)                      # backrest, against the torso
+    dash_z = max(oz + RIDER_FRONT * sk + 0.02, z1 - t - 0.25)
+    dash_top = min(belt, oy + RIDER_LEG_LOW * sk - 0.02)
+    if dash_z < z1 - t - 0.04 and dash_top > y0 + t + 0.1:
+        m.box(group, x0 + t, y0 + t, dash_z, x1 - t, dash_top, z1 - t, 1)
+    seat = {"name": name, "offset_x": round(ox, 4), "offset_y": round(oy, 4), "offset_z": round(oz, 4),
+            "driver": True,
+            "camera_positions": [{"x": round(ox, 4), "y": round(oy + RIDER_EYE * sk, 4), "z": round(oz, 4)}]}
+    display = {"entity_width": s, "entity_height": s}
+    return seat, display
 
 
 def joint(part, pivot, axis, mode="rotate", channel=None, parent=None, **extra):
@@ -480,9 +597,11 @@ def save_json(filename, data):
 BACKHOE_RANGES = {"boom": (-40.0, 35.0), "arm": (-50.0, 110.0)}
 
 
-def backhoe_model(k, model):
+def backhoe_model(k, model, cab_box=(0.3, 1.25, 1.0, 2.5, 0.1, 1.35)):
     """The backhoe design, built at scale k (1.0 = the full-size machine; the mini backhoe is the same
-    design at 0.6, built small rather than scaled at run time so its crawlers grip the ground)."""
+    design at 0.6, built small rather than scaled at run time so its crawlers grip the ground).
+    cab_box (x0, x1, y0, y1, z0, z1) lets the mini have a cab that is larger for its size, as real
+    mini excavators do - a 0.6 copy of the big cab is too small for any rider."""
     m = Mesh(k)
     top, _, _ = crawlers(m, 0.72, 1.45, 2.05, 0.78, r_end=0.3, wheel_r=0.12, n_wheels=6, carrier_r=0.08,
                          n_carrier=1, link_len=0.2)
@@ -492,7 +611,7 @@ def backhoe_model(k, model):
     m.box("$upper", -1.3, 0.8, -1.9, 1.3, 1.0, 1.4, 0)
     m.box("$upper", -1.3, 1.0, -1.9, 0.2, 1.9, 0.3, 0)
     m.box("$upper", -1.3, 0.9, -2.25, 1.3, 1.7, -1.9, 1)
-    cab(m, "$upper", 0.3, 1.25, 1.0, 2.5, 0.1, 1.35)
+    seat, display = cab(m, "$upper", *cab_box, seat_x=0.78)
     B = (-0.2, 1.3, 1.1)
     A = (-0.2, 3.5, 3.4)
     K = (-0.2, 1.4, 4.4)
@@ -536,8 +655,7 @@ def backhoe_model(k, model):
         "work_points": {"bucket_tip": point("$bucket", T)},
         "seat_parts": [{"seat": 0, "part": "$upper"}],
     }
-    seats = [{"name": "operator", "offset_x": 0.78, "offset_y": 0.95, "offset_z": 0.7, "driver": True}]
-    return scaled(dict(top, construction=construction, seats=seats), k)
+    return scaled(dict(top, construction=construction, seats=[seat], passenger_display=display), k)
 
 
 def backhoe():
@@ -555,7 +673,7 @@ def backhoe():
     save_json("backhoe", base_json("Backhoe", "backhoe", 2, max_speed=0.3, turn_speed=2.5, max_health=140.0,
                                    **full))
 
-    mini = backhoe_model(0.6, "mini_backhoe")
+    mini = backhoe_model(0.6, "mini_backhoe", cab_box=(0.2, 1.45, 1.0, 3.1, -0.3, 1.6))
     mini["construction"]["excavator"] = dict(settings, capacity=2)
     save_json("mini_backhoe", base_json("Mini Backhoe", "mini_backhoe", 1, width=1.8, height=1.8, max_speed=0.28,
                                         turn_speed=3.0, max_health=70.0, step_height=0.6, max_fuel=600.0,
@@ -586,7 +704,7 @@ def crane():
     swing_pivot = (0.0, 1.4, -0.5)
     m.box("$upper", -1.0, 1.4, -2.2, 1.0, 1.7, 1.0, 0)
     m.box("$upper", -1.0, 1.7, -2.2, 0.2, 2.2, -1.2, 1)
-    cab(m, "$upper", 0.35, 1.1, 1.7, 2.7, -0.3, 1.0)
+    seat, display = cab(m, "$upper", 0.37, 1.32, 1.7, 3.2, -0.3, 1.0, seat_x=0.845)
     luff_pivot = (0.0, 2.15, -1.8)
     m.box("$upper", -0.45, 1.7, -2.1, 0.45, 2.3, -1.5, 3)
     m.box("$boom", -0.35, 1.85, -2.3, 0.35, 2.45, 3.5, 0)
@@ -623,8 +741,8 @@ def crane():
             "hook_drop": 0.9
         }
     }
-    seats = [{"name": "operator", "offset_x": 0.72, "offset_y": 1.75, "offset_z": 0.35, "driver": True}]
-    save_json("rough_terrain_crane", base_json("Rough Terrain Crane", "rough_terrain_crane", 3, seats=seats,
+    save_json("rough_terrain_crane", base_json("Rough Terrain Crane", "rough_terrain_crane", 3, seats=[seat],
+                                               passenger_display=display,
                                                construction=construction, wheel_parts=wheel_parts(wheels),
                                                weight_type="car", max_speed=0.45, turn_speed=2.0, max_health=160.0))
 
@@ -636,7 +754,7 @@ def bulldozer():
                          n_carrier=1, link_len=0.2)
     m.box("body", -0.78, 0.4, -1.6, 0.78, 1.6, 1.5, 0)
     m.box("body", -0.6, 1.6, 0.2, 0.6, 1.75, 1.5, 1)
-    cab(m, "body", -0.7, 0.7, 1.6, 2.8, -1.4, -0.2)
+    seat, display = cab(m, "body", -0.7, 0.7, 1.6, 3.2, -1.4, -0.2, seat_x=0.0)
     m.box("body", 0.45, 1.6, 0.6, 0.6, 2.4, 0.75, 1)  # exhaust
     for sx in (1.5, -1.5):                             # push-arm trunnions on the track frames
         m.box("body", sx - 0.02 * (1 if sx > 0 else -1), 0.38, -0.1, sx + 0.08 * (1 if sx > 0 else -1), 0.62,
@@ -664,8 +782,8 @@ def bulldozer():
             "resistance": {"hardness_scale": 1.0, "refusal_hardness": 2.0}
         }
     }
-    seats = [{"name": "operator", "offset_x": 0.0, "offset_y": 1.65, "offset_z": -0.8, "driver": True}]
-    save_json("bulldozer", base_json("Bulldozer", "bulldozer", 2, seats=seats, construction=construction,
+    save_json("bulldozer", base_json("Bulldozer", "bulldozer", 2, seats=[seat], passenger_display=display,
+                                     construction=construction,
                                      max_speed=0.3, turn_speed=2.5, max_health=160.0, **top))
 
 
@@ -717,7 +835,8 @@ def corner_mounts(front, rear, x, offset):
 
 def pile_driver_base(m):
     """Small pile driver: the leader is pinned at its foot and held by two backstays; for travel it is
-    laid back onto a rest over the upper structure. Returns (crawler JSON, outrigger and backstay joints)."""
+    laid back onto a rest over the upper structure. Returns (crawler JSON, outrigger and backstay joints,
+    seat, passenger_display)."""
     top, _, _ = crawlers(m, 0.72, 1.45, 2.05, 0.68, r_end=0.27, wheel_r=0.11, n_wheels=6, carrier_r=0.07,
                          n_carrier=1, link_len=0.2)
     m.box("body", -0.72, 0.25, -1.3, 0.72, 0.68, 1.3, 3)
@@ -725,7 +844,7 @@ def pile_driver_base(m):
     m.box("$upper", -0.95, 0.7, -2.0, 0.95, 1.0, 1.3, 0)
     m.box("$upper", -0.9, 1.0, -1.8, -0.3, 1.7, 0.9, 0)    # engine hood (right, clear of the leader)
     m.box("$upper", -0.95, 0.8, -2.25, 0.95, 1.5, -1.9, 1)
-    cab(m, "$upper", 0.25, 0.95, 1.0, 2.4, 0.0, 1.25)
+    seat, display = cab(m, "$upper", 0.4, 1.35, 1.0, 2.6, 0.0, 1.25, seat_x=0.875)
     m.box("$upper", -0.25, 1.0, -1.75, 0.25, 1.38, -1.45, 5)  # rest for the lowered leader
     m.box("$upper", -0.35, 0.7, 1.2, 0.35, 1.2, 1.7, 3)  # mast foot
     m.box("$mast", -0.2, 1.0, 1.6, 0.2, 8.5, 1.9, 5)
@@ -737,7 +856,7 @@ def pile_driver_base(m):
     m.box("$mast", -0.14, 6.3, 1.45, 0.14, 6.7, 1.62, 3)            # cylinder lug
     stays += ram(m, "backstay", "$upper", (0.0, 1.1, -0.4), (0.0, 6.5, 1.55), "$mast",
                  MAST_PIVOT, (1, 0, 0), 0.0, 1.0, 0.24, factor=80.0, offset=-80.0)
-    return top, stays
+    return top, stays, seat, display
 
 
 def pile_driver_json(name, model, tier, joints_list, work_point, pile_settings, crawlers=None, **kw):
@@ -768,10 +887,9 @@ def small_joints(extra):
 
 
 def pile_drivers():
-    small_seat = {"name": "operator", "offset_x": 0.6, "offset_y": 1.0, "offset_z": 0.6, "driver": True}
 
     m = Mesh()
-    top, stays = pile_driver_base(m)
+    top, stays, seat, display = pile_driver_base(m)
     # Drop hammer rig: the same pile handling as the rotary rig. The helmet (cap) slides on the leader by
     # "head" and sits on the pile; the hammer rests on the helmet and is lifted off it by "hammer". A
     # follower (ヤットコ) can be set under the helmet to drive below the helmet's reach.
@@ -799,10 +917,10 @@ def pile_drivers():
                                           "tool": "follower", "tool_length": 2.5, "tool_speed": 0.05,
                                           "load_ticks_per_block": 6, "extract_factor": 0.6, "grip_tolerance": 0.6,
                                           "resistance": {"hardness_scale": 1.0, "refusal_hardness": 20.0}}),
-                     seat=dict(small_seat), **top)
+                     seat=seat, passenger_display=display, **top)
 
     m = Mesh()
-    top, stays = pile_driver_base(m)
+    top, stays, seat, display = pile_driver_base(m)
     # rotary head on the leader (drawn with its grip at y 4.0); the drive rod passes through it
     m.box("$rotary_head", -0.4, 4.0, 1.95, 0.4, 4.8, 2.75, 3)
     m.box("$rotary_head", -0.25, 4.1, 1.83, 0.25, 4.7, 1.97, 1)     # guide shoe on the leader
@@ -819,7 +937,7 @@ def pile_drivers():
                                           "tool": "drive_rod", "tool_length": 2.5, "tool_speed": 0.05,
                                           "load_ticks_per_block": 6, "extract_factor": 0.6, "grip_tolerance": 0.6,
                                           "resistance": {"hardness_scale": 1.0, "refusal_hardness": 25.0}}),
-                     seat=dict(small_seat), **top)
+                     seat=seat, passenger_display=display, **top)
 
     large_pile_driver()
 
@@ -912,7 +1030,7 @@ def large_pile_driver():
     m.prism("body", (0.0, 0.95, 0.0), (0.0, 1.09, 0.0), 0.85, 14, [1])   # swing bearing
     m.box("$upper", -1.5, 1.4, -3.0, -0.45, 2.5, 0.2, 0)
     m.box("$upper", -1.6, 1.2, -3.6, 1.6, 2.3, -3.2, 1)
-    cab(m, "$upper", 0.45, 1.45, 1.4, 3.0, 0.3, 1.7)
+    seat, display = cab(m, "$upper", 0.45, 1.45, 1.4, 3.0, 0.3, 1.7, seat_x=0.95)
     m.box("$upper", -0.5, 1.05, 1.8, 0.5, 1.8, 2.6, 3)            # leader bracket
     rest = (-2.75, 1.5 + (L_FOOT[2] + 2.75) * math.tan(math.radians(90 - L_DOWN)) - 0.4)
     m.box("$upper", -0.35, 1.4, rest[0] - 0.15, 0.35, rest[1], rest[0] + 0.15, 3)  # rest for the lowered leader
@@ -956,7 +1074,7 @@ def large_pile_driver():
                       "tool": "follower", "tool_length": 4.0, "tool_speed": 0.04,
                       "load_ticks_per_block": 5, "extract_factor": 0.6, "grip_tolerance": 0.6,
                       "resistance": {"hardness_scale": 0.8, "refusal_hardness": 30.0}},
-                     seat={"name": "operator", "offset_x": 0.95, "offset_y": 1.4, "offset_z": 0.9, "driver": True},
+                     seat=seat, passenger_display=display,
                      max_speed=0.2, turn_speed=1.5, max_health=220.0, inventory_size=27,
                      crawlers=addon_crawlers, **top)
 
@@ -964,19 +1082,19 @@ def large_pile_driver():
 # ---------------------------------------------------------------- trucks
 def truck_base(m, cab_color, length_rear=-3.0):
     m.box("body", -0.6, 0.5, length_rear, 0.6, 1.1, 3.4, 1)
-    cab(m, "body", -1.2, 1.2, 1.0, 3.0, 1.6, 3.4, cab_color)
+    seat, display = cab(m, "body", -1.2, 1.2, 1.0, 3.0, 1.6, 3.4, cab_color, seat_x=-0.6, name="driver")
     wheels = []
     for i, (x, z, steer) in enumerate([(1.1, 2.4, 30.0), (-1.1, 2.4, 30.0), (1.1, -1.0, 0), (-1.1, -1.0, 0),
                                        (1.1, -2.2, 0), (-1.1, -2.2, 0)]):
         part = "$wheel%d" % i
         m.wheel(part, x, 0.55, z, 0.55, 0.45)
         wheels.append((part, x, 0.55, z, steer))
-    return wheels
+    return wheels, seat, display
 
 
 def dump_truck():
     m = Mesh()
-    wheels = truck_base(m, 5)
+    wheels, seat, display = truck_base(m, 5)
     bed_pivot = (0.0, 1.3, -2.9)
     m.box("$bed", -1.2, 1.3, -2.9, 1.2, 1.45, 1.3, 0)
     m.box("$bed", 1.1, 1.45, -2.9, 1.2, 2.4, 1.3, 0)
@@ -1006,15 +1124,14 @@ def dump_truck():
             "dump_spread_radius": 4, "dump_slope": 0.6
         }
     }
-    seats = [{"name": "driver", "offset_x": -0.6, "offset_y": 1.2, "offset_z": 2.4, "driver": True}]
-    save_json("dump_truck", base_json("Dump Truck", "dump_truck", 2, seats=seats, construction=construction,
+    save_json("dump_truck", base_json("Dump Truck", "dump_truck", 2, seats=[seat], passenger_display=display, construction=construction,
                                       wheel_parts=wheel_parts(wheels), weight_type="car", max_speed=0.6,
                                       turn_speed=2.5, max_health=100.0, inventory_size=27))
 
 
 def mixer_truck():
     m = Mesh()
-    wheels = truck_base(m, 6)
+    wheels, seat, display = truck_base(m, 6)
     drum_rear, drum_front = (0.0, 2.75, -2.6), (0.0, 2.0, 1.1)
     m.prism("$drum", drum_rear, drum_front, 0.95, 8, [5, 6])
     m.prism("$drum", add(drum_rear, (0, 0.05, -0.4)), drum_rear, 0.5, 8, [5, 6])
@@ -1044,8 +1161,7 @@ def mixer_truck():
             "drum_mix_speed": 6.0, "drum_pour_speed": -12.0, "drum_idle_speed": 1.5
         }
     }
-    seats = [{"name": "driver", "offset_x": -0.6, "offset_y": 1.2, "offset_z": 2.4, "driver": True}]
-    save_json("mixer_truck", base_json("Concrete Mixer Truck", "mixer_truck", 3, seats=seats,
+    save_json("mixer_truck", base_json("Concrete Mixer Truck", "mixer_truck", 3, seats=[seat], passenger_display=display,
                                        construction=construction, wheel_parts=wheel_parts(wheels),
                                        weight_type="car", max_speed=0.55, turn_speed=2.5, max_health=100.0,
                                        inventory_size=18))
@@ -1059,7 +1175,7 @@ KINGPIN = (0.0, 1.1, 4.6)
 def tractor():
     m = Mesh()
     m.box("body", -0.6, 0.5, -2.8, 0.6, 1.0, 3.2, 1)
-    cab(m, "body", -1.2, 1.2, 1.0, 3.2, 1.2, 3.2, 9)
+    seat, display = cab(m, "body", -1.2, 1.2, 1.0, 3.2, 1.2, 3.2, 9, seat_x=-0.6, name="driver")
     m.box("body", -0.75, 1.0, -1.8, 0.75, 1.1, -0.6, 3)  # fifth wheel
     wheels = []
     for i, (x, z, steer) in enumerate([(1.1, 2.2, 30.0), (-1.1, 2.2, 30.0), (1.1, -0.9, 0), (-1.1, -0.9, 0),
@@ -1071,8 +1187,7 @@ def tractor():
     construction = {"machine": "tractor",
                     "tractor": {"hitch_x": HITCH[0], "hitch_y": HITCH[1], "hitch_z": HITCH[2],
                                 "couple_radius": 2.0, "towing_speed_factor": 0.7}}
-    seats = [{"name": "driver", "offset_x": -0.6, "offset_y": 1.3, "offset_z": 2.2, "driver": True}]
-    save_json("tractor_head", base_json("Tractor Head", "tractor_head", 3, seats=seats, construction=construction,
+    save_json("tractor_head", base_json("Tractor Head", "tractor_head", 3, seats=[seat], passenger_display=display, construction=construction,
                                         wheel_parts=wheel_parts(wheels), weight_type="car", max_speed=0.7,
                                         turn_speed=2.5, max_health=100.0))
 

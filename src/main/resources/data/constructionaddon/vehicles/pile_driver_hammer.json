@@ -25,10 +25,17 @@
   "seats": [
     {
       "name": "operator",
-      "offset_x": 0.6,
-      "offset_y": 1.0,
-      "offset_z": 0.6,
-      "driver": true
+      "offset_x": 0.875,
+      "offset_y": 0.75,
+      "offset_z": 0.27,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.875,
+          "y": 2.046,
+          "z": 0.27
+        }
+      ]
     }
   ],
   "construction": {
@@ -371,6 +378,10 @@
         "refusal_hardness": 20.0
       }
     }
+  },
+  "passenger_display": {
+    "entity_width": 0.8,
+    "entity_height": 0.8
   },
   "crawler_tracks": [
     {

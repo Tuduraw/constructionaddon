@@ -481,10 +481,21 @@
   "seats": [
     {
       "name": "operator",
-      "offset_x": 0.468,
-      "offset_y": 0.57,
-      "offset_z": 0.42,
-      "driver": true
+      "offset_x": 0.483,
+      "offset_y": 0.417,
+      "offset_z": 0.031,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.483,
+          "y": 1.4295,
+          "z": 0.031
+        }
+      ]
     }
-  ]
+  ],
+  "passenger_display": {
+    "entity_width": 0.625,
+    "entity_height": 0.625
+  }
 }
