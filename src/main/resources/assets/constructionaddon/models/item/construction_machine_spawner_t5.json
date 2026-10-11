@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/minecart"
+    "layer0": "constructionaddon:item/construction_machine_spawner"
   }
 }

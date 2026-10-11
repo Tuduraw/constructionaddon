@@ -57,6 +57,70 @@
         "mode": "scale",
         "channel": "load",
         "offset": 0.0
+      },
+      {
+        "part": "$hoist_ram",
+        "pivot_x": 0.0,
+        "pivot_y": 1.15,
+        "pivot_z": 1.45,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$bed",
+          "x": 0.0,
+          "y": 1.2,
+          "z": -0.6
+        }
+      },
+      {
+        "part": "$hoist_ram_s1",
+        "parent": "$hoist_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.0244,
+        "axis_z": -0.9997,
+        "mode": "reach",
+        "target": {
+          "part": "$bed",
+          "x": 0.0,
+          "y": 1.2,
+          "z": -0.6
+        },
+        "anchor": {
+          "part": "$hoist_ram",
+          "x": 0.0,
+          "y": 1.15,
+          "z": 1.45
+        },
+        "factor": 0.5
+      },
+      {
+        "part": "$hoist_ram_s2",
+        "parent": "$hoist_ram_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.0244,
+        "axis_z": -0.9997,
+        "mode": "reach",
+        "target": {
+          "part": "$bed",
+          "x": 0.0,
+          "y": 1.2,
+          "z": -0.6
+        },
+        "anchor": {
+          "part": "$hoist_ram",
+          "x": 0.0,
+          "y": 1.15,
+          "z": 1.45
+        },
+        "factor": 0.5
       }
     ],
     "work_points": {

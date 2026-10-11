@@ -37,13 +37,14 @@
       {
         "part": "$blade",
         "pivot_x": 0,
-        "pivot_y": 0,
-        "pivot_z": 0,
-        "axis_x": 0,
-        "axis_y": 1,
+        "pivot_y": 0.5,
+        "pivot_z": 0.2,
+        "axis_x": -1,
+        "axis_y": 0,
         "axis_z": 0,
-        "mode": "slide",
-        "channel": "blade"
+        "mode": "rotate",
+        "channel": "blade",
+        "factor": 26.526
       },
       {
         "part": "$blade_load",
@@ -64,8 +65,8 @@
       "blade_width": 3.2,
       "blade_bottom_y": 0.0,
       "blade_height": 1.2,
-      "blade_min": -2.0,
-      "blade_max": 1.5,
+      "blade_min": -1.0,
+      "blade_max": 1.2,
       "blade_speed": 0.04,
       "capacity": 16,
       "max_cuts_per_tick": 2,

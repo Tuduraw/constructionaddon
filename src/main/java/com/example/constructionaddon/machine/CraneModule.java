@@ -1,14 +1,18 @@
 package com.example.constructionaddon.machine;
 
+import com.example.constructionaddon.ConstructionAddon;
 import com.example.constructionaddon.ConstructionServerConfig;
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.entity.CraneHookEntity;
 import com.example.constructionaddon.network.WorkAxis;
 import com.example.tudursvehiclemod.entity.AbstractVehicleEntity;
+import com.example.tudursvehiclemod.entity.AircraftEntity;
 import com.example.tudursvehiclemod.entity.CarrierRunwayPlatformEntity;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -32,8 +36,11 @@ import java.util.UUID;
  * require_outriggers is false), and can't drive while they are. Swing / luff / telescope / hoist
  * keys each move their own joint, all at once if wanted; primary (Z) grabs the nearest liftable
  * entity at the hook (mobs, items, vehicles; players only if the server allows) or releases it.
- * The load is positioned after every entity in the world has ticked, so its own physics can't
- * pull it off the hook. */
+ *
+ * <p>The load rides an invisible hook entity ({@link CraneHookEntity}) that this crane keeps at the end
+ * of the rope: Minecraft's own passenger handling then holds it under the hook on the server and on
+ * every client, whatever the load's own movement code does (vehicle flight physics, mob AI). Only if a
+ * load cannot ride (rare) is it moved to the hook after every entity has ticked instead. */
 public final class CraneModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"swing", "luff", "extend", "rope", "outrigger", "hook"};
@@ -70,6 +77,8 @@ public final class CraneModule extends MachineModule {
 	}
 
 	private UUID heldUuid;
+	/** The hook entity the load rides; null when the load is held the fallback way (moved each tick). */
+	private UUID hookUuid;
 	private Text heldName;
 	private boolean nothingToGrab;
 
@@ -104,6 +113,7 @@ public final class CraneModule extends MachineModule {
 		float outrigger = this.approach(OUTRIGGER, this.machine.isWorkMode() ? 1f : 0f, s.outriggerSpeed());
 		// Keeps the rope within range even for a freshly placed crane (channels start at 0).
 		this.machine.setFloatChannel(ROPE, MathHelper.clamp(this.machine.getFloatChannel(ROPE), s.ropeMin(), s.ropeMax()));
+		this.checkHold(world);
 		this.machine.setFloatChannel(HOOK, this.heldUuid != null ? 1f : 0f);
 
 		boolean ready = !s.requireOutriggers() || outrigger >= 0.999f;
@@ -156,6 +166,43 @@ public final class CraneModule extends MachineModule {
 		return entity instanceof ItemEntity;
 	}
 
+	public boolean isHook(CraneHookEntity hook) {
+		return this.hookUuid != null && this.hookUuid.equals(hook.getUuid());
+	}
+
+	private CraneHookEntity hook(ServerWorld world) {
+		return this.hookUuid != null && world.getEntity(this.hookUuid) instanceof CraneHookEntity hook ? hook : null;
+	}
+
+	/** Forgets a load that has left the hook on its own (a player getting off, the load destroyed). */
+	private void checkHold(ServerWorld world) {
+		if (this.hookUuid == null) {
+			return;
+		}
+		CraneHookEntity hook = this.hook(world);
+		if (hook == null) {
+			// Not loaded (yet) right after the crane itself was loaded: give it a moment.
+			if (this.machine.age > 40) {
+				this.clearHold();
+			}
+			return;
+		}
+		Entity load = hook.load();
+		if (load == null) {
+			hook.discard();
+			this.clearHold();
+		} else {
+			this.heldUuid = load.getUuid();
+			this.heldName = loadName(load);
+		}
+	}
+
+	private void clearHold() {
+		this.heldUuid = null;
+		this.hookUuid = null;
+		this.heldName = null;
+	}
+
 	private void grab(ServerWorld world, Settings s) {
 		Vec3d hook = this.hookPosition();
 		double r = s.grabRadius();
@@ -169,39 +216,64 @@ public final class CraneModule extends MachineModule {
 			return;
 		}
 		this.heldUuid = nearest.getUuid();
-		this.heldName = nearest.getDisplayName();
+		this.heldName = loadName(nearest);
+		CraneHookEntity hookEntity = ConstructionAddon.CRANE_HOOK.create(world, SpawnReason.TRIGGERED);
+		if (hookEntity != null) {
+			hookEntity.setOwner(this.machine.getUuid());
+			hookEntity.setPosition(hook.x, hook.y, hook.z);
+			world.spawnEntity(hookEntity);
+			if (nearest.startRiding(hookEntity, true, true)) {
+				this.hookUuid = hookEntity.getUuid();
+			} else {
+				hookEntity.discard();   // falls back to moving the load each tick (endWorldTick)
+			}
+		}
 		world.playSound(null, hook.x, hook.y, hook.z, SoundEvents.BLOCK_IRON_TRAPDOOR_CLOSE, SoundCategory.BLOCKS, 1.0f, 0.8f);
 	}
 
 	private void release(ServerWorld world) {
 		Entity held = this.heldUuid == null ? null : world.getEntity(this.heldUuid);
+		CraneHookEntity hookEntity = this.hook(world);
+		if (held != null && held.getVehicle() == hookEntity && hookEntity != null) {
+			held.stopRiding();
+		}
+		if (hookEntity != null) {
+			hookEntity.discard();
+		}
+		if (held instanceof AircraftEntity aircraft && !held.isOnGround()) {
+			// Let go in mid-air: tell its flight model it is airborne again (otherwise it still thinks it
+			// was set down) - the base mod's own call for an aircraft whose carrier is gone.
+			aircraft.tudursvehiclemod$releaseFromCarrier();
+		}
 		if (held != null) {
 			held.setVelocity(Vec3d.ZERO);
 			held.fallDistance = 0;
 			Vec3d hook = this.hookPosition();
 			world.playSound(null, hook.x, hook.y, hook.z, SoundEvents.BLOCK_IRON_TRAPDOOR_OPEN, SoundCategory.BLOCKS, 1.0f, 1.0f);
 		}
-		this.heldUuid = null;
-		this.heldName = null;
+		this.clearHold();
 	}
 
 	@Override
 	public boolean wantsEndWorldTick() {
-		return this.heldUuid != null;
+		// Only the fallback hold (a load that could not ride the hook) is moved after the world tick.
+		return this.heldUuid != null && this.hookUuid == null;
 	}
 
 	@Override
 	public void endWorldTick(ServerWorld world) {
-		if (this.heldUuid == null || this.machine.isRemoved()) {
+		if (this.heldUuid == null || this.hookUuid != null || this.machine.isRemoved()) {
 			return;
 		}
 		Entity held = world.getEntity(this.heldUuid);
 		Vec3d hook = this.hookPosition();
 		if (held == null || held.isRemoved() || held.hasVehicle() || held.squaredDistanceTo(hook) > 64.0 * 64.0
 				|| this.machine.tudursvehiclemod$isDestroyed()) {
-			this.heldUuid = null;
-			this.heldName = null;
+			this.clearHold();
 			return;
+		}
+		if (held instanceof AircraftEntity aircraft) {
+			aircraft.tudursvehiclemod$suppressStallWhileCarried();
 		}
 		double x = hook.x;
 		double y = hook.y - held.getHeight() - 0.1;
@@ -236,15 +308,26 @@ public final class CraneModule extends MachineModule {
 	@Override
 	public void writeData(WriteView view) {
 		view.putString("CraneHeld", this.heldUuid != null ? this.heldUuid.toString() : "");
+		view.putString("CraneHook", this.hookUuid != null ? this.hookUuid.toString() : "");
 	}
 
 	@Override
 	public void readData(ReadView view) {
 		String held = view.getString("CraneHeld", "");
+		String hook = view.getString("CraneHook", "");
 		try {
 			this.heldUuid = held.isEmpty() ? null : UUID.fromString(held);
+			this.hookUuid = hook.isEmpty() ? null : UUID.fromString(hook);
 		} catch (IllegalArgumentException e) {
 			this.heldUuid = null;
+			this.hookUuid = null;
 		}
+	}
+
+	/** Custom name, else the entity type's name. getDisplayName() is not used: vehicles that open a
+	 * menu return the menu title from it. */
+	private static Text loadName(Entity load) {
+		Text custom = load.getCustomName();
+		return custom != null ? custom : load.getType().getName();
 	}
 }

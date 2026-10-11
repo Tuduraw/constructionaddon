@@ -290,7 +290,8 @@ def ram(m, name, parent, base, attach, child, pivot, axis, lo, hi, size=0.14, fa
     stages = max(2, int(math.ceil((lmax - section) / (section * 0.82))) + 1)
     parts = ["$" + name] + ["$%s_s%d" % (name, i) for i in range(1, stages)]
     if stages == 2 and lmax <= 1.75 * lmin:
-        barrel = min(rest * 0.62, lmin * 0.9)
+        # long enough that the rod is still inside it at full stroke (rod starts lmax - 0.95 lmin out)
+        barrel = min(max(rest * 0.62, lmax - 0.85 * lmin), lmin * 0.9)
         m.beam(parts[0], sub(base, mul(u, size * 0.5)), add(base, mul(u, barrel)), size, size, 1)
         m.beam(parts[1], add(base, mul(u, max(rest - lmin * 0.95, size))), attach, size * 0.55, size * 0.55, 10)
     else:
@@ -486,6 +487,7 @@ def backhoe_model(k, model):
     top, _, _ = crawlers(m, 0.72, 1.45, 2.05, 0.78, r_end=0.3, wheel_r=0.12, n_wheels=6, carrier_r=0.08,
                          n_carrier=1, link_len=0.2)
     m.box("body", -0.72, 0.25, -1.2, 0.72, 0.72, 1.2, 3)
+    m.prism("body", (0.0, 0.68, 0.0), (0.0, 0.84, 0.0), 0.6, 12, [1])   # swing bearing under the upper structure
     swing_pivot = (0.0, 0.8, 0.0)
     m.box("$upper", -1.3, 0.8, -1.9, 1.3, 1.0, 1.4, 0)
     m.box("$upper", -1.3, 1.0, -1.9, 0.2, 1.9, 0.3, 0)
@@ -570,11 +572,16 @@ def crane():
         part = "$wheel%d" % i
         m.wheel(part, x, 0.6, z, 0.6, 0.5)
         wheels.append((part, x, 0.6, z, steer))
-    # Outriggers: beams inside the carrier that slide out sideways, with pads.
+    # Outriggers: telescopic beams that slide out sideways from boxes across the carrier, with pads. Each
+    # beam is long enough to stay well inside the carrier when fully out; the left and right beams sit
+    # side by side (staggered fore and aft) so they pass each other inside the box.
+    for z in (-2.7, 2.7):
+        m.box("body", -1.1, 0.7, z - 0.25, 1.1, 1.05, z + 0.25, 1)          # outrigger box
     for side, sign in (("l", 1), ("r", -1)):
         g = "$outrigger_" + side
         for z in (-2.7, 2.7):
-            m.box(g, sign * 0.1, 0.75, z - 0.2, sign * 1.3, 1.0, z + 0.2, 3)
+            dz = sign * 0.11
+            m.box(g, sign * -0.95, 0.75, z + dz - 0.1, sign * 1.3, 1.0, z + dz + 0.1, 3)
             m.box(g, sign * 1.15, 0.0, z - 0.3, sign * 1.45, 0.8, z + 0.3, 1)
     swing_pivot = (0.0, 1.4, -0.5)
     m.box("$upper", -1.0, 1.4, -2.2, 1.0, 1.7, 1.0, 0)
@@ -642,7 +649,8 @@ def bulldozer():
     m.write(os.path.join(OBJ_DIR, "bulldozer.obj"), "Bulldozer")
 
     joints = [
-        joint("$blade", (0, 0, 0), (0, 1, 0), mode="slide", channel="blade"),
+        # push arms turn about the trunnions; the cutting edge (2.16 from them) rises "blade" blocks
+        joint("$blade", (0, 0.5, 0.2), (-1, 0, 0), channel="blade", factor=round(180 / (math.pi * 2.16), 3)),
         joint("$blade_load", (0, 0, 2.6), (0, 1, 0), mode="scale", channel="load", parent="$blade", offset=0.0),
     ]
     construction = {
@@ -650,7 +658,7 @@ def bulldozer():
         "joints": joints,
         "bulldozer": {
             "blade_front_z": 2.3, "blade_width": 3.2, "blade_bottom_y": 0.0, "blade_height": 1.2,
-            "blade_min": -2.0, "blade_max": 1.5, "blade_speed": 0.04, "capacity": 16, "max_cuts_per_tick": 2,
+            "blade_min": -1.0, "blade_max": 1.2, "blade_speed": 0.04, "capacity": 16, "max_cuts_per_tick": 2,
             "full_load_speed": 0.5, "cut_drag": 0.04, "unload_interval": 3, "min_work_speed": 0.02,
             "dump_spread_radius": 3, "dump_slope": 0.75,
             "resistance": {"hardness_scale": 1.0, "refusal_hardness": 2.0}
@@ -713,6 +721,7 @@ def pile_driver_base(m):
     top, _, _ = crawlers(m, 0.72, 1.45, 2.05, 0.68, r_end=0.27, wheel_r=0.11, n_wheels=6, carrier_r=0.07,
                          n_carrier=1, link_len=0.2)
     m.box("body", -0.72, 0.25, -1.3, 0.72, 0.68, 1.3, 3)
+    m.prism("body", (0.0, 0.6, 0.0), (0.0, 0.74, 0.0), 0.55, 12, [1])   # swing bearing
     m.box("$upper", -0.95, 0.7, -2.0, 0.95, 1.0, 1.3, 0)
     m.box("$upper", -0.9, 1.0, -1.8, -0.3, 1.7, 0.9, 0)    # engine hood (right, clear of the leader)
     m.box("$upper", -0.95, 0.8, -2.25, 0.95, 1.5, -1.9, 1)
@@ -769,9 +778,9 @@ def pile_drivers():
     cz = PILE_POINT[2]
     grip = 4.0
     m.box("$helmet", -0.32, grip - 0.25, cz - 0.32, 0.32, grip, cz + 0.32, 1)
-    m.box("$helmet", -0.25, grip - 0.2, cz - 0.42, 0.25, grip - 0.05, cz - 0.3, 3)        # guide shoe on the leader
+    m.box("$helmet", -0.25, grip - 0.2, cz - 0.52, 0.25, grip - 0.05, cz - 0.3, 3)        # guide shoe on the leader
     m.box("$hammer", -0.28, grip, cz - 0.28, 0.28, grip + 0.9, cz + 0.28, 3)
-    m.box("$hammer", -0.22, grip + 0.15, cz - 0.4, 0.22, grip + 0.75, cz - 0.28, 3)       # guide shoe
+    m.box("$hammer", -0.22, grip + 0.15, cz - 0.52, 0.22, grip + 0.75, cz - 0.28, 3)      # guide shoe on the leader
     m.box("$hammer", -0.07, grip + 0.9, cz - 0.07, 0.07, grip + 1.05, cz + 0.07, 1)       # lifting eye
     rig = rotary_rig(m, "$mast", cz, grip, 0.2, 0.25, "follower", 2.5, head="$helmet", wing=False,
                      hide_in=grip - 0.12)
@@ -796,6 +805,7 @@ def pile_drivers():
     top, stays = pile_driver_base(m)
     # rotary head on the leader (drawn with its grip at y 4.0); the drive rod passes through it
     m.box("$rotary_head", -0.4, 4.0, 1.95, 0.4, 4.8, 2.75, 3)
+    m.box("$rotary_head", -0.25, 4.1, 1.83, 0.25, 4.7, 1.97, 1)     # guide shoe on the leader
     m.box("$rotary_head", -0.3, 4.8, 2.05, 0.3, 5.2, 2.65, 1)
     rig = rotary_rig(m, "$mast", PILE_POINT[2], 4.0, 0.2, 0.25, "drive_rod", 2.5)
     m.write(os.path.join(OBJ_DIR, "pile_driver_rotary.obj"), "Rotary press-in pile driver")
@@ -889,7 +899,8 @@ def large_pile_driver():
     joints_list = []
     for side, sign in (("l", 1), ("r", -1)):
         g = "$track_" + side
-        m.box(g, sign * 0.95, 0.5, -1.6, sign * 1.1, 0.9, 1.6, 3)   # slide beam into the car body
+        for z in (-1.6, 1.4):   # slide beams, deep in the car body even when widened
+            m.box(g, sign * 0.15, 0.55, z, sign * 1.1, 0.85, z + 0.2, 3)
         joints_list.append(joint(g, (0, 0, 0), (sign, 0, 0), mode="slide", channel="track_width", factor=TRACK_EXT))
     top, belt_joints, addon_crawlers = crawlers(m, 1.1, 1.95, 3.05, 1.0, parents={"l": "$track_l", "r": "$track_r"},
                                                 r_end=0.42, wheel_r=0.16, n_wheels=7, carrier_r=0.11, n_carrier=2,
@@ -898,6 +909,7 @@ def large_pile_driver():
 
     # Upper structure (engine hood on the right, clear of the lowered leader)
     m.box("$upper", -1.6, 1.05, -3.2, 1.6, 1.4, 1.8, 0)   # (the crawlers' top runs end at y 1.0)
+    m.prism("body", (0.0, 0.95, 0.0), (0.0, 1.09, 0.0), 0.85, 14, [1])   # swing bearing
     m.box("$upper", -1.5, 1.4, -3.0, -0.45, 2.5, 0.2, 0)
     m.box("$upper", -1.6, 1.2, -3.6, 1.6, 2.3, -3.2, 1)
     cab(m, "$upper", 0.45, 1.45, 1.4, 3.0, 0.3, 1.7)
@@ -971,12 +983,18 @@ def dump_truck():
     m.box("$bed", -1.2, 1.45, -2.9, -1.1, 2.4, 1.3, 0)
     m.box("$bed", -1.2, 1.45, 1.2, 1.2, 2.6, 1.3, 0)
     m.box("$bed", -1.2, 1.45, -2.95, 1.2, 2.3, -2.85, 3)
+    for x in (-0.45, 0.45):
+        m.box("$bed", x - 0.08, 1.1, -2.95, x + 0.08, 1.31, 1.2, 1)          # sub-frame rails (rest on the chassis)
+        m.box("body", x - 0.16, 1.0, -3.05, x + 0.16, 1.36, -2.75, 1)        # hinge bracket round the pivot
+    m.box("body", -0.3, 1.05, 1.3, 0.3, 1.25, 1.7, 1)                         # hoist ram base
     m.box("$bed_load", -1.1, 1.45, -2.8, 1.1, 2.35, 1.2, 7)
+    hoist = ram(m, "hoist_ram", None, (0.0, 1.15, 1.45), (0.0, 1.2, -0.6), "$bed", bed_pivot, (-1, 0, 0),
+                0.0, 55.0, 0.14)
     m.write(os.path.join(OBJ_DIR, "dump_truck.obj"), "Dump truck")
     joints = [
         joint("$bed", bed_pivot, (-1, 0, 0), channel="bed"),
         joint("$bed_load", (0, 1.45, 0), (0, 1, 0), mode="scale", channel="load", parent="$bed", offset=0.0),
-    ]
+    ] + hoist
     construction = {
         "machine": "dump_truck",
         "joints": joints,
@@ -1003,6 +1021,7 @@ def mixer_truck():
     m.box("body", -0.9, 1.1, -2.4, 0.9, 1.9, -2.1, 3)  # rear pedestal
     m.box("body", -0.9, 1.1, 0.9, 0.9, 1.7, 1.2, 3)    # front pedestal
     chute_pivot = (0.0, 1.6, -3.0)
+    m.box("body", -0.1, 1.05, -3.1, 0.1, 1.55, -2.9, 1)    # post under the chute swivel
     m.box("$chute", -0.2, 1.5, -3.2, 0.2, 1.7, -2.8, 3)
     tip = (0.0, 1.0, -4.6)
     m.beam("$chute_arm", chute_pivot, tip, 0.4, 0.15, 3)

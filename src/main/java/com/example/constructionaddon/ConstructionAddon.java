@@ -2,6 +2,7 @@ package com.example.constructionaddon;
 
 import com.example.constructionaddon.asset.ConstructionSettingsRegistry;
 import com.example.constructionaddon.entity.ConstructionMachineEntity;
+import com.example.constructionaddon.entity.CraneHookEntity;
 import com.example.constructionaddon.item.ConstructionItems;
 import com.example.constructionaddon.network.WorkAxisPayload;
 import com.example.constructionaddon.network.WorkInputPayload;
@@ -14,6 +15,11 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 
@@ -30,6 +36,8 @@ public class ConstructionAddon implements ModInitializer {
 	/** One entity type for every machine; the vehicle JSON's "construction.machine" picks the
 	 * function (see MachineModule). */
 	public static EntityType<ConstructionMachineEntity> CONSTRUCTION_MACHINE;
+	/** The invisible hook a crane's load rides (see CraneHookEntity). */
+	public static EntityType<CraneHookEntity> CRANE_HOOK;
 
 	@Override
 	public void onInitialize() {
@@ -39,6 +47,11 @@ public class ConstructionAddon implements ModInitializer {
 				Identifier.of(MOD_ID, "construction_machine"),
 				ConstructionMachineEntity::new,
 				1.6f, 1.0f);
+		RegistryKey<EntityType<?>> hookKey = RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(MOD_ID, "crane_hook"));
+		// Synced every tick so the load (which follows it on the client too) moves smoothly.
+		CRANE_HOOK = Registry.register(Registries.ENTITY_TYPE, hookKey,
+				EntityType.Builder.<CraneHookEntity>create(CraneHookEntity::new, SpawnGroup.MISC)
+						.dimensions(0.25f, 0.25f).maxTrackingRange(16).trackingTickInterval(1).build(hookKey));
 
 		ConstructionItems.register();
 		VehicleConverterTargets.register(ConstructionItems.TARGET);
