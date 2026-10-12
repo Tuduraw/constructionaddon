@@ -1,0 +1,114 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Low-bed Trailer",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 1.8,
+  "max_speed": 0.7,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "unknown",
+  "max_health": 120.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 0,
+  "spawn_item": {
+    "display_name": "Low-bed Trailer",
+    "tier": 3
+  },
+  "construction": {
+    "machine": "trailer",
+    "trailer": {
+      "kingpin_x": 0.0,
+      "kingpin_y": 1.25,
+      "kingpin_z": 5.4,
+      "axle_z": -5.2,
+      "max_articulation": 75.0
+    }
+  },
+  "fuel_consumption": -1.0,
+  "model": "constructiondetail:models/obj/lowboy_trailer.obj",
+  "texture": "constructiondetail:textures/vehicle/lowboy_trailer.png",
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.1,
+      "pivot_y": 0.4,
+      "pivot_z": -4.7
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.1,
+      "pivot_y": 0.4,
+      "pivot_z": -4.7
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 1.1,
+      "pivot_y": 0.4,
+      "pivot_z": -5.7
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -1.1,
+      "pivot_y": 0.4,
+      "pivot_z": -5.7
+    }
+  ],
+  "toggle_parts": [
+    {
+      "part": "$hatch_ramp_l",
+      "pivot_x": 0.0,
+      "pivot_y": 1.3,
+      "pivot_z": -6.45,
+      "mode": "rotate",
+      "axis_x": -1.0,
+      "axis_y": 0.0,
+      "axis_z": 0.0,
+      "max_angle": 130.5,
+      "trigger": "key",
+      "speed": 2.0
+    },
+    {
+      "part": "$hatch_ramp_r",
+      "pivot_x": 0.0,
+      "pivot_y": 1.3,
+      "pivot_z": -6.45,
+      "mode": "rotate",
+      "axis_x": -1.0,
+      "axis_y": 0.0,
+      "axis_z": 0.0,
+      "max_angle": 130.5,
+      "trigger": "key",
+      "speed": 2.0
+    }
+  ],
+  "runways": [
+    {
+      "width": 2.9,
+      "center_x": 0.0,
+      "height_y": 0.85,
+      "start_z": -4.0,
+      "end_z": 2.9
+    },
+    {
+      "width": 2.9,
+      "center_x": 0.0,
+      "height_y": 1.3,
+      "start_z": -6.45,
+      "end_z": -4.0
+    },
+    {
+      "width": 2.9,
+      "center_x": 0.0,
+      "height_y": 0.65,
+      "start_z": -7.971,
+      "end_z": -6.45,
+      "hatch_gated": true
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Dump Truck 10t",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.6,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Dump Truck 10t",
+    "tier": 2
+  },
+  "construction": {
+    "machine": "dump_truck",
+    "dump_truck": {
+      "bed_min_x": -1.05,
+      "bed_min_y": 1.3,
+      "bed_min_z": -3.45,
+      "bed_max_x": 1.05,
+      "bed_max_y": 3.6,
+      "bed_max_z": 1.65,
+      "bed_speed": 1.5,
+      "bed_max_angle": 55.0,
+      "dump_start_angle": 20.0,
+      "dump_interval_slow": 8,
+      "dump_interval_fast": 2,
+      "capacity": 256,
+      "discharge_point": "discharge",
+      "dump_spread_radius": 4,
+      "dump_slope": 0.6
+    },
+    "joints": [
+      {
+        "part": "$bed",
+        "pivot_x": 0.0,
+        "pivot_y": 1.25,
+        "pivot_z": -3.45,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "bed"
+      },
+      {
+        "part": "$bed_load",
+        "parent": "$bed",
+        "pivot_x": 0.0,
+        "pivot_y": 1.45,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "scale",
+        "channel": "load",
+        "offset": 0.0
+      },
+      {
+        "part": "$hoist_ram",
+        "pivot_x": 0.0,
+        "pivot_y": 0.95,
+        "pivot_z": 1.3,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$bed",
+          "x": 0.0,
+          "y": 1.15,
+          "z": -2.2
+        }
+      },
+      {
+        "part": "$hoist_ram_s1",
+        "parent": "$hoist_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.057,
+        "axis_z": -0.9984,
+        "mode": "reach",
+        "target": {
+          "part": "$bed",
+          "x": 0.0,
+          "y": 1.15,
+          "z": -2.2
+        },
+        "anchor": {
+          "part": "$hoist_ram",
+          "x": 0.0,
+          "y": 0.95,
+          "z": 1.3
+        },
+        "factor": 1.0
+      }
+    ],
+    "work_points": {
+      "discharge": {
+        "part": "$bed",
+        "x": 0.0,
+        "y": 1.5,
+        "z": -3.85
+      }
+    }
+  },
+  "model": "constructiondetail:models/obj/dump_truck_10t.obj",
+  "texture": "constructiondetail:textures/vehicle/dump_truck_10t.png",
+  "seats": [
+    {
+      "name": "driver",
+      "offset_x": -0.55,
+      "offset_y": 0.9625,
+      "offset_z": 2.6415,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": -0.55,
+          "y": 2.542,
+          "z": 2.6415
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.975,
+    "entity_height": 0.975
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.0,
+      "pivot_y": 0.53,
+      "pivot_z": 3.0,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.0,
+      "pivot_y": 0.53,
+      "pivot_z": 3.0,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -1.3
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -1.3
+    },
+    {
+      "part": "$wheel4",
+      "pivot_x": 0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -2.6
+    },
+    {
+      "part": "$wheel5",
+      "pivot_x": -0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -2.6
+    }
+  ]
+}

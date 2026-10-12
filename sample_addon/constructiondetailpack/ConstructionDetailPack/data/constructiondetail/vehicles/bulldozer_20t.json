@@ -1,0 +1,434 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Bulldozer 20t",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.2,
+  "max_speed": 0.3,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 160.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Bulldozer 20t",
+    "tier": 2
+  },
+  "construction": {
+    "machine": "bulldozer",
+    "bulldozer": {
+      "blade_front_z": 3.05,
+      "blade_width": 3.42,
+      "blade_bottom_y": 0.0,
+      "blade_height": 1.3,
+      "blade_min": -1.0,
+      "blade_max": 1.1,
+      "blade_speed": 0.04,
+      "capacity": 20,
+      "max_cuts_per_tick": 2,
+      "full_load_speed": 0.5,
+      "cut_drag": 0.04,
+      "unload_interval": 3,
+      "min_work_speed": 0.02,
+      "dump_spread_radius": 3,
+      "dump_slope": 0.75,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 2.0
+      }
+    },
+    "joints": [
+      {
+        "part": "$blade",
+        "pivot_x": 0,
+        "pivot_y": 0.5,
+        "pivot_z": -0.3,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "blade",
+        "factor": 17.166
+      },
+      {
+        "part": "$blade_load",
+        "parent": "$blade",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 3.3,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "scale",
+        "channel": "load",
+        "offset": 0.0
+      },
+      {
+        "part": "$lift_ram_l",
+        "pivot_x": 0.9,
+        "pivot_y": 2.05,
+        "pivot_z": 0.6,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$blade",
+          "x": 0.9,
+          "y": 0.95,
+          "z": 2.6
+        }
+      },
+      {
+        "part": "$lift_ram_l_s1",
+        "parent": "$lift_ram_l",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": -0.4819,
+        "axis_z": 0.8762,
+        "mode": "reach",
+        "target": {
+          "part": "$blade",
+          "x": 0.9,
+          "y": 0.95,
+          "z": 2.6
+        },
+        "anchor": {
+          "part": "$lift_ram_l",
+          "x": 0.9,
+          "y": 2.05,
+          "z": 0.6
+        },
+        "factor": 1.0
+      },
+      {
+        "part": "$lift_ram_r",
+        "pivot_x": -0.9,
+        "pivot_y": 2.05,
+        "pivot_z": 0.6,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$blade",
+          "x": -0.9,
+          "y": 0.95,
+          "z": 2.6
+        }
+      },
+      {
+        "part": "$lift_ram_r_s1",
+        "parent": "$lift_ram_r",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": -0.4819,
+        "axis_z": 0.8762,
+        "mode": "reach",
+        "target": {
+          "part": "$blade",
+          "x": -0.9,
+          "y": 0.95,
+          "z": 2.6
+        },
+        "anchor": {
+          "part": "$lift_ram_r",
+          "x": -0.9,
+          "y": 2.05,
+          "z": 0.6
+        },
+        "factor": 1.0
+      }
+    ]
+  },
+  "model": "constructiondetail:models/obj/bulldozer_20t.obj",
+  "texture": "constructiondetail:textures/vehicle/bulldozer_20t.png",
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.0,
+      "offset_y": 1.31,
+      "offset_z": -1.44,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.0,
+          "y": 2.606,
+          "z": -1.44
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.8,
+    "entity_height": 0.8
+  },
+  "crawler_tracks": [
+    {
+      "part": "$crawler_l",
+      "x": 0.99,
+      "link_spacing": 0.19829,
+      "path": [
+        {
+          "y": 0.035,
+          "z": 0.8925
+        },
+        {
+          "y": 0.2748,
+          "z": 1.5052
+        },
+        {
+          "y": 0.3965,
+          "z": 1.5865
+        },
+        {
+          "y": 0.54,
+          "z": 1.615
+        },
+        {
+          "y": 0.6835,
+          "z": 1.5865
+        },
+        {
+          "y": 0.8052,
+          "z": 1.5052
+        },
+        {
+          "y": 0.8865,
+          "z": 1.3835
+        },
+        {
+          "y": 0.915,
+          "z": 1.24
+        },
+        {
+          "y": 0.915,
+          "z": -1.24
+        },
+        {
+          "y": 0.8865,
+          "z": -1.3835
+        },
+        {
+          "y": 0.8052,
+          "z": -1.5052
+        },
+        {
+          "y": 0.6835,
+          "z": -1.5865
+        },
+        {
+          "y": 0.54,
+          "z": -1.615
+        },
+        {
+          "y": 0.3965,
+          "z": -1.5865
+        },
+        {
+          "y": 0.2748,
+          "z": -1.5052
+        },
+        {
+          "y": 0.035,
+          "z": -0.8925
+        }
+      ]
+    },
+    {
+      "part": "$crawler_r",
+      "x": -0.99,
+      "link_spacing": 0.19829,
+      "path": [
+        {
+          "y": 0.035,
+          "z": 0.8925
+        },
+        {
+          "y": 0.2748,
+          "z": 1.5052
+        },
+        {
+          "y": 0.3965,
+          "z": 1.5865
+        },
+        {
+          "y": 0.54,
+          "z": 1.615
+        },
+        {
+          "y": 0.6835,
+          "z": 1.5865
+        },
+        {
+          "y": 0.8052,
+          "z": 1.5052
+        },
+        {
+          "y": 0.8865,
+          "z": 1.3835
+        },
+        {
+          "y": 0.915,
+          "z": 1.24
+        },
+        {
+          "y": 0.915,
+          "z": -1.24
+        },
+        {
+          "y": 0.8865,
+          "z": -1.3835
+        },
+        {
+          "y": 0.8052,
+          "z": -1.5052
+        },
+        {
+          "y": 0.6835,
+          "z": -1.5865
+        },
+        {
+          "y": 0.54,
+          "z": -1.615
+        },
+        {
+          "y": 0.3965,
+          "z": -1.5865
+        },
+        {
+          "y": 0.2748,
+          "z": -1.5052
+        },
+        {
+          "y": 0.035,
+          "z": -0.8925
+        }
+      ]
+    }
+  ],
+  "track_roller_parts": [
+    {
+      "part": "$sprocket_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.54,
+      "pivot_z": -1.24,
+      "rotations_per_block": 0.4681
+    },
+    {
+      "part": "$idler_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.54,
+      "pivot_z": 1.24,
+      "rotations_per_block": 0.4681
+    },
+    {
+      "part": "$wheel0_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.22,
+      "pivot_z": -0.8175,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel1_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.22,
+      "pivot_z": -0.4088,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel2_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.22,
+      "pivot_z": 0.0,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel3_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.22,
+      "pivot_z": 0.4088,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel4_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.22,
+      "pivot_z": 0.8175,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$carrier0_l",
+      "pivot_x": 0.99,
+      "pivot_y": 0.78,
+      "pivot_z": 0.0,
+      "rotations_per_block": 1.5915
+    },
+    {
+      "part": "$sprocket_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.54,
+      "pivot_z": -1.24,
+      "rotations_per_block": 0.4681
+    },
+    {
+      "part": "$idler_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.54,
+      "pivot_z": 1.24,
+      "rotations_per_block": 0.4681
+    },
+    {
+      "part": "$wheel0_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.22,
+      "pivot_z": -0.8175,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel1_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.22,
+      "pivot_z": -0.4088,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel2_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.22,
+      "pivot_z": 0.0,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel3_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.22,
+      "pivot_z": 0.4088,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$wheel4_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.22,
+      "pivot_z": 0.8175,
+      "rotations_per_block": 1.061
+    },
+    {
+      "part": "$carrier0_r",
+      "pivot_x": -0.99,
+      "pivot_y": 0.78,
+      "pivot_z": 0.0,
+      "rotations_per_block": 1.5915
+    }
+  ]
+}

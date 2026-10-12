@@ -1,0 +1,49 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Backhoe",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.3,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 140.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Backhoe",
+    "tier": 2
+  },
+  "construction": {
+    "machine": "excavator",
+    "excavator": {
+      "swing_speed": 2.5,
+      "boom_speed": 1.5,
+      "arm_speed": 2.0,
+      "boom_min": -40.0,
+      "boom_max": 35.0,
+      "arm_min": -50.0,
+      "arm_max": 110.0,
+      "bucket_min": -60.0,
+      "bucket_max": 110.0,
+      "curl_speed": 4.0,
+      "capacity": 4,
+      "dig_radius": 0.8,
+      "base_dig_ticks": 4.0,
+      "dump_angle": -20.0,
+      "dump_interval": 3,
+      "dump_spread_radius": 4,
+      "dump_slope": 0.75,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 3.5
+      }
+    }
+  }
+}

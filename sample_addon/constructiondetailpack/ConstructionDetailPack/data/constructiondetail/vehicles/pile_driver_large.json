@@ -1,0 +1,1132 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Large Rotary Pile Driver",
+  "scale": 1.0,
+  "width": 3.5,
+  "height": 3.4,
+  "max_speed": 0.2,
+  "acceleration": 0.04,
+  "turn_speed": 1.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 220.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Large Rotary Pile Driver",
+    "tier": 5
+  },
+  "construction": {
+    "machine": "pile_driver",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "pile_driver": {
+      "mode": "rotary",
+      "max_depth": 80,
+      "mast_speed": 0.012,
+      "swing_speed": 1.0,
+      "outrigger_speed": 0.03,
+      "require_outriggers": true,
+      "crawler_extension": true,
+      "track_width_speed": 0.02,
+      "ticks_per_block": 30.0,
+      "rpm": 25.0,
+      "min_rpm": 4.0,
+      "rpm_response": 0.1,
+      "resistance": {
+        "hardness_scale": 0.8,
+        "refusal_hardness": 30.0
+      },
+      "pile_block": "minecraft:iron_block",
+      "steady_top": 1.65,
+      "steady_margin": 1.2,
+      "steady_speed": 0.05,
+      "pile_length_min": 4,
+      "pile_length_max": 18,
+      "default_pile_length": 12,
+      "head_min": 1.8,
+      "head_max": 19.0,
+      "head_speed": 0.15,
+      "cap_offset": 0.2,
+      "tool": "follower",
+      "tool_length": 6.0,
+      "tool_speed": 0.03,
+      "load_ticks_per_block": 4,
+      "extract_factor": 0.6,
+      "grip_tolerance": 0.6
+    },
+    "joints": [
+      {
+        "part": "$track_l",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "track_width",
+        "factor": 0.7
+      },
+      {
+        "part": "$track_r",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "track_width",
+        "factor": 0.7
+      },
+      {
+        "part": "$outrigger_fl",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 3.4,
+        "min": 0.0,
+        "max": 1.7
+      },
+      {
+        "part": "$outrigger_fl_leg",
+        "parent": "$outrigger_fl",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.4,
+        "offset": -1.2,
+        "min": 0.0,
+        "max": 1.2
+      },
+      {
+        "part": "$outrigger_rl",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 3.4,
+        "min": 0.0,
+        "max": 1.7
+      },
+      {
+        "part": "$outrigger_rl_leg",
+        "parent": "$outrigger_rl",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.4,
+        "offset": -1.2,
+        "min": 0.0,
+        "max": 1.2
+      },
+      {
+        "part": "$outrigger_fr",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 3.4,
+        "min": 0.0,
+        "max": 1.7
+      },
+      {
+        "part": "$outrigger_fr_leg",
+        "parent": "$outrigger_fr",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.4,
+        "offset": -1.2,
+        "min": 0.0,
+        "max": 1.2
+      },
+      {
+        "part": "$outrigger_rr",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 3.4,
+        "min": 0.0,
+        "max": 1.7
+      },
+      {
+        "part": "$outrigger_rr_leg",
+        "parent": "$outrigger_rr",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.4,
+        "offset": -1.2,
+        "min": 0.0,
+        "max": 1.2
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.25,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$leader",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.6,
+        "pivot_z": 3.4,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "mast",
+        "factor": 72.0,
+        "offset": -72.0
+      },
+      {
+        "part": "$rotary_head",
+        "parent": "$leader",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "head",
+        "offset": -10.0
+      },
+      {
+        "part": "$pile",
+        "parent": "$leader",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "pile_top",
+        "offset": -9.8
+      },
+      {
+        "part": "$pile_spin",
+        "parent": "$pile",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 4.5,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "spin",
+        "channel": "rpm",
+        "factor": 0.3
+      },
+      {
+        "part": "$pile_shaft",
+        "parent": "$pile_spin",
+        "pivot_x": 0.0,
+        "pivot_y": 9.8,
+        "pivot_z": 4.5,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "scale",
+        "channel": "pile_length",
+        "factor": 0.11173,
+        "offset": -0.09497,
+        "min": 0.02
+      },
+      {
+        "part": "$pile_tip",
+        "parent": "$pile_spin",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "pile_length",
+        "factor": -1.0,
+        "offset": 9.8
+      },
+      {
+        "part": "$follower",
+        "parent": "$rotary_head",
+        "pivot_x": 0.0,
+        "pivot_y": 10.3,
+        "pivot_z": 4.5,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "show",
+        "channel": "tool"
+      },
+      {
+        "part": "$steady_l",
+        "parent": "$leader",
+        "pivot_x": 0.62,
+        "pivot_y": 1.5,
+        "pivot_z": 3.88,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "steady",
+        "factor": 100.0
+      },
+      {
+        "part": "$steady_r",
+        "parent": "$leader",
+        "pivot_x": -0.62,
+        "pivot_y": 1.5,
+        "pivot_z": 3.88,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "steady",
+        "factor": 100.0
+      },
+      {
+        "part": "$backstay_l",
+        "parent": "$upper",
+        "pivot_x": 0.8,
+        "pivot_y": 3.1,
+        "pivot_z": -3.0,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$leader",
+          "x": 0.5,
+          "y": 12.5,
+          "z": 2.98
+        }
+      },
+      {
+        "part": "$backstay_l_s1",
+        "parent": "$backstay_l",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0269,
+        "axis_y": 0.8434,
+        "axis_z": 0.5366,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.5,
+          "y": 12.5,
+          "z": 2.98
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.8,
+          "y": 3.1,
+          "z": -3.0
+        },
+        "factor": 0.3333
+      },
+      {
+        "part": "$backstay_l_s2",
+        "parent": "$backstay_l_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0269,
+        "axis_y": 0.8434,
+        "axis_z": 0.5366,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.5,
+          "y": 12.5,
+          "z": 2.98
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.8,
+          "y": 3.1,
+          "z": -3.0
+        },
+        "factor": 0.3333
+      },
+      {
+        "part": "$backstay_l_s3",
+        "parent": "$backstay_l_s2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.0269,
+        "axis_y": 0.8434,
+        "axis_z": 0.5366,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": 0.5,
+          "y": 12.5,
+          "z": 2.98
+        },
+        "anchor": {
+          "part": "$backstay_l",
+          "x": 0.8,
+          "y": 3.1,
+          "z": -3.0
+        },
+        "factor": 0.3333
+      },
+      {
+        "part": "$backstay_r",
+        "parent": "$upper",
+        "pivot_x": -0.8,
+        "pivot_y": 3.1,
+        "pivot_z": -3.0,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$leader",
+          "x": -0.5,
+          "y": 12.5,
+          "z": 2.98
+        }
+      },
+      {
+        "part": "$backstay_r_s1",
+        "parent": "$backstay_r",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0269,
+        "axis_y": 0.8434,
+        "axis_z": 0.5366,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.5,
+          "y": 12.5,
+          "z": 2.98
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.8,
+          "y": 3.1,
+          "z": -3.0
+        },
+        "factor": 0.3333
+      },
+      {
+        "part": "$backstay_r_s2",
+        "parent": "$backstay_r_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0269,
+        "axis_y": 0.8434,
+        "axis_z": 0.5366,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.5,
+          "y": 12.5,
+          "z": 2.98
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.8,
+          "y": 3.1,
+          "z": -3.0
+        },
+        "factor": 0.3333
+      },
+      {
+        "part": "$backstay_r_s3",
+        "parent": "$backstay_r_s2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0269,
+        "axis_y": 0.8434,
+        "axis_z": 0.5366,
+        "mode": "reach",
+        "target": {
+          "part": "$leader",
+          "x": -0.5,
+          "y": 12.5,
+          "z": 2.98
+        },
+        "anchor": {
+          "part": "$backstay_r",
+          "x": -0.8,
+          "y": 3.1,
+          "z": -3.0
+        },
+        "factor": 0.3333
+      },
+      {
+        "part": "$sprocket_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.58,
+        "pivot_z": -2.63,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -116.93
+      },
+      {
+        "part": "$idler_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.58,
+        "pivot_z": 2.63,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -116.93
+      },
+      {
+        "part": "$wheel0_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -1.9962,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel1_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -1.4259,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel2_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -0.8555,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel3_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -0.2852,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel4_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 0.2852,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel5_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 0.8555,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel6_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 1.4259,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel7_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 1.9962,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -318.31
+      },
+      {
+        "part": "$carrier0_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.95,
+        "pivot_z": -1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -477.465
+      },
+      {
+        "part": "$carrier1_l",
+        "parent": "$track_l",
+        "pivot_x": 0,
+        "pivot_y": 0.95,
+        "pivot_z": 1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_l",
+        "factor": -477.465
+      },
+      {
+        "part": "$sprocket_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.58,
+        "pivot_z": -2.63,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -116.93
+      },
+      {
+        "part": "$idler_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.58,
+        "pivot_z": 2.63,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -116.93
+      },
+      {
+        "part": "$wheel0_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -1.9962,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel1_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -1.4259,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel2_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -0.8555,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel3_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": -0.2852,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel4_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 0.2852,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel5_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 0.8555,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel6_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 1.4259,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$wheel7_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.26,
+        "pivot_z": 1.9962,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -318.31
+      },
+      {
+        "part": "$carrier0_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.95,
+        "pivot_z": -1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -477.465
+      },
+      {
+        "part": "$carrier1_r",
+        "parent": "$track_r",
+        "pivot_x": 0,
+        "pivot_y": 0.95,
+        "pivot_z": 1.067,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "belt",
+        "belt": "$belt_r",
+        "factor": -477.465
+      }
+    ],
+    "work_points": {
+      "pile_point": {
+        "part": "$leader",
+        "x": 0.0,
+        "y": 1.4,
+        "z": 4.5
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ],
+    "crawlers": [
+      {
+        "belt": "$belt_l",
+        "parent": "$track_l",
+        "link_prefix": "$link_l_",
+        "link_spacing": 0.23814,
+        "path": [
+          {
+            "y": 0.05,
+            "z": 2.63
+          },
+          {
+            "y": 0.121,
+            "z": 2.895
+          },
+          {
+            "y": 0.315,
+            "z": 3.089
+          },
+          {
+            "y": 0.58,
+            "z": 3.16
+          },
+          {
+            "y": 0.845,
+            "z": 3.089
+          },
+          {
+            "y": 1.039,
+            "z": 2.895
+          },
+          {
+            "y": 1.11,
+            "z": 2.63
+          },
+          {
+            "y": 1.11,
+            "z": -2.63
+          },
+          {
+            "y": 1.039,
+            "z": -2.895
+          },
+          {
+            "y": 0.845,
+            "z": -3.089
+          },
+          {
+            "y": 0.58,
+            "z": -3.16
+          },
+          {
+            "y": 0.315,
+            "z": -3.089
+          },
+          {
+            "y": 0.121,
+            "z": -2.895
+          },
+          {
+            "y": 0.05,
+            "z": -2.63
+          }
+        ]
+      },
+      {
+        "belt": "$belt_r",
+        "parent": "$track_r",
+        "link_prefix": "$link_r_",
+        "link_spacing": 0.23814,
+        "path": [
+          {
+            "y": 0.05,
+            "z": 2.63
+          },
+          {
+            "y": 0.121,
+            "z": 2.895
+          },
+          {
+            "y": 0.315,
+            "z": 3.089
+          },
+          {
+            "y": 0.58,
+            "z": 3.16
+          },
+          {
+            "y": 0.845,
+            "z": 3.089
+          },
+          {
+            "y": 1.039,
+            "z": 2.895
+          },
+          {
+            "y": 1.11,
+            "z": 2.63
+          },
+          {
+            "y": 1.11,
+            "z": -2.63
+          },
+          {
+            "y": 1.039,
+            "z": -2.895
+          },
+          {
+            "y": 0.845,
+            "z": -3.089
+          },
+          {
+            "y": 0.58,
+            "z": -3.16
+          },
+          {
+            "y": 0.315,
+            "z": -3.089
+          },
+          {
+            "y": 0.121,
+            "z": -2.895
+          },
+          {
+            "y": 0.05,
+            "z": -2.63
+          }
+        ]
+      }
+    ]
+  },
+  "model": "constructiondetail:models/obj/pile_driver_large.obj",
+  "texture": "constructiondetail:textures/vehicle/pile_driver_large.png",
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 1.1,
+      "offset_y": 1.42,
+      "offset_z": 0.8725,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 1.1,
+          "y": 2.797,
+          "z": 0.8725
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.85,
+    "entity_height": 0.85
+  },
+  "crawler_tracks": [
+    {
+      "part": "$belt_l",
+      "x": 1.35,
+      "link_spacing": 0.23814,
+      "path": [
+        {
+          "y": 0.05,
+          "z": 2.63
+        },
+        {
+          "y": 0.121,
+          "z": 2.895
+        },
+        {
+          "y": 0.315,
+          "z": 3.089
+        },
+        {
+          "y": 0.58,
+          "z": 3.16
+        },
+        {
+          "y": 0.845,
+          "z": 3.089
+        },
+        {
+          "y": 1.039,
+          "z": 2.895
+        },
+        {
+          "y": 1.11,
+          "z": 2.63
+        },
+        {
+          "y": 1.11,
+          "z": -2.63
+        },
+        {
+          "y": 1.039,
+          "z": -2.895
+        },
+        {
+          "y": 0.845,
+          "z": -3.089
+        },
+        {
+          "y": 0.58,
+          "z": -3.16
+        },
+        {
+          "y": 0.315,
+          "z": -3.089
+        },
+        {
+          "y": 0.121,
+          "z": -2.895
+        },
+        {
+          "y": 0.05,
+          "z": -2.63
+        }
+      ]
+    },
+    {
+      "part": "$belt_r",
+      "x": -1.35,
+      "link_spacing": 0.23814,
+      "path": [
+        {
+          "y": 0.05,
+          "z": 2.63
+        },
+        {
+          "y": 0.121,
+          "z": 2.895
+        },
+        {
+          "y": 0.315,
+          "z": 3.089
+        },
+        {
+          "y": 0.58,
+          "z": 3.16
+        },
+        {
+          "y": 0.845,
+          "z": 3.089
+        },
+        {
+          "y": 1.039,
+          "z": 2.895
+        },
+        {
+          "y": 1.11,
+          "z": 2.63
+        },
+        {
+          "y": 1.11,
+          "z": -2.63
+        },
+        {
+          "y": 1.039,
+          "z": -2.895
+        },
+        {
+          "y": 0.845,
+          "z": -3.089
+        },
+        {
+          "y": 0.58,
+          "z": -3.16
+        },
+        {
+          "y": 0.315,
+          "z": -3.089
+        },
+        {
+          "y": 0.121,
+          "z": -2.895
+        },
+        {
+          "y": 0.05,
+          "z": -2.63
+        }
+      ]
+    }
+  ]
+}

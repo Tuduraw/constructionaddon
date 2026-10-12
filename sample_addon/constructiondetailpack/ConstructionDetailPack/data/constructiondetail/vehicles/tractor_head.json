@@ -1,0 +1,95 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Tractor Head 6x4",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.1,
+  "max_speed": 0.7,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Tractor Head 6x4",
+    "tier": 3
+  },
+  "construction": {
+    "machine": "tractor",
+    "tractor": {
+      "hitch_x": 0.0,
+      "hitch_y": 1.25,
+      "hitch_z": -1.45,
+      "couple_radius": 2.0,
+      "towing_speed_factor": 0.7
+    }
+  },
+  "model": "constructiondetail:models/obj/tractor_head.obj",
+  "texture": "constructiondetail:textures/vehicle/tractor_head.png",
+  "seats": [
+    {
+      "name": "driver",
+      "offset_x": -0.55,
+      "offset_y": 0.95,
+      "offset_z": 2.02,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": -0.55,
+          "y": 2.57,
+          "z": 2.02
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 1.0,
+    "entity_height": 1.0
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 1.0,
+      "pivot_y": 0.53,
+      "pivot_z": 2.45,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -1.0,
+      "pivot_y": 0.53,
+      "pivot_z": 2.45,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -0.95
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -0.95
+    },
+    {
+      "part": "$wheel4",
+      "pivot_x": 0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -2.25
+    },
+    {
+      "part": "$wheel5",
+      "pivot_x": -0.93,
+      "pivot_y": 0.53,
+      "pivot_z": -2.25
+    }
+  ]
+}

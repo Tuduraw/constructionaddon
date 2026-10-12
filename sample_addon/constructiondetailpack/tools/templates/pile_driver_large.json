@@ -1,0 +1,50 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Large Pile Driver (Rotary)",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.2,
+  "acceleration": 0.04,
+  "turn_speed": 1.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 220.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Large Pile Driver (Rotary)",
+    "tier": 5
+  },
+  "construction": {
+    "machine": "pile_driver",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "pile_driver": {
+      "mode": "rotary",
+      "max_depth": 60,
+      "mast_speed": 0.012,
+      "swing_speed": 1.0,
+      "outrigger_speed": 0.03,
+      "require_outriggers": true,
+      "crawler_extension": true,
+      "track_width_speed": 0.02,
+      "ticks_per_block": 30.0,
+      "rpm": 25.0,
+      "min_rpm": 4.0,
+      "rpm_response": 0.1,
+      "resistance": {
+        "hardness_scale": 0.8,
+        "refusal_hardness": 30.0
+      }
+    }
+  }
+}

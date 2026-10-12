@@ -1,0 +1,686 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Rotary Pile Driver",
+  "scale": 1.0,
+  "width": 3.2,
+  "height": 3.0,
+  "max_speed": 0.25,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 140.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 18,
+  "spawn_item": {
+    "display_name": "Rotary Pile Driver",
+    "tier": 4
+  },
+  "construction": {
+    "machine": "pile_driver",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "pile_driver": {
+      "swing_speed": 1.5,
+      "swing_limit": 0.0,
+      "outrigger_speed": 0.04,
+      "require_outriggers": true,
+      "crawler_extension": false,
+      "mode": "rotary",
+      "max_depth": 48,
+      "mast_speed": 0.02,
+      "ticks_per_block": 40.0,
+      "rpm": 30.0,
+      "min_rpm": 5.0,
+      "rpm_response": 0.15,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 25.0
+      },
+      "pile_block": "minecraft:iron_block",
+      "steady_top": 1.55,
+      "steady_margin": 1.2,
+      "steady_speed": 0.06,
+      "pile_length_min": 2,
+      "pile_length_max": 9,
+      "default_pile_length": 6,
+      "head_min": 1.7,
+      "head_max": 9.3,
+      "head_speed": 0.12,
+      "cap_offset": 0.25,
+      "tool": "drive_rod",
+      "tool_length": 3.5,
+      "tool_speed": 0.05,
+      "load_ticks_per_block": 5,
+      "extract_factor": 0.6,
+      "grip_tolerance": 0.6
+    },
+    "joints": [
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.05,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$mast",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.5,
+        "pivot_z": 2.2,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "mast",
+        "factor": 80.0,
+        "offset": -80.0
+      },
+      {
+        "part": "$outrigger_fl",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.2,
+        "min": 0.0,
+        "max": 1.1
+      },
+      {
+        "part": "$outrigger_fl_leg",
+        "parent": "$outrigger_fl",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.0,
+        "offset": -1.0,
+        "min": 0.0,
+        "max": 1.0
+      },
+      {
+        "part": "$outrigger_rl",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.2,
+        "min": 0.0,
+        "max": 1.1
+      },
+      {
+        "part": "$outrigger_rl_leg",
+        "parent": "$outrigger_rl",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.0,
+        "offset": -1.0,
+        "min": 0.0,
+        "max": 1.0
+      },
+      {
+        "part": "$outrigger_fr",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.2,
+        "min": 0.0,
+        "max": 1.1
+      },
+      {
+        "part": "$outrigger_fr_leg",
+        "parent": "$outrigger_fr",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.0,
+        "offset": -1.0,
+        "min": 0.0,
+        "max": 1.0
+      },
+      {
+        "part": "$outrigger_rr",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.2,
+        "min": 0.0,
+        "max": 1.1
+      },
+      {
+        "part": "$outrigger_rr_leg",
+        "parent": "$outrigger_rr",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.0,
+        "offset": -1.0,
+        "min": 0.0,
+        "max": 1.0
+      },
+      {
+        "part": "$rotary_head",
+        "parent": "$mast",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "head",
+        "offset": -5.4
+      },
+      {
+        "part": "$pile",
+        "parent": "$mast",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "pile_top",
+        "offset": -5.15
+      },
+      {
+        "part": "$pile_spin",
+        "parent": "$pile",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 3.35,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "spin",
+        "channel": "rpm",
+        "factor": 0.3
+      },
+      {
+        "part": "$pile_shaft",
+        "parent": "$pile_spin",
+        "pivot_x": 0.0,
+        "pivot_y": 5.15,
+        "pivot_z": 3.35,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "scale",
+        "channel": "pile_length",
+        "factor": 0.23256,
+        "offset": -0.19767,
+        "min": 0.02
+      },
+      {
+        "part": "$pile_tip",
+        "parent": "$pile_spin",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "pile_length",
+        "factor": -1.0,
+        "offset": 5.15
+      },
+      {
+        "part": "$drive_rod",
+        "parent": "$rotary_head",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "tool",
+        "factor": -3.5
+      },
+      {
+        "part": "$steady_l",
+        "parent": "$mast",
+        "pivot_x": 0.42,
+        "pivot_y": 1.425,
+        "pivot_z": 2.93,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "steady",
+        "factor": 100.0
+      },
+      {
+        "part": "$steady_r",
+        "parent": "$mast",
+        "pivot_x": -0.42,
+        "pivot_y": 1.425,
+        "pivot_z": 2.93,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "steady",
+        "factor": 100.0
+      },
+      {
+        "part": "$backstay",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.55,
+        "pivot_z": 0.2,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$mast",
+          "x": 0.0,
+          "y": 7.0,
+          "z": 2.2
+        }
+      },
+      {
+        "part": "$backstay_s1",
+        "parent": "$backstay",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.9388,
+        "axis_z": 0.3445,
+        "mode": "reach",
+        "target": {
+          "part": "$mast",
+          "x": 0.0,
+          "y": 7.0,
+          "z": 2.2
+        },
+        "anchor": {
+          "part": "$backstay",
+          "x": 0.0,
+          "y": 1.55,
+          "z": 0.2
+        },
+        "factor": 1.0
+      }
+    ],
+    "work_points": {
+      "pile_point": {
+        "part": "$mast",
+        "x": 0.0,
+        "y": 1.5,
+        "z": 3.35
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ]
+  },
+  "model": "constructiondetail:models/obj/pile_driver_rotary.obj",
+  "texture": "constructiondetail:textures/vehicle/pile_driver_rotary.png",
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 1.0,
+      "offset_y": 1.22,
+      "offset_z": 0.4475,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 1.0,
+          "y": 2.435,
+          "z": 0.4475
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.75,
+    "entity_height": 0.75
+  },
+  "crawler_tracks": [
+    {
+      "part": "$crawler_l",
+      "x": 1.3,
+      "link_spacing": 0.20042,
+      "path": [
+        {
+          "y": 0.045,
+          "z": 1.93
+        },
+        {
+          "y": 0.1033,
+          "z": 2.1475
+        },
+        {
+          "y": 0.2625,
+          "z": 2.3067
+        },
+        {
+          "y": 0.48,
+          "z": 2.365
+        },
+        {
+          "y": 0.6975,
+          "z": 2.3067
+        },
+        {
+          "y": 0.8567,
+          "z": 2.1475
+        },
+        {
+          "y": 0.915,
+          "z": 1.93
+        },
+        {
+          "y": 0.915,
+          "z": -1.93
+        },
+        {
+          "y": 0.8567,
+          "z": -2.1475
+        },
+        {
+          "y": 0.6975,
+          "z": -2.3067
+        },
+        {
+          "y": 0.48,
+          "z": -2.365
+        },
+        {
+          "y": 0.2625,
+          "z": -2.3067
+        },
+        {
+          "y": 0.1033,
+          "z": -2.1475
+        },
+        {
+          "y": 0.045,
+          "z": -1.93
+        }
+      ]
+    },
+    {
+      "part": "$crawler_r",
+      "x": -1.3,
+      "link_spacing": 0.20042,
+      "path": [
+        {
+          "y": 0.045,
+          "z": 1.93
+        },
+        {
+          "y": 0.1033,
+          "z": 2.1475
+        },
+        {
+          "y": 0.2625,
+          "z": 2.3067
+        },
+        {
+          "y": 0.48,
+          "z": 2.365
+        },
+        {
+          "y": 0.6975,
+          "z": 2.3067
+        },
+        {
+          "y": 0.8567,
+          "z": 2.1475
+        },
+        {
+          "y": 0.915,
+          "z": 1.93
+        },
+        {
+          "y": 0.915,
+          "z": -1.93
+        },
+        {
+          "y": 0.8567,
+          "z": -2.1475
+        },
+        {
+          "y": 0.6975,
+          "z": -2.3067
+        },
+        {
+          "y": 0.48,
+          "z": -2.365
+        },
+        {
+          "y": 0.2625,
+          "z": -2.3067
+        },
+        {
+          "y": 0.1033,
+          "z": -2.1475
+        },
+        {
+          "y": 0.045,
+          "z": -1.93
+        }
+      ]
+    }
+  ],
+  "track_roller_parts": [
+    {
+      "part": "$sprocket_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.48,
+      "pivot_z": -1.93,
+      "rotations_per_block": 0.3979
+    },
+    {
+      "part": "$idler_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.48,
+      "pivot_z": 1.93,
+      "rotations_per_block": 0.3979
+    },
+    {
+      "part": "$wheel0_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": -1.4167,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel1_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": -0.9445,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel2_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": -0.4722,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel3_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 0.0,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel4_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 0.4722,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel5_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 0.9445,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel6_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 1.4167,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$carrier0_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.78,
+      "pivot_z": -0.7425,
+      "rotations_per_block": 1.5915
+    },
+    {
+      "part": "$carrier1_l",
+      "pivot_x": 1.3,
+      "pivot_y": 0.78,
+      "pivot_z": 0.7425,
+      "rotations_per_block": 1.5915
+    },
+    {
+      "part": "$sprocket_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.48,
+      "pivot_z": -1.93,
+      "rotations_per_block": 0.3979
+    },
+    {
+      "part": "$idler_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.48,
+      "pivot_z": 1.93,
+      "rotations_per_block": 0.3979
+    },
+    {
+      "part": "$wheel0_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": -1.4167,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel1_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": -0.9445,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel2_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": -0.4722,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel3_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 0.0,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel4_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 0.4722,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel5_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 0.9445,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$wheel6_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.21,
+      "pivot_z": 1.4167,
+      "rotations_per_block": 1.1368
+    },
+    {
+      "part": "$carrier0_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.78,
+      "pivot_z": -0.7425,
+      "rotations_per_block": 1.5915
+    },
+    {
+      "part": "$carrier1_r",
+      "pivot_x": -1.3,
+      "pivot_y": 0.78,
+      "pivot_z": 0.7425,
+      "rotations_per_block": 1.5915
+    }
+  ]
+}

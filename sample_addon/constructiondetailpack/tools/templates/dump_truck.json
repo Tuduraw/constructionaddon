@@ -1,0 +1,43 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Dump Truck",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.6,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Dump Truck",
+    "tier": 2
+  },
+  "construction": {
+    "machine": "dump_truck",
+    "dump_truck": {
+      "bed_min_x": -1.1,
+      "bed_min_y": 1.2,
+      "bed_min_z": -2.9,
+      "bed_max_x": 1.1,
+      "bed_max_y": 4.5,
+      "bed_max_z": 1.3,
+      "bed_speed": 1.5,
+      "bed_max_angle": 55.0,
+      "dump_start_angle": 20.0,
+      "dump_interval_slow": 8,
+      "dump_interval_fast": 2,
+      "capacity": 256,
+      "discharge_point": "discharge",
+      "dump_spread_radius": 4,
+      "dump_slope": 0.6
+    }
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Rough Terrain Crane 25t",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.5,
+  "max_speed": 0.45,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 160.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Rough Terrain Crane 25t",
+    "tier": 3
+  },
+  "construction": {
+    "machine": "crane",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "crane": {
+      "swing_speed": 1.5,
+      "luff_speed": 0.6,
+      "luff_min": 0.0,
+      "luff_max": 78.0,
+      "extend_speed": 0.08,
+      "extend_max": 21.0,
+      "rope_speed": 0.15,
+      "rope_min": 0.5,
+      "rope_max": 50.0,
+      "outrigger_speed": 0.03,
+      "require_outriggers": true,
+      "grab_radius": 1.5,
+      "max_lift_width": 6.0,
+      "hook_drop": 1.15
+    },
+    "joints": [
+      {
+        "part": "$outrigger_l",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.1
+      },
+      {
+        "part": "$outrigger_r",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 2.1
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.6,
+        "pivot_z": -0.6,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$boom",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 2.55,
+        "pivot_z": -3.0,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "luff"
+      },
+      {
+        "part": "$boom2",
+        "parent": "$boom",
+        "pivot_x": 0.0,
+        "pivot_y": 2.55,
+        "pivot_z": -3.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.3333
+      },
+      {
+        "part": "$boom3",
+        "parent": "$boom2",
+        "pivot_x": 0.0,
+        "pivot_y": 2.55,
+        "pivot_z": -3.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.3333
+      },
+      {
+        "part": "$boom4",
+        "parent": "$boom3",
+        "pivot_x": 0.0,
+        "pivot_y": 2.55,
+        "pivot_z": -3.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.3333
+      },
+      {
+        "part": "$rope",
+        "parent": "$boom4",
+        "pivot_x": 0.0,
+        "pivot_y": 2.35,
+        "pivot_z": 7.2,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "scale",
+        "channel": "rope",
+        "offset": 0.0,
+        "inherit_rotation": false
+      },
+      {
+        "part": "$hook",
+        "parent": "$boom4",
+        "pivot_x": 0.0,
+        "pivot_y": 2.35,
+        "pivot_z": 7.2,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "rope",
+        "inherit_rotation": false
+      },
+      {
+        "part": "$luff_ram",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.88,
+        "pivot_z": -1.0,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$boom",
+          "x": 0.0,
+          "y": 2.4,
+          "z": 2.8
+        }
+      },
+      {
+        "part": "$luff_ram_s1",
+        "parent": "$luff_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.1356,
+        "axis_z": 0.9908,
+        "mode": "reach",
+        "target": {
+          "part": "$boom",
+          "x": 0.0,
+          "y": 2.4,
+          "z": 2.8
+        },
+        "anchor": {
+          "part": "$luff_ram",
+          "x": 0.0,
+          "y": 1.88,
+          "z": -1.0
+        },
+        "factor": 1.0
+      }
+    ],
+    "work_points": {
+      "boom_tip": {
+        "part": "$boom4",
+        "x": 0.0,
+        "y": 2.35,
+        "z": 7.2
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ]
+  },
+  "model": "constructiondetail:models/obj/rough_terrain_crane_25t.obj",
+  "texture": "constructiondetail:textures/vehicle/rough_terrain_crane_25t.png",
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.92,
+      "offset_y": 1.77,
+      "offset_z": -0.182,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.92,
+          "y": 2.742,
+          "z": -0.182
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.6,
+    "entity_height": 0.6
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 0.98,
+      "pivot_y": 0.65,
+      "pivot_z": 1.85,
+      "steer_angle": 25.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -0.98,
+      "pivot_y": 0.65,
+      "pivot_z": 1.85,
+      "steer_angle": 25.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 0.98,
+      "pivot_y": 0.65,
+      "pivot_z": -1.85,
+      "steer_angle": 25.0
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -0.98,
+      "pivot_y": 0.65,
+      "pivot_z": -1.85,
+      "steer_angle": 25.0
+    }
+  ]
+}

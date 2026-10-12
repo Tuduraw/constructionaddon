@@ -1,0 +1,51 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Pile Driver (Drop Hammer)",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.25,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 140.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 18,
+  "spawn_item": {
+    "display_name": "Pile Driver (Drop Hammer)",
+    "tier": 3
+  },
+  "construction": {
+    "machine": "pile_driver",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "pile_driver": {
+      "swing_speed": 1.5,
+      "swing_limit": 0.0,
+      "outrigger_speed": 0.04,
+      "require_outriggers": true,
+      "crawler_extension": false,
+      "mode": "hammer",
+      "max_depth": 32,
+      "mast_speed": 0.02,
+      "blows_per_block": 2.0,
+      "max_blows_per_block": 40,
+      "lift_ticks": 20,
+      "drop_ticks": 5,
+      "lift_height": 2.0,
+      "resistance": {
+        "hardness_scale": 1.0,
+        "refusal_hardness": 20.0
+      }
+    }
+  }
+}

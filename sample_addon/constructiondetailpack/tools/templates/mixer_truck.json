@@ -1,0 +1,42 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Concrete Mixer Truck",
+  "scale": 1.0,
+  "width": 3.0,
+  "height": 3.0,
+  "max_speed": 0.55,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 100.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 18,
+  "spawn_item": {
+    "display_name": "Concrete Mixer Truck",
+    "tier": 3
+  },
+  "construction": {
+    "machine": "mixer_truck",
+    "mixer_truck": {
+      "chute_swing_speed": 3.0,
+      "chute_swing_limit": 100.0,
+      "chute_tilt_min": -25.0,
+      "chute_tilt_max": 30.0,
+      "chute_tilt_speed": 1.0,
+      "pour_interval": 4,
+      "spread_radius": 4,
+      "capacity": 64,
+      "water_capacity": 64,
+      "water_per_bucket": 8,
+      "mix_interval": 5,
+      "drum_mix_speed": 6.0,
+      "drum_pour_speed": -12.0,
+      "drum_idle_speed": 1.5
+    }
+  }
+}
