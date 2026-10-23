@@ -63,7 +63,7 @@ public final class TractorModule extends MachineModule {
 	public Vec3d hitchWorld() {
 		Settings s = this.settings();
 		float scale = this.machine.getDefinition().scale();
-		return TrailerModule.yawTransform(this.machine.getX(), this.machine.getY(), this.machine.getZ(),
+		return TowLink.yawTransform(this.machine.getX(), this.machine.getY(), this.machine.getZ(),
 				this.machine.getYaw(), s.hitchX() * scale, s.hitchY() * scale, s.hitchZ() * scale);
 	}
 
@@ -74,7 +74,7 @@ public final class TractorModule extends MachineModule {
 		}
 		Entity entity = world.getEntity(this.trailerUuid);
 		if (entity instanceof ConstructionMachineEntity trailer && !trailer.isRemoved()
-				&& trailer.module() instanceof TrailerModule module && module.isCoupledTo(this.machine)) {
+				&& trailer.module() instanceof Towable module && module.isCoupledTo(this.machine)) {
 			return trailer;
 		}
 		return null;
@@ -94,7 +94,7 @@ public final class TractorModule extends MachineModule {
 			return;
 		}
 		if (trailer != null) {
-			((TrailerModule) trailer.module()).uncouple();
+			((Towable) trailer.module()).uncouple();
 			this.trailerUuid = null;
 			this.sound(world, SoundEvents.BLOCK_PISTON_CONTRACT);
 			return;
@@ -104,11 +104,11 @@ public final class TractorModule extends MachineModule {
 		List<ConstructionMachineEntity> candidates = world.getEntitiesByClass(ConstructionMachineEntity.class,
 				new Box(hitch, hitch).expand(s.coupleRadius() + 16.0),
 				e -> e != this.machine && !e.isRemoved() && !e.tudursvehiclemod$isDestroyed()
-						&& e.module() instanceof TrailerModule module && !module.isCoupled());
+						&& e.module() instanceof Towable module && !module.isCoupled() && module.canCouple());
 		ConstructionMachineEntity best = null;
 		double bestDist = (double) s.coupleRadius() * s.coupleRadius();
 		for (ConstructionMachineEntity candidate : candidates) {
-			double dist = ((TrailerModule) candidate.module()).kingpinWorld().squaredDistanceTo(hitch);
+			double dist = ((Towable) candidate.module()).kingpinWorld().squaredDistanceTo(hitch);
 			if (dist <= bestDist) {
 				best = candidate;
 				bestDist = dist;
@@ -116,7 +116,7 @@ public final class TractorModule extends MachineModule {
 		}
 		this.nothingToCouple = best == null;
 		if (best != null) {
-			((TrailerModule) best.module()).coupleTo(this.machine);
+			((Towable) best.module()).coupleTo(this.machine);
 			this.trailerUuid = best.getUuid();
 			this.sound(world, SoundEvents.BLOCK_PISTON_EXTEND);
 		}

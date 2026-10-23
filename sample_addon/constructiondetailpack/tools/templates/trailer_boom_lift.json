@@ -1,0 +1,49 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Trailer Boom Lift",
+  "scale": 1.0,
+  "max_speed": 0.7,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "unknown",
+  "max_health": 90.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 0,
+  "spawn_item": {
+    "display_name": "Trailer Boom Lift",
+    "tier": 2
+  },
+  "construction": {
+    "machine": "aerial_platform",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "aerial_platform": {
+      "swing_speed": 1.0,
+      "luff_speed": 0.5,
+      "luff_min": 0.0,
+      "luff_max": 75.0,
+      "knuckle_speed": 0.8,
+      "knuckle_min": 0.0,
+      "knuckle_max": 160.0,
+      "extend_speed": 0.03,
+      "extend_max": 1.5,
+      "basket_speed": 1.5,
+      "basket_limit": 90.0,
+      "outriggers": true,
+      "require_outriggers": true,
+      "stow_to_drive": true,
+      "swing_clear_luff": 20.0,
+      "swing_low_limit": 60.0
+    }
+  },
+  "fuel_consumption": -1.0
+}

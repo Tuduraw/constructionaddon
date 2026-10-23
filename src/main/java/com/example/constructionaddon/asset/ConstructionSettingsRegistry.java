@@ -138,6 +138,6 @@ public final class ConstructionSettingsRegistry implements SimpleSynchronousReso
 		Object machineSettings = type.parseSettings(machineJson,
 				error -> LOGGER.error("Invalid '{}' settings for '{}': {}", type.id(), vehicleId, error));
 		return new ConstructionSettings(type, common.joints(), common.crawlers(), common.workPoints(), common.seatParts(),
-				common.swingSound(), machineSettings);
+				common.swingSound(), machineSettings, common.workSeat());
 	}
 }

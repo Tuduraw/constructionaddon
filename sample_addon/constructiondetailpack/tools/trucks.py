@@ -20,7 +20,7 @@ HW = 1.245          # half width (2.49 m)
 TYRE_R = 0.53
 
 
-def cabover(m, part, z0, z1, y_top, axle_z, tag="cabin", seat_x=-0.55):
+def cabover(m, part, z0, z1, y_top, axle_z, tag="cabin", seat_x=-0.55, max_scale=1.0):
     """Cab-over-engine cab over the front axle. z0/z1: back/front of the cab. Returns the driver's
     'seats' / 'passenger_display' JSON, with the rider fitted inside the cab (common.fit_rider)."""
     wz0, wz1 = axle_z - TYRE_R - 0.08, axle_z + TYRE_R + 0.08
@@ -66,7 +66,8 @@ def cabover(m, part, z0, z1, y_top, axle_z, tag="cabin", seat_x=-0.55):
     box(m, part, -HW + 0.05, yb - 0.05, z0 + 0.03, HW - 0.05, yb, z1 - 0.1, "black")
     box(m, part, -HW + 0.06, yb, z1 - 0.5, HW - 0.06, yb + 0.35, z1 - 0.1, "black")
     slope_top = z1 - slope - 0.1
-    (ox, oy, oz), k = fit_rider(-HW + 0.06, HW - 0.06, yb, y_top - 0.03, z0 + 0.08, slope_top - 0.04, seat_x)
+    (ox, oy, oz), k = fit_rider(-HW + 0.06, HW - 0.06, yb, y_top - 0.03, z0 + 0.08, slope_top - 0.04, seat_x,
+                                max_scale)
     # forward until the knees reach the dashboard, the face staying behind the sloped windscreen
     oz = min(max(oz, z1 - 0.5 - RIDER_FRONT * k - 0.02), slope_top - 0.3 * k)
     cyl(m, part, (ox, 1.95, z1 - 0.55), (ox, 2.02, z1 - 0.62), 0.22, n=10, tag="black")

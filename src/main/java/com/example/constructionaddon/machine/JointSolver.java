@@ -146,6 +146,11 @@ public final class JointSolver {
 					float travel = joint.belt().map(this.belts::travel).orElse(0f);
 					own.rotate((float) Math.toRadians(joint.factor() * travel + joint.offset()), axis);
 				}
+				case SCISSOR -> {
+					float sine = MathHelper.clamp(clampedValue(joint, this.channels), -1f, 1f);
+					float rest = MathHelper.clamp(joint.offset(), -1f, 1f);
+					own.rotate((float) (Math.asin(sine) - Math.asin(rest)), axis);
+				}
 				case SHOW -> {
 					// Hidden: shrunk evenly into the pivot (uniform, so the normals stay well defined).
 					if (clampedValue(joint, this.channels) < 0.999f) {

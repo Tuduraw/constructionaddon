@@ -1,9 +1,9 @@
 # Construction Detail Pack(重機ディテールパック)
 
-Construction Machinery Addon(`constructionaddon`)の機能を使って、実際の重機クラスに近い寸法で作り込んだ重機・車両11機を追加するアドオンパックです。
+Construction Machinery Addon(`constructionaddon`)の機能を使って、実際の重機クラスに近い寸法で作り込んだ重機・車両17機を追加するアドオンパックです。
 同梱のサンプル機とは別の、新規設計の機体です(寸法・関節位置・作業点・座席・車輪位置もすべて独自)。
 
-- 前提:Tudur's Vehicle Mod 1.0.3 以降、Construction Machinery Addon(関節モード`aim`/`reach`/`belt`/`show`・`crawlers`と、打撃式・回転貫入式の杭の施工に対応した版)
+- 前提:Tudur's Vehicle Mod 1.0.3 以降、Construction Machinery Addon(関節モード`aim`/`reach`/`belt`/`show`/`scissor`・`crawlers`・`work_seat`と、高所作業車・打撃式・回転貫入式・全周回転式の杭の施工に対応した版)
 - モデルは [Meshkit](https://github.com/Tuduraw/Meshkit) で作成しました(生成スクリプト:このパックのプロジェクトの `tools/`)。
 - 作者:Tuduraw。Tudur's Vehicle Mod の作者 Tuduraw 氏に感謝します。モデル・テクスチャ・スクリプトの作成には Claude(Anthropic)を使用しました。
 - ライセンス:MIT(リポジトリと同じ)
@@ -36,10 +36,16 @@ Construction Machinery Addon(`constructionaddon`)の機能を使って、実際�
 | lowboy_trailer | Low-bed Trailer | 3 | 低床トレーラー | 13.0 × 3.0 × 1.8 | 約5,200 |
 | pile_driver_rotary | Rotary Pile Driver | 4 | 杭打ち機(回転貫入式) | 6.8 × 3.8 × 13.9 | 約6,300 |
 | pile_driver_large | Large Rotary Pile Driver | 5 | 大型杭打ち機(回転貫入式) | 9.2 × 4.3〜4.9 × 25 | 約7,500 |
+| scissor_lift_8m | Scissor Lift 8m | 1 | 高所作業車(シザース式・構内用) | 2.5 × 0.9 × 2.2 | 約4,500 |
+| trailer_boom_lift_12m | Trailer Boom Lift 12m | 2 | 高所作業車(トレーラー式・屈伸ブーム) | 5.8 × 2.1 × 2.0 | 約3,200 |
+| spider_crane_3t | Spider Crane 3t | 2 | スパイダークレーン | 2.7 × 0.8 × 1.3(ブーム先端まで3.0) | 約3,200 |
+| bucket_truck_12m | Insulated Bucket Truck 12m | 3 | 高所作業車(トラック式・電柱工事用) | 7.3 × 2.58 × 2.9 | 約5,900 |
+| full_rotation_unit | Full-Rotation Machine (Stationary) | 4 | 全周回転機(据置式) | 4.1 × 4.7 × 2.2(パワーユニット含む、杭を除く) | 約5,700 |
+| full_rotation_crawler | Full-Rotation Machine (Crawler) | 5 | 全周回転機(自走式) | 8.1 × 3.3 × 2.8(杭を除く) | 約7,200 |
 
 寸法はモデルの休止姿勢での値です。全幅はミラーを除く車体幅、全高はキャブ(トラクターは排気管、杭打ち機はリーダー上端、トレーラーはグースネック)までの高さです。全長は、バックホウが後端からバケット先端まで(ブームを上げ、アームを下ろした姿勢)、ブルドーザーがリッパーを含む長さ、ミキサー車がシュートを除く長さです。
 
-運転者は、キャブの内寸に頭・腕・脚が収まるように縮めて表示し(`passenger_display`)、視点を縮めた運転者の目の高さに置いています(`camera_positions`)。倍率は、トラクターヘッド 1.0、ダンプカー・ミキサー車 0.975、バックホウ 20t・大型杭打ち機 0.85、ブルドーザー 0.8、杭打ち機 0.75、ミニバックホウ 0.65、ラフタークレーン 0.6(キャブがブームの横で幅0.75mと細いため)です。
+運転者は、キャブの内寸に頭・腕・脚が収まるように縮めて表示し(`passenger_display`)、視点を縮めた運転者の目の高さに置いています(`camera_positions`)。倍率は、トラクターヘッド 1.0、全周回転機 0.875〜0.9、高所作業車 0.7(運転席とバケットで共通)、スパイダークレーン 0.625、ダンプカー・ミキサー車 0.975、バックホウ 20t・大型杭打ち機 0.85、ブルドーザー 0.8、杭打ち機 0.75、ミニバックホウ 0.65、ラフタークレーン 0.6(キャブがブームの横で幅0.75mと細いため)です。
 
 ## 機体ごとの構成
 
@@ -51,6 +57,12 @@ Construction Machinery Addon(`constructionaddon`)の機能を使って、実際�
 - **杭打ち機のアウトリガー**:3機とも、上部旋回体の下部の四隅に付いたアウトリガーが斜め外側へ張り出し(小型機1.1m、大型機1.7m)、ジャッキを接地させます。上部旋回体と一緒に旋回し、どの向きでも接地点がクローラー(大型機は拡幅後のクローラー)の外側に来る長さにしています。
 - **Dump Truck 10t / Concrete Mixer Truck / Tractor Head 6x4**:キャブオーバー型・右ハンドルの3軸車(前1軸操舵、後2軸はダブルタイヤ)。ダンプの荷台はホイストシリンダー付き。トラクターのカプラー高さは1.25mです。
 - **Low-bed Trailer**:床高0.85m・幅3.0mの低床部と、2軸台車の上の後部床(高さ1.3m)。後端の歩み板は先端が地面に届く角度まで倒れます。
+
+- **Scissor Lift 8m**:幅0.9m(扉を通れる幅)の電動シザースリフト。5段のシザースで作業床が約6.2mまで上がり、作業床から操作します(↑↓)。前方へ0.9m引き出せる拡張デッキ付き(,・.)。上げたままでも低速で走行できます。
+- **Insulated Bucket Truck 12m**:電柱工事用のトラック式。3段の伸縮ブーム(最大7.5m伸長)を前方のキャブの上へ格納し、バケットは首振りします。H形のアウトリガー4本。運転席では走行だけを行い、ブームはバケットの乗員が操作します。格納姿勢から伸ばす・正面へ下げる操作は、ブームがキャブに当たらない角度まで起こしてからでないとできません。
+- **Trailer Boom Lift 12m**:工事現場用のけん引式。下部ブーム・上部ブーム(屈伸)・伸縮・バケットの首振りで、前後に4本の脚を倒して設置します(走行時は脚を立てて畳む)。トラクターヘッドで牽引し、運転席はなくバケットから操作します。
+- **Spider Crane 3t**:幅0.8mのゴムクローラーの小型クレーン。5段の伸縮ブームと、走行時は車体の脇に立てて畳み、作業時に四隅へ倒して接地する4本の脚を持ちます。運転者は後部のステップに立って操作します。
+- **Full-Rotation Machine**:直径1.2mのケーシング(鋼管)を、6つの爪を持つチャックが途中で掴み、回しながら押し込みます。チャックの上下の行程は0.7mで、行程の端で自動的に掴み替えます。キャップは使わず、杭頭がチャックまで下がったら次のケーシングを上に建て込んで継ぎます。地表より下へ施工するときだけ、長さ3.5mのヤットコの先端のキャップで杭頭を回します。自走式はクローラー台車の前に、据置式は架台の上に機械を載せ、別置きのパワーユニットを持ちます(据置式は走行しません)。
 
 重機の性能に関わる設定(速度・容量・硬さの扱いなど)は、同じ種類のサンプル機の値を引き継いでいます。寸法に関わる設定(排土板の位置と大きさ、荷台の範囲、ブームの伸長量、杭の最大深さ、連結位置など)は、この機体の寸法に合わせて変えています。
 
@@ -97,6 +109,11 @@ Construction Machinery Addon(`constructionaddon`)の機能を使って、実際�
 | Mixer Truck | 全長約7.7m、全高約3.75m、ドラム径約2.2m | 7.9m、3.9m、2.2m |
 | Tractor Head 6x4 | 全長約6.3〜6.6m、カプラー高さ約1.25m | 6.8m、1.25m |
 | Low-bed Trailer | 全長約12〜13m、全幅約3.0m、床高約0.8〜0.9m | 13.0m、3.0m、0.85m |
+| Scissor Lift | 作業床高さ約6〜8m、全幅約0.8m、全長約2.3〜2.5m | 6.2m、0.9m、2.5m |
+| Bucket Truck | 作業床高さ約10〜12m、伸縮ブーム3〜4段、全長約7〜8m | 12m級、4段(3段伸縮)、7.3m |
+| Trailer Boom Lift | 作業床高さ約10〜12m、屈伸ブーム、全長約6m、脚4本 | 12m級、屈伸+伸縮、5.8m、4本 |
+| Spider Crane 3t | 全幅約0.75〜0.8m、全長約2.6〜2.8m、全高約1.5m、ブーム4〜5段で約8〜9m、脚の設置範囲約4×4m | 0.8m、2.7m、1.3m、5段約6.6m、約2.3×3.3m |
+| Full-Rotation Machine | ケーシング径約1.0〜2.0m、チャックの行程は1m未満、クローラー台車式と据置式 | 1.2m、0.7m |
 | Pile Drivers | 小型:リーダー約12m。大型:リーダー約20〜30m、バックステーはリーダー中間部、クローラー幅約3.5→4.9m、回転貫入の鋼管杭径約0.4〜1.0m | 12m。24m、高さ約1/2、3.5→4.9m、0.5m・0.8m |
 
 ゲーム上の都合で変えている点:
@@ -113,13 +130,13 @@ python3 tools/build.py --preview         # 休止姿勢と作業姿勢のプレ�
 python3 tools/build.py excavator_20t     # 指定した機体だけ作り直す
 ```
 
-必要なのは Python 3、numpy、Pillow です。速度・容量などの性能設定は `tools/templates/` にあります。寸法は各スクリプト(`excavator.py`・`crane.py`・`dozer.py`・`piling.py`・`trucks.py`)の先頭の定数で決めており、関節・作業点・座席・車輪の位置もそこから計算して機体JSONに書き出します。
+必要なのは Python 3、numpy、Pillow です。速度・容量などの性能設定は `tools/templates/` にあります。寸法は各スクリプト(`excavator.py`・`crane.py`・`dozer.py`・`piling.py`・`trucks.py`・`aerial.py`・`spider.py`・`fullrot.py`)の先頭の定数で決めており、関節・作業点・座席・車輪の位置もそこから計算して機体JSONに書き出します。
 
 ---
 
 # Construction Detail Pack (English)
 
-An add-on pack with 11 newly designed construction machines and vehicles for Construction Machinery Addon, built to
+An add-on pack with 17 newly designed construction machines and vehicles for Construction Machinery Addon, built to
 the approximate dimensions of real machine classes (their dimensions, joints, work points, seats and wheels are all
 their own, independent of the sample machines).
 
@@ -127,6 +144,9 @@ their own, independent of the sample machines).
 - Models made with [Meshkit](https://github.com/Tuduraw/Meshkit) (generator: `tools/` of this pack project).
 - Thanks to Tuduraw, author of Tudur's Vehicle Mod. Claude (Anthropic) was used to create the models, textures and scripts.
 - Install: copy the `ConstructionDetailPack` folder into `<game dir>/tudursvehiclemod-addons/`, then `/reload`.
+- Also: an 8 m scissor lift, a 12 m insulated bucket truck, a towed 12 m articulated boom lift, a 3 t spider crane,
+  and crawler / stationary full-rotation casing machines (the chuck grips the casing part-way down and regrips at
+  the end of each stroke; only the follower's cap turns the pile head).
 - Machines: 3 t and 20 t backhoes, 20 t bulldozer, 25 t rough terrain crane, drop hammer / rotary / large rotary pile
   drivers, 10 t dump truck, mixer truck, 6x4 tractor head and low-bed trailer (see the Japanese table for sizes).
 - Performance settings (speeds, capacities, hardness handling) follow the sample machine of the same type; settings

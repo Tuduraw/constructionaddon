@@ -25,6 +25,10 @@ import java.util.Optional;
  *   <li>show - shown while channel x factor + offset is 1 or more, otherwise hidden (shrunk to
  *       nothing at the pivot - put the pivot inside the parent). For parts that appear and
  *       disappear rather than move or grow (a follower set under a pile driver's head).</li>
+ *   <li>scissor - turns about axis through pivot by asin(value) - asin(offset) degrees, where value =
+ *       offset + factor x channel (clamped to -1..1): the arm of a scissor stack, modelled in its
+ *       channel-0 pose, whose levels "slide" apart linearly - value is the rise of one level divided by
+ *       the arm's pin-to-pin length.</li>
  * </ul>
  * A joint without a channel stays still but can parent others. Children apply on top of their
  * parent to any depth; inherit_rotation = false takes only the parent's displacement (a hook
@@ -47,7 +51,7 @@ public record Joint(
 ) {
 
 	public enum Mode {
-		ROTATE, SLIDE, SCALE, SPIN, AIM, REACH, BELT, SHOW;
+		ROTATE, SLIDE, SCALE, SPIN, AIM, REACH, BELT, SHOW, SCISSOR;
 
 		static final Codec<Mode> CODEC = Codec.STRING.xmap(
 				s -> {

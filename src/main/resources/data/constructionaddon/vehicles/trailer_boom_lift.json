@@ -1,0 +1,469 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/trailer_boom_lift.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Trailer Boom Lift",
+  "scale": 1.0,
+  "width": 1.8,
+  "height": 2.0,
+  "max_speed": 0.7,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "unknown",
+  "max_health": 90.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 0,
+  "spawn_item": {
+    "display_name": "Trailer Boom Lift",
+    "tier": 2
+  },
+  "seats": [
+    {
+      "name": "bucket",
+      "offset_x": 0.0,
+      "offset_y": 0.764,
+      "offset_z": -1.45,
+      "driver": false,
+      "camera_positions": [
+        {
+          "x": 0.0,
+          "y": 2.06,
+          "z": -1.45
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.8,
+    "entity_height": 0.8
+  },
+  "construction": {
+    "machine": "aerial_platform",
+    "joints": [
+      {
+        "part": "$outrigger_fl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.6,
+        "min": 0.0,
+        "max": 0.8
+      },
+      {
+        "part": "$outrigger_fl_leg",
+        "parent": "$outrigger_fl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.9,
+        "offset": -0.45,
+        "min": 0.0,
+        "max": 0.45
+      },
+      {
+        "part": "$outrigger_fr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.6,
+        "min": 0.0,
+        "max": 0.8
+      },
+      {
+        "part": "$outrigger_fr_leg",
+        "parent": "$outrigger_fr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.9,
+        "offset": -0.45,
+        "min": 0.0,
+        "max": 0.45
+      },
+      {
+        "part": "$outrigger_rl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.6,
+        "min": 0.0,
+        "max": 0.8
+      },
+      {
+        "part": "$outrigger_rl_leg",
+        "parent": "$outrigger_rl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.9,
+        "offset": -0.45,
+        "min": 0.0,
+        "max": 0.45
+      },
+      {
+        "part": "$outrigger_rr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.6,
+        "min": 0.0,
+        "max": 0.8
+      },
+      {
+        "part": "$outrigger_rr_leg",
+        "parent": "$outrigger_rr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 0.9,
+        "offset": -0.45,
+        "min": 0.0,
+        "max": 0.45
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.65,
+        "pivot_z": 0.3,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$boom1",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.0,
+        "pivot_z": 0.45,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "luff"
+      },
+      {
+        "part": "$boom2",
+        "parent": "$boom1",
+        "pivot_x": 0.0,
+        "pivot_y": 1.29,
+        "pivot_z": 2.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "knuckle"
+      },
+      {
+        "part": "$boom3",
+        "parent": "$boom2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": -1,
+        "mode": "slide",
+        "channel": "extend"
+      },
+      {
+        "part": "$bucket_l1",
+        "parent": "$boom3",
+        "pivot_x": 0.0,
+        "pivot_y": 1.28,
+        "pivot_z": -0.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "luff"
+      },
+      {
+        "part": "$bucket_l2",
+        "parent": "$bucket_l1",
+        "pivot_x": 0.0,
+        "pivot_y": 1.28,
+        "pivot_z": -0.55,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "knuckle",
+        "factor": -1.0
+      },
+      {
+        "part": "$bucket",
+        "parent": "$bucket_l2",
+        "pivot_x": 0.0,
+        "pivot_y": 1.28,
+        "pivot_z": -0.55,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "basket"
+      },
+      {
+        "part": "$luff_ram",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.8,
+        "pivot_z": -0.05,
+        "axis_x": -1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 0.92,
+          "z": 1.2
+        }
+      },
+      {
+        "part": "$luff_ram_s1",
+        "parent": "$luff_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.0956,
+        "axis_z": 0.9954,
+        "mode": "reach",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 0.92,
+          "z": 1.2
+        },
+        "anchor": {
+          "part": "$luff_ram",
+          "x": 0.0,
+          "y": 0.8,
+          "z": -0.05
+        },
+        "factor": 1.0
+      },
+      {
+        "part": "$knuckle_ram",
+        "parent": "$boom1",
+        "pivot_x": 0.0,
+        "pivot_y": 1.05,
+        "pivot_z": 1.6,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$boom2",
+          "x": 0.0,
+          "y": 1.3,
+          "z": 2.0
+        }
+      },
+      {
+        "part": "$knuckle_ram_s1",
+        "parent": "$knuckle_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.53,
+        "axis_z": 0.848,
+        "mode": "reach",
+        "target": {
+          "part": "$boom2",
+          "x": 0.0,
+          "y": 1.3,
+          "z": 2.0
+        },
+        "anchor": {
+          "part": "$knuckle_ram",
+          "x": 0.0,
+          "y": 1.05,
+          "z": 1.6
+        },
+        "factor": 0.25
+      },
+      {
+        "part": "$knuckle_ram_s2",
+        "parent": "$knuckle_ram_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.53,
+        "axis_z": 0.848,
+        "mode": "reach",
+        "target": {
+          "part": "$boom2",
+          "x": 0.0,
+          "y": 1.3,
+          "z": 2.0
+        },
+        "anchor": {
+          "part": "$knuckle_ram",
+          "x": 0.0,
+          "y": 1.05,
+          "z": 1.6
+        },
+        "factor": 0.25
+      },
+      {
+        "part": "$knuckle_ram_s3",
+        "parent": "$knuckle_ram_s2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.53,
+        "axis_z": 0.848,
+        "mode": "reach",
+        "target": {
+          "part": "$boom2",
+          "x": 0.0,
+          "y": 1.3,
+          "z": 2.0
+        },
+        "anchor": {
+          "part": "$knuckle_ram",
+          "x": 0.0,
+          "y": 1.05,
+          "z": 1.6
+        },
+        "factor": 0.25
+      },
+      {
+        "part": "$knuckle_ram_s4",
+        "parent": "$knuckle_ram_s3",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.53,
+        "axis_z": 0.848,
+        "mode": "reach",
+        "target": {
+          "part": "$boom2",
+          "x": 0.0,
+          "y": 1.3,
+          "z": 2.0
+        },
+        "anchor": {
+          "part": "$knuckle_ram",
+          "x": 0.0,
+          "y": 1.05,
+          "z": 1.6
+        },
+        "factor": 0.25
+      }
+    ],
+    "work_points": {
+      "basket": {
+        "part": "$bucket",
+        "x": 0,
+        "y": 0.86,
+        "z": -1.2
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$bucket"
+      }
+    ],
+    "work_seat": 0,
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "aerial_platform": {
+      "swing_speed": 1.0,
+      "luff_speed": 0.5,
+      "luff_min": 0.0,
+      "luff_max": 75.0,
+      "knuckle_speed": 0.8,
+      "knuckle_min": 0.0,
+      "knuckle_max": 160.0,
+      "extend_speed": 0.03,
+      "extend_max": 1.5,
+      "basket_speed": 1.5,
+      "basket_limit": 90.0,
+      "outriggers": true,
+      "require_outriggers": true,
+      "stow_to_drive": true,
+      "swing_clear_luff": 20.0,
+      "swing_low_limit": 60.0,
+      "tow": {
+        "kingpin_x": 0.0,
+        "kingpin_y": 1.1,
+        "kingpin_z": 2.75,
+        "axle_z": -0.5,
+        "max_articulation": 80.0
+      }
+    }
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 0.82,
+      "pivot_y": 0.38,
+      "pivot_z": -0.5
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -0.82,
+      "pivot_y": 0.38,
+      "pivot_z": -0.5
+    }
+  ],
+  "fuel_consumption": -1.0
+}

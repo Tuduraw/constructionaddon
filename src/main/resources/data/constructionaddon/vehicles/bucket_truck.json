@@ -1,0 +1,362 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "model": "constructionaddon:models/obj/bucket_truck.obj",
+  "texture": "constructionaddon:textures/vehicle/construction.png",
+  "display_name": "Bucket Truck",
+  "scale": 1.0,
+  "width": 2.4,
+  "height": 3.0,
+  "max_speed": 0.6,
+  "acceleration": 0.04,
+  "turn_speed": 2.5,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 110.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Bucket Truck",
+    "tier": 3
+  },
+  "seats": [
+    {
+      "name": "driver",
+      "offset_x": 0.5,
+      "offset_y": 1.03,
+      "offset_z": 1.114,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.5,
+          "y": 2.2855,
+          "z": 1.114
+        }
+      ]
+    },
+    {
+      "name": "bucket",
+      "offset_x": 0.0,
+      "offset_y": 0.9745,
+      "offset_z": -4.2363,
+      "driver": false,
+      "camera_positions": [
+        {
+          "x": 0.0,
+          "y": 2.23,
+          "z": -4.2363
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.775,
+    "entity_height": 0.775
+  },
+  "construction": {
+    "machine": "aerial_platform",
+    "joints": [
+      {
+        "part": "$outrigger_fl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.7,
+        "min": 0.0,
+        "max": 0.85
+      },
+      {
+        "part": "$outrigger_fl_leg",
+        "parent": "$outrigger_fl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.0,
+        "offset": -0.5,
+        "min": 0.0,
+        "max": 0.5
+      },
+      {
+        "part": "$outrigger_fr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": 0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.7,
+        "min": 0.0,
+        "max": 0.85
+      },
+      {
+        "part": "$outrigger_fr_leg",
+        "parent": "$outrigger_fr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.0,
+        "offset": -0.5,
+        "min": 0.0,
+        "max": 0.5
+      },
+      {
+        "part": "$outrigger_rl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.7,
+        "min": 0.0,
+        "max": 0.85
+      },
+      {
+        "part": "$outrigger_rl_leg",
+        "parent": "$outrigger_rl",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.0,
+        "offset": -0.5,
+        "min": 0.0,
+        "max": 0.5
+      },
+      {
+        "part": "$outrigger_rr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": -0.7071,
+        "axis_y": 0.0,
+        "axis_z": -0.7071,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.7,
+        "min": 0.0,
+        "max": 0.85
+      },
+      {
+        "part": "$outrigger_rr_leg",
+        "parent": "$outrigger_rr",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": -1,
+        "axis_z": 0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": 1.0,
+        "offset": -0.5,
+        "min": 0.0,
+        "max": 0.5
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.0,
+        "pivot_z": 0.25,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$boom1",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.55,
+        "pivot_z": 0.35,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "luff"
+      },
+      {
+        "part": "$boom2",
+        "parent": "$boom1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": -1,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.5
+      },
+      {
+        "part": "$boom3",
+        "parent": "$boom2",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0,
+        "axis_y": 0,
+        "axis_z": -1,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.5
+      },
+      {
+        "part": "$bucket_level",
+        "parent": "$boom3",
+        "pivot_x": 0.0,
+        "pivot_y": 1.5,
+        "pivot_z": -3.45,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "level"
+      },
+      {
+        "part": "$bucket",
+        "parent": "$bucket_level",
+        "pivot_x": 0.0,
+        "pivot_y": 1.5,
+        "pivot_z": -3.45,
+        "axis_x": 0,
+        "axis_y": 1,
+        "axis_z": 0,
+        "mode": "rotate",
+        "channel": "basket"
+      },
+      {
+        "part": "$luff_ram",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.2,
+        "pivot_z": 0.65,
+        "axis_x": 1,
+        "axis_y": 0,
+        "axis_z": 0,
+        "mode": "aim",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 1.36,
+          "z": -0.95
+        }
+      },
+      {
+        "part": "$luff_ram_s1",
+        "parent": "$luff_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.0995,
+        "axis_z": -0.995,
+        "mode": "reach",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 1.36,
+          "z": -0.95
+        },
+        "anchor": {
+          "part": "$luff_ram",
+          "x": 0.0,
+          "y": 1.2,
+          "z": 0.65
+        },
+        "factor": 1.0
+      }
+    ],
+    "work_points": {
+      "basket": {
+        "part": "$bucket",
+        "x": 0,
+        "y": 1.03,
+        "z": -4.0
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 1,
+        "part": "$bucket"
+      }
+    ],
+    "work_seat": 1,
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "aerial_platform": {
+      "swing_speed": 1.0,
+      "luff_speed": 0.5,
+      "luff_min": 0.0,
+      "luff_max": 75.0,
+      "extend_speed": 0.04,
+      "extend_max": 5.0,
+      "basket_speed": 1.5,
+      "basket_limit": 90.0,
+      "outriggers": true,
+      "require_outriggers": true,
+      "stow_to_drive": true,
+      "swing_clear_luff": 72.0,
+      "swing_low_limit": 100.0
+    }
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 0.88,
+      "pivot_y": 0.5,
+      "pivot_z": 1.75,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -0.88,
+      "pivot_y": 0.5,
+      "pivot_z": 1.75,
+      "steer_angle": 30.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 0.85,
+      "pivot_y": 0.5,
+      "pivot_z": -1.65
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -0.85,
+      "pivot_y": 0.5,
+      "pivot_z": -1.65
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.constructionaddon.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "PlayerEntityMiningMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

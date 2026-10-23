@@ -19,9 +19,10 @@ public enum MachineType {
 	BULLDOZER("bulldozer", BulldozerModule.Settings.CODEC, BulldozerModule::new),
 	PILE_DRIVER("pile_driver", PileDriverModule.Settings.CODEC, PileDriverModule::new),
 	TRACTOR("tractor", TractorModule.Settings.CODEC, TractorModule::new),
-	TRAILER("trailer", TrailerModule.Settings.CODEC, TrailerModule::new),
+	TRAILER("trailer", TowLink.Settings.CODEC, TrailerModule::new),
 	DUMP_TRUCK("dump_truck", DumpTruckModule.Settings.CODEC, DumpTruckModule::new),
-	MIXER_TRUCK("mixer_truck", MixerTruckModule.Settings.CODEC, MixerTruckModule::new);
+	MIXER_TRUCK("mixer_truck", MixerTruckModule.Settings.CODEC, MixerTruckModule::new),
+	AERIAL_PLATFORM("aerial_platform", AerialPlatformModule.Settings.CODEC, AerialPlatformModule::new);
 
 	private final String id;
 	private final Codec<?> settingsCodec;

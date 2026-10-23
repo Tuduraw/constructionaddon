@@ -1,0 +1,605 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Spider Crane 3t",
+  "scale": 1.0,
+  "max_speed": 0.12,
+  "acceleration": 0.04,
+  "turn_speed": 2.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 70.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Spider Crane 3t",
+    "tier": 2
+  },
+  "construction": {
+    "machine": "crane",
+    "swing_sound": {
+      "sound": "minecraft:block.note_block.bit",
+      "volume": 0.6,
+      "pitch": 1.8,
+      "interval": 8
+    },
+    "crane": {
+      "swing_speed": 1.2,
+      "luff_speed": 0.5,
+      "luff_min": 0.0,
+      "luff_max": 80.0,
+      "extend_speed": 0.035,
+      "extend_max": 4.5,
+      "rope_speed": 0.1,
+      "rope_min": 0.3,
+      "rope_max": 25.0,
+      "outrigger_speed": 0.02,
+      "require_outriggers": true,
+      "grab_radius": 1.0,
+      "max_lift_width": 2.5,
+      "hook_drop": 0.45
+    },
+    "joints": [
+      {
+        "part": "$leg_fl",
+        "pivot_x": 0.42,
+        "pivot_y": 0.48,
+        "pivot_z": 0.72,
+        "axis_x": -0.8,
+        "axis_y": 0.0,
+        "axis_z": 0.6,
+        "mode": "rotate",
+        "channel": "outrigger",
+        "factor": -180.0,
+        "offset": 90.0,
+        "min": 0.0,
+        "max": 90.0
+      },
+      {
+        "part": "$leg_fl_foot",
+        "parent": "$leg_fl",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": -0.2,
+        "offset": 0.2,
+        "min": 0.0,
+        "max": 0.1
+      },
+      {
+        "part": "$leg_fr",
+        "pivot_x": -0.42,
+        "pivot_y": 0.48,
+        "pivot_z": 0.72,
+        "axis_x": -0.8,
+        "axis_y": 0.0,
+        "axis_z": -0.6,
+        "mode": "rotate",
+        "channel": "outrigger",
+        "factor": -180.0,
+        "offset": 90.0,
+        "min": 0.0,
+        "max": 90.0
+      },
+      {
+        "part": "$leg_fr_foot",
+        "parent": "$leg_fr",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": -0.2,
+        "offset": 0.2,
+        "min": 0.0,
+        "max": 0.1
+      },
+      {
+        "part": "$leg_rl",
+        "pivot_x": 0.42,
+        "pivot_y": 0.48,
+        "pivot_z": -0.62,
+        "axis_x": 0.8,
+        "axis_y": -0.0,
+        "axis_z": 0.6,
+        "mode": "rotate",
+        "channel": "outrigger",
+        "factor": -180.0,
+        "offset": 90.0,
+        "min": 0.0,
+        "max": 90.0
+      },
+      {
+        "part": "$leg_rl_foot",
+        "parent": "$leg_rl",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": -0.2,
+        "offset": 0.2,
+        "min": 0.0,
+        "max": 0.1
+      },
+      {
+        "part": "$leg_rr",
+        "pivot_x": -0.42,
+        "pivot_y": 0.48,
+        "pivot_z": -0.62,
+        "axis_x": 0.8,
+        "axis_y": 0.0,
+        "axis_z": -0.6,
+        "mode": "rotate",
+        "channel": "outrigger",
+        "factor": -180.0,
+        "offset": 90.0,
+        "min": 0.0,
+        "max": 90.0
+      },
+      {
+        "part": "$leg_rr_foot",
+        "parent": "$leg_rr",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "outrigger",
+        "factor": -0.2,
+        "offset": 0.2,
+        "min": 0.0,
+        "max": 0.1
+      },
+      {
+        "part": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.5,
+        "pivot_z": -0.1,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "swing"
+      },
+      {
+        "part": "$boom1",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 1.06,
+        "pivot_z": -0.5,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "rotate",
+        "channel": "luff"
+      },
+      {
+        "part": "$boom2",
+        "parent": "$boom1",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.25
+      },
+      {
+        "part": "$boom3",
+        "parent": "$boom2",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.25
+      },
+      {
+        "part": "$boom4",
+        "parent": "$boom3",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.25
+      },
+      {
+        "part": "$boom5",
+        "parent": "$boom4",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend",
+        "factor": 0.25
+      },
+      {
+        "part": "$rope",
+        "parent": "$boom5",
+        "pivot_x": 0.0,
+        "pivot_y": 0.98,
+        "pivot_z": 1.52,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "scale",
+        "channel": "rope",
+        "offset": 0.0,
+        "inherit_rotation": false
+      },
+      {
+        "part": "$hook",
+        "parent": "$boom5",
+        "pivot_x": 0.0,
+        "pivot_y": 0.98,
+        "pivot_z": 1.52,
+        "axis_x": 0.0,
+        "axis_y": -1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "rope",
+        "inherit_rotation": false
+      },
+      {
+        "part": "$luff_ram",
+        "parent": "$upper",
+        "pivot_x": 0.0,
+        "pivot_y": 0.62,
+        "pivot_z": -0.3,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "aim",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 0.93,
+          "z": 0.35
+        }
+      },
+      {
+        "part": "$luff_ram_s1",
+        "parent": "$luff_ram",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.4305,
+        "axis_z": 0.9026,
+        "mode": "reach",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 0.93,
+          "z": 0.35
+        },
+        "anchor": {
+          "part": "$luff_ram",
+          "x": 0.0,
+          "y": 0.62,
+          "z": -0.3
+        },
+        "factor": 0.5
+      },
+      {
+        "part": "$luff_ram_s2",
+        "parent": "$luff_ram_s1",
+        "pivot_x": 0,
+        "pivot_y": 0,
+        "pivot_z": 0,
+        "axis_x": 0.0,
+        "axis_y": 0.4305,
+        "axis_z": 0.9026,
+        "mode": "reach",
+        "target": {
+          "part": "$boom1",
+          "x": 0.0,
+          "y": 0.93,
+          "z": 0.35
+        },
+        "anchor": {
+          "part": "$luff_ram",
+          "x": 0.0,
+          "y": 0.62,
+          "z": -0.3
+        },
+        "factor": 0.5
+      }
+    ],
+    "work_points": {
+      "boom_tip": {
+        "part": "$boom5",
+        "x": 0.0,
+        "y": 0.98,
+        "z": 1.52
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$upper"
+      }
+    ]
+  },
+  "model": "constructiondetail:models/obj/spider_crane_3t.obj",
+  "texture": "constructiondetail:textures/vehicle/spider_crane_3t.png",
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.0,
+      "offset_y": 0.5875,
+      "offset_z": -1.1538,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.0,
+          "y": 1.6,
+          "z": -1.1538
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.625,
+    "entity_height": 0.625
+  },
+  "width": 1.0,
+  "height": 1.5,
+  "crawler_tracks": [
+    {
+      "part": "$crawler_l",
+      "x": 0.2725,
+      "link_spacing": 0.11891,
+      "path": [
+        {
+          "y": 0.005,
+          "z": 0.77
+        },
+        {
+          "y": 0.0258,
+          "z": 0.8475
+        },
+        {
+          "y": 0.0825,
+          "z": 0.9042
+        },
+        {
+          "y": 0.16,
+          "z": 0.925
+        },
+        {
+          "y": 0.2375,
+          "z": 0.9042
+        },
+        {
+          "y": 0.2942,
+          "z": 0.8475
+        },
+        {
+          "y": 0.315,
+          "z": 0.77
+        },
+        {
+          "y": 0.315,
+          "z": -0.77
+        },
+        {
+          "y": 0.2942,
+          "z": -0.8475
+        },
+        {
+          "y": 0.2375,
+          "z": -0.9042
+        },
+        {
+          "y": 0.16,
+          "z": -0.925
+        },
+        {
+          "y": 0.0825,
+          "z": -0.9042
+        },
+        {
+          "y": 0.0258,
+          "z": -0.8475
+        },
+        {
+          "y": 0.005,
+          "z": -0.77
+        }
+      ]
+    },
+    {
+      "part": "$crawler_r",
+      "x": -0.2725,
+      "link_spacing": 0.11891,
+      "path": [
+        {
+          "y": 0.005,
+          "z": 0.77
+        },
+        {
+          "y": 0.0258,
+          "z": 0.8475
+        },
+        {
+          "y": 0.0825,
+          "z": 0.9042
+        },
+        {
+          "y": 0.16,
+          "z": 0.925
+        },
+        {
+          "y": 0.2375,
+          "z": 0.9042
+        },
+        {
+          "y": 0.2942,
+          "z": 0.8475
+        },
+        {
+          "y": 0.315,
+          "z": 0.77
+        },
+        {
+          "y": 0.315,
+          "z": -0.77
+        },
+        {
+          "y": 0.2942,
+          "z": -0.8475
+        },
+        {
+          "y": 0.2375,
+          "z": -0.9042
+        },
+        {
+          "y": 0.16,
+          "z": -0.925
+        },
+        {
+          "y": 0.0825,
+          "z": -0.9042
+        },
+        {
+          "y": 0.0258,
+          "z": -0.8475
+        },
+        {
+          "y": 0.005,
+          "z": -0.77
+        }
+      ]
+    }
+  ],
+  "track_roller_parts": [
+    {
+      "part": "$sprocket_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.16,
+      "pivot_z": -0.77,
+      "rotations_per_block": 1.2243
+    },
+    {
+      "part": "$idler_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.16,
+      "pivot_z": 0.77,
+      "rotations_per_block": 1.2243
+    },
+    {
+      "part": "$wheel0_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": -0.5455,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel1_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": -0.2728,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel2_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": 0.0,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel3_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": 0.2728,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel4_l",
+      "pivot_x": 0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": 0.5455,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$sprocket_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.16,
+      "pivot_z": -0.77,
+      "rotations_per_block": 1.2243
+    },
+    {
+      "part": "$idler_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.16,
+      "pivot_z": 0.77,
+      "rotations_per_block": 1.2243
+    },
+    {
+      "part": "$wheel0_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": -0.5455,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel1_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": -0.2728,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel2_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": 0.0,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel3_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": 0.2728,
+      "rotations_per_block": 2.6526
+    },
+    {
+      "part": "$wheel4_r",
+      "pivot_x": -0.2725,
+      "pivot_y": 0.11,
+      "pivot_z": 0.5455,
+      "rotations_per_block": 2.6526
+    }
+  ]
+}

@@ -51,6 +51,17 @@ MACHINES = {
                     {"chute_swing": 40, "chute_tilt": 20}),
     "tractor_head": ("trucks", "tractor_head", "tractor_head", "Tractor Head 6x4", {}),
     "lowboy_trailer": ("trucks", "lowboy_trailer", "lowboy_trailer", "Low-bed Trailer", {}),
+    "scissor_lift_8m": ("aerial", "scissor_lift", "scissor_lift", "Scissor Lift 8m", {"lift": 0.7, "extend": 0.9}),
+    "bucket_truck_12m": ("aerial", "bucket_truck", "bucket_truck", "Insulated Bucket Truck 12m",
+                         {"outrigger": 1, "luff": 50, "extend": 4, "swing": 60, "level": -50, "basket": 30}),
+    "trailer_boom_lift_12m": ("aerial", "trailer_boom_lift", "trailer_boom_lift", "Trailer Boom Lift 12m",
+                              {"outrigger": 1, "luff": 45, "knuckle": 110, "extend": 1.2, "swing": 40}),
+    "spider_crane_3t": ("spider", "spider_crane", "spider_crane", "Spider Crane 3t",
+                        {"outrigger": 1, "luff": 50, "extend": 3, "rope": 2, "swing": 30}),
+    "full_rotation_crawler": ("fullrot", "crawler_type", "full_rotation_crawler", "Full-Rotation Machine (Crawler)",
+                              {"outrigger": 1, "head": 1.6, "pile_top": 6.0, "pile_length": 6.0, "rpm": 5}),
+    "full_rotation_unit": ("fullrot", "stationary_type", "full_rotation_unit", "Full-Rotation Machine (Stationary)",
+                           {"outrigger": 1, "head": 1.6, "pile_top": 6.0, "pile_length": 6.0, "tool": 1}),
 }
 PREFIX = ""
 
@@ -140,6 +151,9 @@ def solve_joints(con, values, travel=0.0):
             M[:3, 3] = ax * ((d_now - d_rest) * f + j.get("offset", 0.0))
         elif mode == "belt":
             M = rot4(ax, f * travel + j.get("offset", 0.0), piv)
+        elif mode == "scissor" and j.get("channel"):
+            rest = min(max(off, -1.0), 1.0)
+            M = rot4(ax, math.degrees(math.asin(min(max(v, -1.0), 1.0)) - math.asin(rest)), piv)
         elif mode == "show" and v < 0.999:
             T = np.eye(4); T[:3, 3] = piv
             Ti = np.eye(4); Ti[:3, 3] = -piv

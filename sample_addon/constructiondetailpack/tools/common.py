@@ -215,6 +215,82 @@ def cab(m, part, x0, x1, y0, y1, z0, z1, tag="cabin", door_side=1, roof_lip=0.05
                 z1 - 0.05, "paint2")
 
 
+# ------------------------------------------------------------------ open seats (baskets, platforms, steps)
+def open_scale(ix0, ix1, iz0, iz1, max_scale=1.0):
+    """Largest rider scale (2.5 % steps) whose arms and knees stay inside the floor plan
+    [ix0, ix1] x [iz0 (behind), iz1 (in front)] of an open seat."""
+    s = max_scale
+    while s > 0.3:
+        if RIDER_WIDTH * s <= (ix1 - ix0) - 0.04 and (RIDER_BACK + RIDER_FRONT) * s + 0.04 <= iz1 - iz0:
+            break
+        s = round(s - 0.025, 3)
+    return s
+
+
+def open_seat(m, part, floor, ix0, ix1, iz0, iz1, pref_x, s, name, driver, eye_over=0.0, tag="seat"):
+    """A rider on a stool in an open place, facing +z, the back of the head 2 cm in front of iz0. eye_over:
+    the eye at least this high above the floor (over the rails / rim, as a standing worker looks).
+    Returns the seat JSON (with the camera at the rider's eye)."""
+    oz = iz0 + RIDER_BACK * s + 0.02
+    half = RIDER_WIDTH * s / 2 + 0.02
+    ox = min(max(pref_x, ix0 + half), ix1 - half)
+    cushion = max(floor + 0.42 * s + 0.05, floor + eye_over - (RIDER_EYE - RIDER_SEAT) * s)
+    oy = cushion - RIDER_SEAT * s
+    cyl(m, part, (ox, floor, oz + 0.04 * s), (ox, cushion - 0.06, oz + 0.04 * s), 0.035, n=6, tag="steel")
+    cbox(m, part, ox - 0.17 * s, cushion - 0.07, oz - 0.14 * s, ox + 0.17 * s, cushion, oz + 0.22 * s, tag, c=0.02)
+    cbox(m, part, ox - 0.12, floor, oz - 0.1, ox + 0.12, floor + 0.03, oz + 0.18, "steel", c=0.01)
+    return {"name": name, "offset_x": r4(ox), "offset_y": r4(oy), "offset_z": r4(oz), "driver": driver,
+            "camera_positions": [{"x": r4(ox), "y": r4(oy + RIDER_EYE * s), "z": r4(oz)}]}
+
+
+def guard_rails(m, part, x0, x1, y0, z0, z1, h=1.1, tag="paint", sides=("l", "r", "f", "b"), gate=None, r=0.025):
+    """Hand rails (top and knee rails on posts) and toe boards round a floor; `sides` picks which edges get
+    them (l = +x, r = -x, f = +z, b = -z); gate = (x_a, x_b) leaves an opening in the rear (b) rails."""
+    def run(a, b, edge):
+        pts_top = [(a[0], y0 + h, a[1]), (b[0], y0 + h, b[1])]
+        pts_mid = [(a[0], y0 + h * 0.5, a[1]), (b[0], y0 + h * 0.5, b[1])]
+        tube(m, part, pts_top, r, tag=tag)
+        tube(m, part, pts_mid, r * 0.8, tag=tag)
+        n = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.9))
+        for i in range(n + 1):
+            t = i / n
+            x, z = a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t
+            cyl(m, part, (x, y0, z), (x, y0 + h + r, z), r, n=6, tag=tag)
+        tb = 0.012
+        if edge in ("l", "r"):
+            box(m, part, a[0] - tb, y0, min(a[1], b[1]), a[0] + tb, y0 + 0.12, max(a[1], b[1]), tag)
+        else:
+            box(m, part, min(a[0], b[0]), y0, a[1] - tb, max(a[0], b[0]), y0 + 0.12, a[1] + tb, tag)
+    if "l" in sides:
+        run((x1, z0), (x1, z1), "l")
+    if "r" in sides:
+        run((x0, z0), (x0, z1), "r")
+    if "f" in sides:
+        run((x0, z1), (x1, z1), "f")
+    if "b" in sides:
+        if gate:
+            run((x0, z0), (gate[0], z0), "b")
+            run((gate[1], z0), (x1, z0), "b")
+            tube(m, part, [(gate[0], y0 + h * 0.95, z0), (gate[1], y0 + h * 0.95, z0)], r * 0.5, tag="black")   # chain
+        else:
+            run((x0, z0), (x1, z0), "b")
+
+
+def annulus(m, part, cx, cz, r0, r1, y0, y1, n=16, tag="paint", a0=0.0):
+    """A ring (round housing, turntable, ring gear) from n plan segments."""
+    for i in range(n):
+        a = a0 + 2 * math.pi * i / n
+        b = a0 + 2 * math.pi * (i + 1) / n
+        poly = [(cx + r0 * math.cos(a), cz + r0 * math.sin(a)), (cx + r1 * math.cos(a), cz + r1 * math.sin(a)),
+                (cx + r1 * math.cos(b), cz + r1 * math.sin(b)), (cx + r0 * math.cos(b), cz + r0 * math.sin(b))]
+        plan_plate(m, part, poly, y0, y1, tag)
+
+
+def riders_json(seats, s):
+    """'seats' and 'passenger_display' for several seats sharing one rider scale."""
+    return {"seats": seats, "passenger_display": {"entity_width": s, "entity_height": s}}
+
+
 # ------------------------------------------------------------------ running gear
 def crawler_layout(z_half, height, r_end, wheel_r, n_wheels, carrier_r=0.0, n_carrier=0, shoe_t=0.07):
     """Where everything of one crawler goes, in the (y, z) side view (tank practice: the shoes run

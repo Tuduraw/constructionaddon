@@ -63,9 +63,8 @@ public class ConstructionAddon implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(WorkInputPayload.ID, (payload, context) ->
 				context.server().execute(() -> {
 					AbstractVehicleEntity vehicle = AbstractVehicleEntity.tudursvehiclemod$getEffectiveVehicle(context.player());
-					// Only the driver operates the machine.
-					if (vehicle instanceof ConstructionMachineEntity machine
-							&& machine.getControllingPassenger() == context.player()) {
+					// Only the work operator (the driver, or the work_seat's rider) works the machine.
+					if (vehicle instanceof ConstructionMachineEntity machine && machine.isWorkOperator(context.player())) {
 						machine.setWorkButtons(payload.buttons());
 					}
 				}));
@@ -74,8 +73,7 @@ public class ConstructionAddon implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(WorkAxisPayload.ID, (payload, context) ->
 				context.server().execute(() -> {
 					AbstractVehicleEntity vehicle = AbstractVehicleEntity.tudursvehiclemod$getEffectiveVehicle(context.player());
-					if (vehicle instanceof ConstructionMachineEntity machine
-							&& machine.getControllingPassenger() == context.player()) {
+					if (vehicle instanceof ConstructionMachineEntity machine && machine.isWorkOperator(context.player())) {
 						machine.setWorkAxisMask(payload.mask());
 					}
 				}));

@@ -21,6 +21,7 @@
     "tudursvehiclemod": ">=1.0.3"
   },
   "mixins": [
+    "constructionaddon.mixins.json",
     {
       "config": "constructionaddon.client.mixins.json",
       "environment": "client"

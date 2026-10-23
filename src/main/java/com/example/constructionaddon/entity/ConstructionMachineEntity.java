@@ -60,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul> */
 public class ConstructionMachineEntity extends CarEntity {
 
-	public static final int FLOAT_CHANNELS = 13;
+	public static final int FLOAT_CHANNELS = 14;
 	public static final int INT_CHANNELS = 4;
 
 	@SuppressWarnings("unchecked")
@@ -297,7 +297,7 @@ public class ConstructionMachineEntity extends CarEntity {
 	// Work inputs
 	// ------------------------------------------------------------------
 
-	/** From WorkInputPayload (server) - only the driver's keys count. */
+	/** From WorkInputPayload (server) - only the work operator's keys count. */
 	public void setWorkButtons(int buttons) {
 		this.buttonsHeld = buttons;
 	}
@@ -311,7 +311,7 @@ public class ConstructionMachineEntity extends CarEntity {
 		return (this.buttonsPressed & button.bit()) != 0;
 	}
 
-	/** From WorkAxisPayload (server) - only the driver's keys count. */
+	/** From WorkAxisPayload (server) - only the work operator's keys count. */
 	public void setWorkAxisMask(int mask) {
 		for (WorkAxis axis : WorkAxis.values()) {
 			this.workAxes[axis.ordinal()] = WorkAxis.unpack(mask, axis);
@@ -364,9 +364,28 @@ public class ConstructionMachineEntity extends CarEntity {
 		return this.drivingSuppressed() || super.getSyncedBrakeInput();
 	}
 
-	/** The seated driver as a server player, or null. */
+	/** The player who works the machine: the rider of the JSON's work_seat (an aerial platform's
+	 * basket), or the driver when there is none. Both sides (seat assignments are synced). */
+	public PlayerEntity workOperatorPlayer() {
+		int seat = this.settings().workSeat();
+		if (seat < 0) {
+			return this.getControllingPassenger() instanceof PlayerEntity player ? player : null;
+		}
+		for (Entity passenger : this.getPassengerList()) {
+			if (passenger instanceof PlayerEntity player && this.tudursvehiclemod$getAssignedSeatIndex(passenger) == seat) {
+				return player;
+			}
+		}
+		return null;
+	}
+
+	public boolean isWorkOperator(PlayerEntity player) {
+		return player != null && this.workOperatorPlayer() == player;
+	}
+
+	/** The work operator (see workOperatorPlayer) as a server player, or null. */
 	public ServerPlayerEntity operator() {
-		return this.getControllingPassenger() instanceof ServerPlayerEntity player ? player : null;
+		return this.workOperatorPlayer() instanceof ServerPlayerEntity player ? player : null;
 	}
 
 	public static boolean isCreative(PlayerEntity player) {

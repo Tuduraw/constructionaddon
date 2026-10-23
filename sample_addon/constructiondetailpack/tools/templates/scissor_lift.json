@@ -1,0 +1,31 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Scissor Lift",
+  "scale": 1.0,
+  "max_speed": 0.15,
+  "acceleration": 0.04,
+  "turn_speed": 3.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 60.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 600.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Scissor Lift",
+    "tier": 1
+  },
+  "construction": {
+    "machine": "aerial_platform",
+    "aerial_platform": {
+      "lift_speed": 0.006,
+      "swing_speed": 0.0,
+      "outriggers": false,
+      "stow_to_drive": false,
+      "raised_speed_factor": 0.25
+    }
+  }
+}

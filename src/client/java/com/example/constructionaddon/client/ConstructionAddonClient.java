@@ -61,6 +61,8 @@ public class ConstructionAddonClient implements ClientModInitializer {
 			case VERTICAL, BOOM, LUFF -> new int[] {GLFW.GLFW_KEY_UP, GLFW.GLFW_KEY_DOWN};
 			case ARM, TELESCOPE -> new int[] {GLFW.GLFW_KEY_COMMA, GLFW.GLFW_KEY_PERIOD};
 			case HOIST -> new int[] {GLFW.GLFW_KEY_SEMICOLON, GLFW.GLFW_KEY_APOSTROPHE};
+			case KNUCKLE -> new int[] {GLFW.GLFW_KEY_SEMICOLON, GLFW.GLFW_KEY_APOSTROPHE};
+			case BASKET -> new int[] {GLFW.GLFW_KEY_LEFT_BRACKET, GLFW.GLFW_KEY_RIGHT_BRACKET};
 		};
 	}
 
@@ -92,7 +94,7 @@ public class ConstructionAddonClient implements ClientModInitializer {
 			}
 			AbstractVehicleEntity vehicle = AbstractVehicleEntity.tudursvehiclemod$getEffectiveVehicle(client.player);
 			ConstructionMachineEntity machine = vehicle instanceof ConstructionMachineEntity m ? m : null;
-			boolean operating = machine != null && machine.getControllingPassenger() == client.player
+			boolean operating = machine != null && machine.isWorkOperator(client.player)
 					&& client.currentScreen == null;
 
 			boolean piling = operating && machine.settings().machine() == MachineType.PILE_DRIVER;

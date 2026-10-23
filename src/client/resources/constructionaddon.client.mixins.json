@@ -6,7 +6,8 @@
   "client": [
     "LivingEntityRenderStateMixin",
     "LivingEntityRendererMixin",
-    "MinecraftClientMouseMixin"
+    "MinecraftClientMouseMixin",
+    "EntityCameraPosMixin"
   ],
   "injectors": {
     "defaultRequire": 1

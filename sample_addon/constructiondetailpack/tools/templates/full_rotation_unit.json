@@ -1,0 +1,53 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Full-Rotation Machine (Stationary)",
+  "scale": 1.0,
+  "max_speed": 0.0,
+  "acceleration": 0.04,
+  "turn_speed": 0.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "tank",
+  "max_health": 200.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 1200.0,
+  "inventory_size": 27,
+  "spawn_item": {
+    "display_name": "Full-Rotation Machine (Stationary)",
+    "tier": 4
+  },
+  "construction": {
+    "machine": "pile_driver",
+    "pile_driver": {
+      "mode": "full_rotation",
+      "pile_block": "minecraft:iron_block",
+      "max_depth": 40,
+      "outrigger_speed": 0.03,
+      "require_outriggers": true,
+      "swing_speed": 0.0,
+      "ticks_per_block": 50.0,
+      "rpm": 12.0,
+      "min_rpm": 2.0,
+      "rpm_response": 0.1,
+      "head_min": 1.4,
+      "head_max": 2.1,
+      "head_speed": 0.06,
+      "chuck_length": 0.6,
+      "chuck_speed": 0.08,
+      "pile_length_min": 3,
+      "pile_length_max": 8,
+      "default_pile_length": 5,
+      "tool": "follower",
+      "tool_length": 3.0,
+      "tool_speed": 0.05,
+      "load_ticks_per_block": 5,
+      "extract_factor": 0.7,
+      "resistance": {
+        "hardness_scale": 0.8,
+        "refusal_hardness": 30.0
+      }
+    }
+  }
+}

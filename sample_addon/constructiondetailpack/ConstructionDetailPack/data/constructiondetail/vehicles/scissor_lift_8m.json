@@ -1,0 +1,313 @@
+{
+  "entity_type": "constructionaddon:construction_machine",
+  "display_name": "Scissor Lift 8m",
+  "scale": 1.0,
+  "max_speed": 0.15,
+  "acceleration": 0.04,
+  "turn_speed": 3.0,
+  "step_height": 1.0,
+  "gravity": -0.04,
+  "reverse_throttle": 0.5,
+  "weight_type": "car",
+  "max_health": 60.0,
+  "armor_damage_factor": 1.0,
+  "damage_factor": 1.0,
+  "max_fuel": 600.0,
+  "inventory_size": 9,
+  "spawn_item": {
+    "display_name": "Scissor Lift 8m",
+    "tier": 1
+  },
+  "construction": {
+    "machine": "aerial_platform",
+    "aerial_platform": {
+      "lift_speed": 0.005,
+      "swing_speed": 0.0,
+      "outriggers": false,
+      "stow_to_drive": false,
+      "raised_speed_factor": 0.25,
+      "extend_max": 0.9,
+      "extend_speed": 0.02
+    },
+    "joints": [
+      {
+        "part": "$sa0",
+        "pivot_x": 0.0,
+        "pivot_y": 0.47,
+        "pivot_z": -0.98,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sb0",
+        "parent": "$lv1",
+        "pivot_x": 0.0,
+        "pivot_y": 0.566,
+        "pivot_z": -0.98,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sa1",
+        "parent": "$lv1",
+        "pivot_x": 0.0,
+        "pivot_y": 0.566,
+        "pivot_z": -0.98,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sb1",
+        "parent": "$lv2",
+        "pivot_x": 0.0,
+        "pivot_y": 0.662,
+        "pivot_z": -0.98,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sa2",
+        "parent": "$lv2",
+        "pivot_x": 0.0,
+        "pivot_y": 0.662,
+        "pivot_z": -0.98,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sb2",
+        "parent": "$lv3",
+        "pivot_x": 0.0,
+        "pivot_y": 0.758,
+        "pivot_z": -0.98,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sa3",
+        "parent": "$lv3",
+        "pivot_x": 0.0,
+        "pivot_y": 0.758,
+        "pivot_z": -0.98,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sb3",
+        "parent": "$lv4",
+        "pivot_x": 0.0,
+        "pivot_y": 0.854,
+        "pivot_z": -0.98,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sa4",
+        "parent": "$lv4",
+        "pivot_x": 0.0,
+        "pivot_y": 0.854,
+        "pivot_z": -0.98,
+        "axis_x": -1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$sb4",
+        "parent": "$lv5",
+        "pivot_x": 0.0,
+        "pivot_y": 0.95,
+        "pivot_z": -0.98,
+        "axis_x": 1.0,
+        "axis_y": 0.0,
+        "axis_z": 0.0,
+        "mode": "scissor",
+        "channel": "lift",
+        "factor": 0.53895,
+        "offset": 0.05053
+      },
+      {
+        "part": "$lv1",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "lift",
+        "factor": 1.024
+      },
+      {
+        "part": "$lv2",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "lift",
+        "factor": 2.048
+      },
+      {
+        "part": "$lv3",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "lift",
+        "factor": 3.072
+      },
+      {
+        "part": "$lv4",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "lift",
+        "factor": 4.096
+      },
+      {
+        "part": "$lv5",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 1.0,
+        "axis_z": 0.0,
+        "mode": "slide",
+        "channel": "lift",
+        "factor": 5.12
+      },
+      {
+        "part": "$deck_ext",
+        "parent": "$lv5",
+        "pivot_x": 0.0,
+        "pivot_y": 0.0,
+        "pivot_z": 0.0,
+        "axis_x": 0.0,
+        "axis_y": 0.0,
+        "axis_z": 1.0,
+        "mode": "slide",
+        "channel": "extend"
+      }
+    ],
+    "work_points": {
+      "basket": {
+        "part": "$lv5",
+        "x": 0.0,
+        "y": 1.05,
+        "z": -0.4
+      }
+    },
+    "seat_parts": [
+      {
+        "seat": 0,
+        "part": "$lv5"
+      }
+    ],
+    "work_seat": 0
+  },
+  "model": "constructiondetail:models/obj/scissor_lift_8m.obj",
+  "texture": "constructiondetail:textures/vehicle/scissor_lift_8m.png",
+  "seats": [
+    {
+      "name": "operator",
+      "offset_x": 0.0,
+      "offset_y": 1.266,
+      "offset_z": -0.945,
+      "driver": true,
+      "camera_positions": [
+        {
+          "x": 0.0,
+          "y": 2.4,
+          "z": -0.945
+        }
+      ]
+    }
+  ],
+  "passenger_display": {
+    "entity_width": 0.7,
+    "entity_height": 0.7
+  },
+  "wheel_parts": [
+    {
+      "part": "$wheel0",
+      "pivot_x": 0.32,
+      "pivot_y": 0.19,
+      "pivot_z": 0.86,
+      "steer_angle": 45.0
+    },
+    {
+      "part": "$wheel1",
+      "pivot_x": -0.32,
+      "pivot_y": 0.19,
+      "pivot_z": 0.86,
+      "steer_angle": 45.0
+    },
+    {
+      "part": "$wheel2",
+      "pivot_x": 0.32,
+      "pivot_y": 0.19,
+      "pivot_z": -0.86
+    },
+    {
+      "part": "$wheel3",
+      "pivot_x": -0.32,
+      "pivot_y": 0.19,
+      "pivot_z": -0.86
+    }
+  ],
+  "width": 1.0,
+  "height": 2.0
+}

@@ -41,6 +41,14 @@ import java.util.Locale;
  *   <li>hammer - a drop hammer resting on the cap is lifted and dropped; every blow drives the pile a
  *       share of a block (blows_per_block x the ground's factor blows per block; refusal above
  *       max_blows_per_block). Pulling a pile out is done by the hammer's winch.</li>
+ *   <li>full_rotation (全周回転) - no leader and no cap: the pile stands through a ring (the chuck) at
+ *       the foot of the machine whose jaws grip it anywhere along its length, turn it and thrust it in
+ *       over the chuck's stroke (head_min..head_max = the jaws' lowest..highest place), then let go,
+ *       ride back up and grip it again - by themselves, for as long as the key is held. A new pile is
+ *       stood on the ground (or on a pile already in the ground, which it then joins) through the open
+ *       chuck. The follower (ヤットコ), with its cap at its foot, stands on the pile's head and is gripped
+ *       instead, to turn the pile in below the chuck. Rotation behaves like the rotary mode (rpm,
+ *       refusal below min_rpm).</li>
  * </ul>
  * Both: travel with the leader up is fine (with crawler_extension the crawlers widen first); work
  * mode deploys the jacks (driving is held while they are down); swing keys slew the upper structure.
@@ -51,7 +59,7 @@ import java.util.Locale;
 public final class PileDriverModule extends MachineModule {
 
 	private static final String[] CHANNELS = {"mast", "hammer", "rpm", "feed", "swing", "outrigger", "track_width", "travel",
-			"head", "pile_top", "pile_length", "tool", "steady"};
+			"head", "pile_top", "pile_length", "tool", "steady", "chuck"};
 	private static final int MAST = 0;
 	private static final int HAMMER = 1;
 	private static final int RPM = 2;
@@ -70,6 +78,8 @@ public final class PileDriverModule extends MachineModule {
 	private static final int TOOL = 11;
 	/** Rotary: pile steady (振れ止め) at the leader foot opened (0 = closed round the pile, 1 = open). */
 	private static final int STEADY = 12;
+	/** Full rotation: how far the chuck's jaws are open (0 = gripping, 1 = open). */
+	private static final int CHUCK = 13;
 
 	public record Setup(float swingSpeed, float swingLimit, float outriggerSpeed, boolean requireOutriggers,
 			boolean crawlerExtension, float trackWidthSpeed) {
@@ -151,15 +161,25 @@ public final class PileDriverModule extends MachineModule {
 		}
 	}
 
+	/** Full rotation: the chuck's jaws (chuck_length tall, the pile must reach over them to be gripped)
+	 * and how fast they open / close (per tick, 0..1). */
+	public record FullRotation(float chuckLength, float chuckSpeed) {
+		static final MapCodec<FullRotation> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+				Codec.FLOAT.optionalFieldOf("chuck_length", 0.8f).forGetter(FullRotation::chuckLength),
+				Codec.FLOAT.optionalFieldOf("chuck_speed", 0.08f).forGetter(FullRotation::chuckSpeed)
+		).apply(i, FullRotation::new));
+	}
+
 	public record Settings(Common common, Setup setup, Hammer hammer, Rotary rotary, Piling piling,
-			ResistanceProfile resistance) {
+			ResistanceProfile resistance, FullRotation fullRotation) {
 		public static final Codec<Settings> CODEC = RecordCodecBuilder.create(i -> i.group(
 				Common.MAP_CODEC.forGetter(Settings::common),
 				Setup.MAP_CODEC.forGetter(Settings::setup),
 				Hammer.MAP_CODEC.forGetter(Settings::hammer),
 				Rotary.MAP_CODEC.forGetter(Settings::rotary),
 				Piling.MAP_CODEC.forGetter(Settings::piling),
-				ResistanceProfile.field(1.0f, 20.0f).forGetter(Settings::resistance)
+				ResistanceProfile.field(1.0f, 20.0f).forGetter(Settings::resistance),
+				FullRotation.MAP_CODEC.forGetter(Settings::fullRotation)
 		).apply(i, Settings::new));
 
 		public static final Settings DEFAULT = MachineModule.defaults(CODEC);
@@ -167,10 +187,23 @@ public final class PileDriverModule extends MachineModule {
 		public boolean rotaryMode() {
 			return "rotary".equalsIgnoreCase(this.common.mode());
 		}
+
+		public boolean fullRotationMode() {
+			return "full_rotation".equalsIgnoreCase(this.common.mode());
+		}
+
+		/** The pile is turned in (rotary or full rotation), not hammered. */
+		public boolean rotating() {
+			return this.rotaryMode() || this.fullRotationMode();
+		}
 	}
 
 	private enum Status { IDLE, MAST, LEADER_DOWN, JACKS, READY, DRIVING, DONE, REFUSED, NO_PILE, NO_GROUND, PROTECTED,
-		FREE, LOADING, HOLDING, EXTRACTING, HEAD_BOTTOM, HEAD_TOP, TOO_LONG, LEADER_LOCKED, MAX_DEPTH, JOINED }
+		FREE, LOADING, HOLDING, EXTRACTING, HEAD_BOTTOM, HEAD_TOP, TOO_LONG, LEADER_LOCKED, MAX_DEPTH, JOINED,
+		REGRIP, CHUCK_LOW, CHUCK_TOP, TOO_SHORT, FOLLOWER_FIRST }
+
+	/** Full rotation: what the chuck is doing between grips. */
+	private enum Chuck { GRIPPING, OPENING, MOVING, CLOSING }
 
 	/** Leader up (target) - toggled by the secondary key. */
 	private boolean leaderUp;
@@ -203,11 +236,19 @@ public final class PileDriverModule extends MachineModule {
 	private Block loadBlock;
 	private int loadTicks;
 	private float loadHead;
+	/** Full rotation: the block a new pile stands on (its foot), while it is being set. */
+	private int loadBase;
 	private int lengthKeyCooldown;
 	private boolean headPlaced;
 	/** Rotary: a one-off message shown for a while over the running status. */
 	private Status notice;
 	private int noticeTicks;
+	// Full rotation: the jaws grip the held pile (the head then follows it), the distance from the jaws up to
+	// the top of what they grip (pile, or follower) when they took hold, and the regrip cycle.
+	private boolean gripped;
+	private float gripTop;
+	private Chuck chuckState = Chuck.GRIPPING;
+	private float chuckTarget;
 
 	public PileDriverModule(ConstructionMachineEntity machine) {
 		super(machine);
@@ -249,7 +290,12 @@ public final class PileDriverModule extends MachineModule {
 		Setup setup = s.setup();
 		float mast = this.machine.getFloatChannel(MAST);
 		float width = this.machine.getFloatChannel(TRACK_WIDTH);
-		if (!setup.crawlerExtension()) {
+		if (s.fullRotationMode()) {
+			// No leader: the rig is always "up".
+			this.machine.setFloatChannel(TRACK_WIDTH, 0f);
+			this.machine.setFloatChannel(MAST, 1f);
+			mast = 1f;
+		} else if (!setup.crawlerExtension()) {
 			this.machine.setFloatChannel(TRACK_WIDTH, 0f);
 			mast = this.approach(MAST, this.leaderUp ? 1f : 0f, s.common().mastSpeed());
 		} else if (this.leaderUp) {
@@ -301,7 +347,8 @@ public final class PileDriverModule extends MachineModule {
 		}
 
 		// Leader: X, the same key as the hammer rig. It stays up while a pile is gripped or being set.
-		if (operator != null && this.machine.isSecondaryPressed()) {
+		boolean fullRotation = s.fullRotationMode();
+		if (operator != null && !fullRotation && this.machine.isSecondaryPressed()) {
 			if (this.leaderUp && (this.holding || this.loading)) {
 				this.notice(Status.LEADER_LOCKED);
 			} else {
@@ -313,7 +360,7 @@ public final class PileDriverModule extends MachineModule {
 		boolean jacksReady = !s.setup().requireOutriggers() || this.machine.getFloatChannel(OUTRIGGER) >= 0.999f;
 
 		if (operator != null) {
-			if (!this.pileInGround()) {
+			if (!this.pileInGround() && !fullRotation) {
 				this.workSwing(SWING, s.setup().swingSpeed(), s.setup().swingLimit());
 			}
 			int change = (int) this.machine.workAxis(WorkAxis.VERTICAL);
@@ -361,11 +408,19 @@ public final class PileDriverModule extends MachineModule {
 		if (operator != null && this.machine.isPrimaryPressed() && !this.loading) {
 			if (this.holding) {
 				this.release(world, operator);
+			} else if (fullRotation) {
+				if (!this.toolMoving(p) && !this.tryGripFullRotation(world, x, z, s)) {
+					this.startLoadFullRotation(world, operator, x, z, s);
+				}
 			} else if (!this.toolMoving(p) && !this.tryGrip(world, x, z, p)) {
 				this.startLoad(world, operator, x, MathHelper.floor(point.y), z, s);
 			}
 		}
-		if (operator != null && this.machine.isPressed(WorkButton.TOOL) && p.hasTool() && !this.holding && !this.loading) {
+		if (operator != null && fullRotation && this.machine.isPressed(WorkButton.TOOL) && p.hasTool() && !this.holding
+				&& !this.loading) {
+			// The follower is stood on (or lifted off) the pile's head; the chuck is open meanwhile.
+			this.toolOut = !this.toolOut;
+		} else if (operator != null && this.machine.isPressed(WorkButton.TOOL) && p.hasTool() && !this.holding && !this.loading) {
 			// Lowering it needs room under the head.
 			float room = this.machine.getFloatChannel(HEAD) - this.lowestFreeHead(world, x, z, p);
 			if (this.toolOut || p.headMax() - this.machine.getFloatChannel(HEAD) + room >= p.toolLength() - 1.0e-3f) {
@@ -381,7 +436,11 @@ public final class PileDriverModule extends MachineModule {
 		}
 		if (this.loading) {
 			this.spinDown(r, 0f);
-			this.tickLoad(p);
+			if (fullRotation) {
+				this.tickLoadFullRotation(s);
+			} else {
+				this.tickLoad(p);
+			}
 		} else if (this.holding) {
 			boolean down = operator != null && this.machine.isHeld(WorkButton.PENETRATE);
 			boolean up = operator != null && this.machine.isHeld(WorkButton.EXTRACT);
@@ -397,12 +456,17 @@ public final class PileDriverModule extends MachineModule {
 					: (this.machine.isHeld(WorkButton.EXTRACT) ? 1f : 0f) - (this.machine.isHeld(WorkButton.PENETRATE) ? 1f : 0f);
 			// The cap (with the tool, if lowered) never goes into what is under it: the head is pushed up
 			// instead, e.g. while a drive rod is being lowered.
-			float lowest = Math.min(p.headMax(), Math.max(p.headMin(), this.lowestFreeHead(world, x, z, p)));
+			float lowest = fullRotation ? p.headMin()
+					: Math.min(p.headMax(), Math.max(p.headMin(), this.lowestFreeHead(world, x, z, p)));
 			float g = this.machine.getFloatChannel(HEAD);
 			this.machine.setFloatChannel(HEAD, MathHelper.clamp(g + move * p.headSpeed(), lowest, p.headMax()));
 			this.status = Status.FREE;
 		}
-		this.updatePileChannels(p);
+		if (fullRotation) {
+			this.updateFullRotationChannels(world, x, z, s);
+		} else {
+			this.updatePileChannels(p);
+		}
 	}
 
 	private void notice(Status notice) {
@@ -604,6 +668,16 @@ public final class PileDriverModule extends MachineModule {
 		if (!this.holding) {
 			return;
 		}
+		if (this.settings().fullRotationMode()) {
+			// The chuck lets go wherever the stroke ended: a block more than half done is finished (so the
+			// pile does not jump back up), one less than half done is undone.
+			if (this.stepOffset >= 0.5f) {
+				this.stepDown(world);
+			} else if (this.stepOffset <= -0.5f) {
+				this.stepUp(world);
+			}
+			this.stepOffset = 0f;
+		}
 		PileRegistry registry = PileRegistry.get(world);
 		int x = this.holdX;
 		int z = this.holdZ;
@@ -647,6 +721,8 @@ public final class PileDriverModule extends MachineModule {
 		}
 		this.holding = false;
 		this.stepOffset = 0f;
+		this.gripped = false;
+		this.chuckState = Chuck.GRIPPING;
 		world.playSound(null, x + 0.5, placedTop + 1.0, z + 0.5, SoundEvents.BLOCK_CHAIN_BREAK, SoundCategory.BLOCKS, 1.0f, 1.0f);
 	}
 
@@ -655,7 +731,10 @@ public final class PileDriverModule extends MachineModule {
 	private void tickHeldPile(ServerWorld world, ServerPlayerEntity operator, Settings s, int dir) {
 		Piling p = s.piling();
 		Rotary r = s.rotary();
-		if (!s.rotaryMode() && (dir > 0 || this.hammerTick > 0)) {
+		if (s.fullRotationMode() && !this.tickChuck(s, dir)) {
+			return;
+		}
+		if (!s.rotating() && (dir > 0 || this.hammerTick > 0)) {
 			// Drop hammer: driven blow by blow (a blow under way always finishes).
 			this.tickBlows(world, operator, s, dir > 0);
 			return;
@@ -679,7 +758,7 @@ public final class PileDriverModule extends MachineModule {
 		}
 		float rpmNeeded = r.rpm() / Math.max(1f, factor);
 		float speedRatio = 1f;
-		if (s.rotaryMode()) {
+		if (s.rotating()) {
 			this.spinDown(r, dir * rpmNeeded);
 			speedRatio = MathHelper.clamp(Math.abs(this.rpm) / Math.max(0.01f, rpmNeeded), 0f, 1f);
 		}
@@ -687,7 +766,7 @@ public final class PileDriverModule extends MachineModule {
 		this.stepOffset += dir * speedRatio / ticks;
 		this.status = dir > 0 ? Status.DRIVING : Status.EXTRACTING;
 		if (this.machine.age % 8 == 0) {
-			if (s.rotaryMode()) {
+			if (s.rotating()) {
 				world.playSound(null, this.holdX + 0.5, this.holdSurface + 1.0, this.holdZ + 0.5,
 						SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS, 0.6f,
 						0.5f + 0.5f * MathHelper.clamp(Math.abs(this.rpm) / Math.max(1f, r.rpm()), 0f, 1f));
@@ -769,7 +848,8 @@ public final class PileDriverModule extends MachineModule {
 		Piling p = s.piling();
 		int next = this.holdBottom - 1;
 		float headAfter = this.headFor(this.modelY(this.holdBottom + this.holdLength - 1), p);
-		if (headAfter < p.headMin() - 1.0e-3f) {
+		// (full rotation: the chuck's stroke is checked - and regripped - before each block, in tickChuck)
+		if (!s.fullRotationMode() && headAfter < p.headMin() - 1.0e-3f) {
 			this.status = Status.HEAD_BOTTOM;
 			return 0f;
 		}
@@ -821,7 +901,7 @@ public final class PileDriverModule extends MachineModule {
 		}
 		GroundResistance.Result resistance = GroundResistance.evaluate(world, pos, state, s.resistance());
 		float factor = resistance.passable() ? 0.25f : resistance.factor();
-		boolean tooHard = s.rotaryMode()
+		boolean tooHard = s.rotating()
 				? s.rotary().rpm() / Math.max(1f, factor) < s.rotary().minRpm()
 				: MathHelper.ceil(s.hammer().blowsPerBlock() * factor) > s.hammer().maxBlowsPerBlock();
 		if (resistance.refused() || tooHard) {
@@ -841,7 +921,7 @@ public final class PileDriverModule extends MachineModule {
 	private float checkUp(ServerWorld world, ServerPlayerEntity operator, Settings s) {
 		Piling p = s.piling();
 		float headAfter = this.headFor(this.modelY(this.holdBottom + this.holdLength + 1), p);
-		if (headAfter > p.headMax() + 1.0e-3f) {
+		if (!s.fullRotationMode() && headAfter > p.headMax() + 1.0e-3f) {
 			this.status = Status.HEAD_TOP;
 			return 0f;
 		}
@@ -896,6 +976,228 @@ public final class PileDriverModule extends MachineModule {
 			world.setBlockState(new BlockPos(this.holdX, newTop, this.holdZ), this.holdBlock.getDefaultState());
 		}
 		this.holdBottom++;
+	}
+
+	// --- full rotation: the chuck
+
+	/** Top (model) of what the jaws grip: the held pile, plus the follower standing on it. */
+	private float assemblyTop(Piling p) {
+		return this.modelY(this.holdBottom + this.holdLength - this.stepOffset) + this.toolOffset(p);
+	}
+
+	private void startRegrip(float target) {
+		this.gripped = false;
+		this.chuckTarget = target;
+		this.chuckState = Chuck.OPENING;
+		this.status = Status.REGRIP;
+	}
+
+	/** Full rotation, every tick while a pile is held: runs the regrip cycle (open, ride to the new
+	 * place, close), and before each block checks that it fits in the chuck's stroke, starting a regrip
+	 * when it doesn't. Returns true when the pile may move this tick. */
+	private boolean tickChuck(Settings s, int dir) {
+		Piling p = s.piling();
+		FullRotation f = s.fullRotation();
+		float speed = Math.max(0.01f, f.chuckSpeed());
+		switch (this.chuckState) {
+			case OPENING -> {
+				this.spinDown(s.rotary(), 0f);
+				this.gripped = false;
+				if (this.approach(CHUCK, 1f, speed) >= 1f) {
+					this.chuckState = Chuck.MOVING;
+				}
+				this.status = Status.REGRIP;
+				return false;
+			}
+			case MOVING -> {
+				this.spinDown(s.rotary(), 0f);
+				float g = this.approach(HEAD, this.chuckTarget, Math.max(0.02f, p.headSpeed() * 2f));
+				if (Math.abs(g - this.chuckTarget) < 1.0e-3f) {
+					this.chuckState = Chuck.CLOSING;
+				}
+				this.status = Status.REGRIP;
+				return false;
+			}
+			case CLOSING -> {
+				this.spinDown(s.rotary(), 0f);
+				if (this.approach(CHUCK, 0f, speed) <= 0f) {
+					this.gripped = true;
+					this.gripTop = this.assemblyTop(p) - this.machine.getFloatChannel(HEAD);
+					this.chuckState = Chuck.GRIPPING;
+				}
+				this.status = Status.REGRIP;
+				return false;
+			}
+			default -> {
+			}
+		}
+		if (dir == 0) {
+			return true;
+		}
+		// The jaws reached the end of their stroke (the stroke can be shorter than a block): let go and take
+		// hold again at the other end, wherever the pile is - mid-block too.
+		float head = this.machine.getFloatChannel(HEAD);
+		if (dir > 0 && head <= p.headMin() + 0.01f) {
+			// as high as the jaws still stand on the pile / follower
+			float target = Math.min(p.headMax(), this.assemblyTop(p) - f.chuckLength());
+			if (target <= head + 0.05f) {
+				this.spinDown(s.rotary(), 0f);
+				this.status = Status.CHUCK_LOW;
+				return false;
+			}
+			this.startRegrip(target);
+			return false;
+		}
+		if (dir < 0 && head >= p.headMax() - 0.01f) {
+			// pulling out: take hold lower down, never under the pile's foot
+			float target = Math.max(p.headMin(), this.modelY(this.holdBottom - this.stepOffset));
+			if (target >= head - 0.05f) {
+				this.spinDown(s.rotary(), 0f);
+				this.status = Status.CHUCK_TOP;
+				return false;
+			}
+			this.startRegrip(target);
+			return false;
+		}
+		return true;
+	}
+
+	/** Grips a pile standing in the chuck, if enough of it (or of the follower on it) stands above the
+	 * jaws' lowest place to drive it at least a block; the chuck then rides to it and closes. */
+	private boolean tryGripFullRotation(ServerWorld world, int x, int z, Settings s) {
+		Piling p = s.piling();
+		PileRegistry registry = PileRegistry.get(world);
+		PileRegistry.Pile pile = registry.at(world, x, z);
+		if (pile == null) {
+			return false;
+		}
+		float top = this.modelY(pile.top() + 1) + this.toolOffset(p);
+		float target = Math.min(p.headMax(), top - s.fullRotation().chuckLength());
+		if (top - s.fullRotation().chuckLength() - 1f < p.headMin() - 0.001f) {
+			return false; // could not be turned down another block: a new pile is set on top of it instead
+		}
+		Block block = pile.blockType();
+		for (int y = Math.max(pile.bottom(), pile.surface() + 1); y <= pile.top(); y++) {
+			BlockPos pos = new BlockPos(x, y, z);
+			if (world.getBlockState(pos).getBlock() == block) {
+				world.setBlockState(pos, Blocks.AIR.getDefaultState());
+			}
+		}
+		registry.remove(x, z);
+		this.holding = true;
+		this.holdX = x;
+		this.holdZ = z;
+		this.holdBottom = pile.bottom();
+		this.holdLength = pile.length();
+		this.holdSurface = pile.surface();
+		this.holdBlock = block;
+		this.stepOffset = 0f;
+		this.startRegrip(target);
+		world.playSound(null, x + 0.5, pile.top() + 1.0, z + 0.5, SoundEvents.BLOCK_CHAIN_PLACE, SoundCategory.BLOCKS, 1.0f, 1.2f);
+		return true;
+	}
+
+	/** Sets a new pile through the open chuck, standing on what is under it - the ground, or the head of
+	 * a pile already in it (which it joins once turned down onto it). */
+	private void startLoadFullRotation(ServerWorld world, ServerPlayerEntity operator, int x, int z, Settings s) {
+		Piling p = s.piling();
+		if (this.toolOut || this.machine.getFloatChannel(TOOL) > 0.001f) {
+			this.notice(Status.FOLLOWER_FIRST);
+			return;
+		}
+		int length = this.pileLengthSet;
+		int y = MathHelper.floor(this.worldY(p.headMax()));
+		int base = Integer.MIN_VALUE;
+		for (int i = 0; i < 96; i++, y--) {
+			BlockPos pos = new BlockPos(x, y, z);
+			if (world.isOutOfHeightLimit(pos)) {
+				break;
+			}
+			if (!PourSpreader.free(world, pos)) {
+				base = y + 1;
+				break;
+			}
+		}
+		if (base == Integer.MIN_VALUE) {
+			this.notice(Status.NO_GROUND);
+			return;
+		}
+		float top = this.modelY(base + length);
+		if (top < p.headMin() + s.fullRotation().chuckLength() + 0.1f) {
+			this.notice(Status.TOO_SHORT);
+			return;
+		}
+		Block block = this.findPileBlock(operator, s);
+		if (block == null || (!ConstructionMachineEntity.isCreative(operator) && this.countBlocks(block) < length)) {
+			this.notice(Status.NO_PILE);
+			return;
+		}
+		if (!ConstructionMachineEntity.isCreative(operator)) {
+			this.takeBlocks(block, length);
+		}
+		this.loading = true;
+		this.loadLength = length;
+		this.loadBlock = block;
+		this.loadBase = base;
+		this.loadTicks = Math.max(1, p.loadTicksPerBlock()) * length;
+		this.loadHead = Math.min(p.headMax(), top - s.fullRotation().chuckLength());
+		this.holdX = x;
+		this.holdZ = z;
+		this.holdSurface = this.surfaceAt(world, x, base - 1, z, s);
+		this.status = Status.LOADING;
+	}
+
+	/** The pile comes down into the open chuck while the chuck rides up to where it will grip it. */
+	private void tickLoadFullRotation(Settings s) {
+		Piling p = s.piling();
+		this.status = Status.LOADING;
+		if (Float.isNaN(this.loadHead)) {
+			this.loadHead = this.machine.getFloatChannel(HEAD);
+		}
+		this.approach(CHUCK, 1f, Math.max(0.01f, s.fullRotation().chuckSpeed()));
+		this.approach(HEAD, this.loadHead, Math.max(0.02f, p.headSpeed() * 2f));
+		if (--this.loadTicks > 0) {
+			return;
+		}
+		this.loading = false;
+		this.holding = true;
+		this.holdBlock = this.loadBlock;
+		this.holdLength = this.loadLength;
+		this.holdBottom = this.loadBase;
+		this.stepOffset = 0f;
+		this.gripped = false;
+		this.chuckTarget = this.loadHead;
+		this.chuckState = Chuck.MOVING;
+		this.machine.getEntityWorld().playSound(null, this.machine.getX(), this.machine.getY() + 1, this.machine.getZ(),
+				SoundEvents.BLOCK_CHAIN_PLACE, SoundCategory.BLOCKS, 1.0f, 0.8f);
+	}
+
+	private void updateFullRotationChannels(ServerWorld world, int x, int z, Settings s) {
+		Piling p = s.piling();
+		float scale = this.scale();
+		if (this.holding) {
+			float top = this.modelY(this.holdBottom + this.holdLength - this.stepOffset);
+			this.machine.setFloatChannel(PILE_TOP, top);
+			this.machine.setFloatChannel(PILE_LENGTH, this.holdLength / scale);
+			if (this.gripped && this.chuckState == Chuck.GRIPPING) {
+				this.machine.setFloatChannel(CHUCK, 0f);
+				this.machine.setFloatChannel(HEAD, top + this.toolOffset(p) - this.gripTop);
+			}
+			return;
+		}
+		if (this.loading) {
+			int total = Math.max(1, p.loadTicksPerBlock()) * Math.max(1, this.loadLength);
+			float left = MathHelper.clamp(this.loadTicks / (float) total, 0f, 1f);
+			this.machine.setFloatChannel(PILE_LENGTH, this.loadLength / scale);
+			this.machine.setFloatChannel(PILE_TOP, this.modelY(this.loadBase + this.loadLength) + left * this.loadLength / scale);
+			return;
+		}
+		// Free: the chuck stands open; a follower stands on the head of the pile under it, if there is one.
+		this.approach(CHUCK, 1f, Math.max(0.01f, s.fullRotation().chuckSpeed()));
+		this.machine.setFloatChannel(PILE_LENGTH, 0f);
+		PileRegistry.Pile pile = PileRegistry.get(world).at(world, x, z);
+		this.machine.setFloatChannel(PILE_TOP, pile != null ? this.modelY(pile.top() + 1)
+				: this.machine.getFloatChannel(HEAD) + 0.3f);
 	}
 
 	// --- cargo
@@ -973,18 +1275,24 @@ public final class PileDriverModule extends MachineModule {
 					this.loadProgressPercent(s));
 			case HOLDING, JOINED -> Text.translatable("status.constructionaddon.pile_driver.rotary."
 					+ (shown == Status.JOINED ? "joined" : "holding"), this.holdLength, this.embedment(), tool);
-			case DRIVING -> s.rotaryMode()
+			case DRIVING -> s.rotating()
 					? Text.translatable("status.constructionaddon.pile_driver.rotary.driving", this.holdLength,
 							this.embedment(), Math.round(Math.abs(this.rpm)), pct)
 					: Text.translatable("status.constructionaddon.pile_driver.rotary.hammering", this.holdLength,
 							this.embedment(), this.blowsDone, this.blowsNeeded(s.hammer()));
-			case EXTRACTING -> s.rotaryMode()
+			case EXTRACTING -> s.rotating()
 					? Text.translatable("status.constructionaddon.pile_driver.rotary.extracting", this.holdLength,
 							this.embedment(), Math.round(Math.abs(this.rpm)), pct)
 					: Text.translatable("status.constructionaddon.pile_driver.rotary.pulling", this.holdLength,
 							this.embedment(), pct);
 			case HEAD_BOTTOM -> Text.translatable("status.constructionaddon.pile_driver.rotary.head_bottom", this.embedment());
 			case HEAD_TOP -> Text.translatable("status.constructionaddon.pile_driver.rotary.head_top");
+			case REGRIP -> Text.translatable("status.constructionaddon.pile_driver.full_rotation.regrip", this.holdLength,
+					this.embedment(), tool);
+			case CHUCK_LOW -> Text.translatable("status.constructionaddon.pile_driver.full_rotation.chuck_low", this.embedment());
+			case CHUCK_TOP -> Text.translatable("status.constructionaddon.pile_driver.full_rotation.chuck_top");
+			case TOO_SHORT -> Text.translatable("status.constructionaddon.pile_driver.full_rotation.too_short", this.pileLengthSet);
+			case FOLLOWER_FIRST -> Text.translatable("status.constructionaddon.pile_driver.full_rotation.follower_first");
 			case TOO_LONG -> Text.translatable("status.constructionaddon.pile_driver.rotary.too_long", this.pileLengthSet);
 			case MAX_DEPTH -> Text.translatable("status.constructionaddon.pile_driver.rotary.max_depth", s.common().maxDepth());
 			case NO_PILE -> Text.translatable("status.constructionaddon.pile_driver.rotary.no_pile", this.pileBlock(s).getName(), this.pileLengthSet);
@@ -1011,6 +1319,7 @@ public final class PileDriverModule extends MachineModule {
 			view.putInt("PileHoldBottom", this.holding ? this.holdBottom : Integer.MIN_VALUE);
 			view.putInt("PileHoldLength", this.holding ? this.holdLength : this.loadLength);
 			view.putInt("PileHoldSurface", this.holdSurface);
+			view.putInt("PileLoadBase", this.loadBase);
 		}
 	}
 
@@ -1036,11 +1345,15 @@ public final class PileDriverModule extends MachineModule {
 					this.loadLength = view.getInt("PileHoldLength", 1);
 					this.loadTicks = 1;
 					this.loadHead = Float.NaN;
+					this.loadBase = view.getInt("PileLoadBase", 0);
 				} else {
 					this.holding = true;
 					this.holdBlock = block;
 					this.holdBottom = bottom;
 					this.holdLength = view.getInt("PileHoldLength", 1);
+					// full rotation: the jaws take hold again where they are
+					this.gripped = false;
+					this.chuckState = Chuck.CLOSING;
 				}
 			}
 		}

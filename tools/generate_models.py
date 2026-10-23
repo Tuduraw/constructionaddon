@@ -283,7 +283,15 @@ def fit_rider(ix0, ix1, floor, roof, iz0, iz1, pref_x, max_scale=1.0):
     return (round(ox, 3), round(oy, 3), round(oz, 3)), s
 
 
-def cab(m, group, x0, x1, y0, y1, z0, z1, color=0, side_sign=1, seat_x=None, name="operator"):
+def cab_scale(x0, x1, y0, y1, z0, z1, seat_x=None, k=1.0):
+    """The rider scale cab() would fit into this cab (to share one scale between several seats)."""
+    t, roof_t = CAB_WALL, 0.07
+    pref = (x0 + x1) / 2 if seat_x is None else seat_x
+    return fit_rider((x0 + t) * k, (x1 - t) * k, (y0 + t) * k, (y1 - roof_t) * k, (z0 + t) * k, (z1 - t) * k,
+                     pref * k)[1]
+
+
+def cab(m, group, x0, x1, y0, y1, z0, z1, color=0, side_sign=1, seat_x=None, name="operator", max_scale=1.0):
     """A hollow operator cab: floor, waist-high tub, corner pillars, roof, translucent glass at the
     front and both sides, a seat and a dashboard. The rider is fitted inside it (see fit_rider).
     side_sign picks the door side. Returns (seat JSON, passenger_display JSON) in model units."""
@@ -312,7 +320,7 @@ def cab(m, group, x0, x1, y0, y1, z0, z1, color=0, side_sign=1, seat_x=None, nam
     k = m.k
     pref = (x0 + x1) / 2 if seat_x is None else seat_x
     o, s = fit_rider((x0 + t) * k, (x1 - t) * k, (y0 + t) * k, (y1 - roof_t) * k, (z0 + t) * k, (z1 - t) * k,
-                     pref * k)
+                     pref * k, max_scale)
     ox, oy, oz = (v / k for v in o)
     sk = s / k                                    # rider scale in model units
     cushion = oy + RIDER_SEAT * sk
@@ -1223,6 +1231,518 @@ def lowboy_trailer():
                                           max_speed=0.7, max_health=120.0, fuel_consumption=-1.0, inventory_size=0))
 
 
+
+# ---------------------------------------------------------------- open seats (baskets, platforms, steps)
+def open_scale(ix0, ix1, iz0, iz1, max_scale=1.0):
+    """Largest rider scale (2.5 % steps) whose arms and knees stay inside the floor plan
+    [ix0, ix1] x [iz0 (behind), iz1 (in front)] of an open seat (a basket, a platform)."""
+    s = max_scale
+    while s > 0.3:
+        if RIDER_WIDTH * s <= (ix1 - ix0) - 0.04 and (RIDER_BACK + RIDER_FRONT) * s + 0.04 <= iz1 - iz0:
+            break
+        s = round(s - 0.025, 3)
+    return s
+
+
+def open_seat(m, group, floor, ix0, ix1, iz0, iz1, pref_x, scale, name, driver, color=1, eye_over=0.0):
+    """A rider sitting on a stool in an open place (basket, platform), facing +z: the back of the head
+    2 cm in front of iz0, centred on pref_x within [ix0, ix1]. eye_over: the eye at least this high above
+    the floor (over the rails / the rim, as a standing worker would look) - the stool is made taller.
+    Returns the seat JSON."""
+    oz = iz0 + RIDER_BACK * scale + 0.02
+    half = RIDER_WIDTH * scale / 2 + 0.02
+    ox = min(max(pref_x, ix0 + half), ix1 - half)
+    cushion = max(floor + 0.42 * scale + 0.05, floor + eye_over - (RIDER_EYE - RIDER_SEAT) * scale)
+    oy = cushion - RIDER_SEAT * scale
+    m.box(group, ox - 0.16 * scale, floor, oz - 0.14 * scale, ox + 0.16 * scale, cushion, oz + 0.22 * scale, color)
+    return {"name": name, "offset_x": round(ox, 4), "offset_y": round(oy, 4), "offset_z": round(oz, 4),
+            "driver": driver,
+            "camera_positions": [{"x": round(ox, 4), "y": round(oy + RIDER_EYE * scale, 4), "z": round(oz, 4)}]}
+
+
+def guard_rails(m, group, x0, x1, y0, z0, z1, height=1.05, color=0, gate=None):
+    """Hand rails round an open floor: corner posts, a top and a knee rail, a toe board. gate = (z_a, z_b)
+    leaves a gap in the rear rails between those x... (None = closed)."""
+    p = 0.04
+    for x in (x0, x1 - p):
+        for z in (z0, z1 - p):
+            m.box(group, x, y0, z, x + p, y0 + height, z + p, color)
+    for yy, hh in ((height - p, p), (height * 0.5, p * 0.8)):
+        m.box(group, x0, y0 + yy, z0, x1, y0 + yy + hh, z0 + p, color)
+        m.box(group, x0, y0 + yy, z1 - p, x1, y0 + yy + hh, z1, color)
+        m.box(group, x0, y0 + yy, z0, x0 + p, y0 + yy + hh, z1, color)
+        m.box(group, x1 - p, y0 + yy, z0, x1, y0 + yy + hh, z1, color)
+    m.box(group, x0, y0, z0, x1, y0 + 0.12, z0 + 0.02, color)
+    m.box(group, x0, y0, z1 - 0.02, x1, y0 + 0.12, z1, color)
+    m.box(group, x0, y0, z0, x0 + 0.02, y0 + 0.12, z1, color)
+    m.box(group, x1 - 0.02, y0, z0, x1, y0 + 0.12, z1, color)
+
+
+def bucket(m, group, x0, x1, y0, z0, z1, height=1.0, color=6):
+    """A closed work bucket (FRP-type: solid walls, a rim) - floor at y0 + 0.06."""
+    t = 0.05
+    m.box(group, x0, y0, z0, x1, y0 + 0.06, z1, color)
+    m.box(group, x0, y0, z0, x1, y0 + height, z0 + t, color)
+    m.box(group, x0, y0, z1 - t, x1, y0 + height, z1, color)
+    m.box(group, x0, y0, z0, x0 + t, y0 + height, z1, color)
+    m.box(group, x1 - t, y0, z0, x1, y0 + height, z1, color)
+    r, yt = 0.07, y0 + height                                                                   # rim (a frame)
+    m.box(group, x0 - 0.02, yt - 0.05, z0 - 0.02, x1 + 0.02, yt, z0 + r, 1)
+    m.box(group, x0 - 0.02, yt - 0.05, z1 - r, x1 + 0.02, yt, z1 + 0.02, 1)
+    m.box(group, x0 - 0.02, yt - 0.05, z0 + r, x0 + r, yt, z1 - r, 1)
+    m.box(group, x1 - r, yt - 0.05, z0 + r, x1 + 0.02, yt, z1 - r, 1)
+
+
+AERIAL_COLOR = 6   # white bodies, orange accents
+
+
+# ---------------------------------------------------------------- aerial work platforms
+SC_LEVELS = 4
+SC_L = 1.7            # scissor arm, pin to pin
+SC_Y0 = 0.55          # lowest pins (on the chassis)
+SC_H0 = 0.11          # rise of one level, stowed
+SC_HM = 1.2           # rise of one level, fully raised
+SC_ZF = -0.8          # fixed (rear) pins
+
+
+def scissor_lift():
+    """Compact self-propelled scissor lift for indoor / plant work: driven and worked from its platform.
+    Four scissor levels: each level frame ($lvN) slides up by N x the rise of one level; every arm turns
+    by asin(rise / arm) about its fixed pin (joint mode "scissor"), so its other end stays on the next pin."""
+    m = Mesh()
+    m.box("body", -0.4, 0.2, -0.95, 0.4, 0.5, 0.95, 5)                 # chassis
+    m.box("body", -0.38, 0.12, -0.7, 0.38, 0.2, 0.7, 1)                 # pothole guard
+    m.box("body", -0.42, 0.25, 0.92, 0.42, 0.45, 0.98, 1)              # bumpers
+    m.box("body", -0.42, 0.25, -0.98, 0.42, 0.45, -0.92, 1)
+    wheels = []
+    for i, (x, z, steer) in enumerate([(0.3, 0.68, 40.0), (-0.3, 0.68, 40.0), (0.3, -0.68, 0), (-0.3, -0.68, 0)]):
+        part = "$wheel%d" % i
+        m.wheel(part, x, 0.16, z, 0.16, 0.12)
+        wheels.append((part, x, 0.16, z, steer))
+    lift = SC_HM - SC_H0
+    c0 = math.sqrt(SC_L ** 2 - SC_H0 ** 2)
+    joints = []
+    for k in range(SC_LEVELS):
+        y_k, y_n = SC_Y0 + k * SC_H0, SC_Y0 + (k + 1) * SC_H0
+        frame = "$lv%d" % k if k else None
+        top = "$lv%d" % (k + 1)
+        a, b = "$sa%d" % k, "$sb%d" % k
+        for sx in (1, -1):
+            # A arms (outer pair): fixed pin at the rear of this level, up to the front of the next
+            m.beam(a, (sx * 0.33, y_k, SC_ZF), (sx * 0.33, y_n, SC_ZF + c0), 0.05, 0.09, 3)
+            # B arms (inner pair): sliding end at the front of this level, up to the fixed pin of the next
+            m.beam(b, (sx * 0.27, y_k, SC_ZF + c0), (sx * 0.27, y_n, SC_ZF), 0.05, 0.09, 3)
+        m.prism(a, (-0.36, y_n, SC_ZF + c0), (0.36, y_n, SC_ZF + c0), 0.03, 6, [1])    # front pin (rolls on the next level)
+        m.prism(b, (-0.36, y_k, SC_ZF + c0), (0.36, y_k, SC_ZF + c0), 0.03, 6, [1])
+        m.prism(a, (-0.36, (y_k + y_n) / 2, SC_ZF + c0 / 2), (0.36, (y_k + y_n) / 2, SC_ZF + c0 / 2), 0.035, 6, [1])
+        if k:
+            m.prism(frame, (-0.36, y_k, SC_ZF), (0.36, y_k, SC_ZF), 0.035, 6, [1])  # fixed pin bar of this level
+        joints.append(joint(a, (0, y_k, SC_ZF), (-1, 0, 0), mode="scissor", channel="lift", parent=frame,
+                            factor=round(lift / SC_L, 5), offset=round(SC_H0 / SC_L, 5)))
+        joints.append(joint(b, (0, y_n, SC_ZF), (1, 0, 0), mode="scissor", channel="lift", parent=top,
+                            factor=round(lift / SC_L, 5), offset=round(SC_H0 / SC_L, 5)))
+    for k in range(1, SC_LEVELS + 1):
+        joints.append(joint("$lv%d" % k, (0, 0, 0), (0, 1, 0), mode="slide", channel="lift", factor=round(k * lift, 4)))
+    m.prism("body", (-0.36, SC_Y0, SC_ZF), (0.36, SC_Y0, SC_ZF), 0.035, 6, [1])
+    m.box("body", -0.4, 0.5, SC_ZF - 0.06, 0.4, SC_Y0 + 0.03, SC_ZF + c0 + 0.06, 1)          # rails for the rollers
+    # platform
+    deck = "$lv%d" % SC_LEVELS
+    fy = SC_Y0 + SC_LEVELS * SC_H0
+    m.box(deck, -0.4, fy, -0.95, 0.4, fy + 0.08, 0.95, 1)
+    m.box(deck, -0.36, fy - 0.03, SC_ZF - 0.04, 0.36, fy, SC_ZF + c0 + 0.04, 1)
+    guard_rails(m, deck, -0.4, 0.4, fy + 0.08, -0.95, 0.95, color=5)
+    m.box(deck, -0.15, fy + 0.85, 0.82, 0.15, fy + 1.05, 0.91, 1)                    # control box on the front rail
+    s = open_scale(-0.36, 0.36, -0.91, 0.6)
+    seat = open_seat(m, deck, fy + 0.08, -0.36, 0.36, -0.91, 0.6, 0.0, s, "operator", True, eye_over=1.3)
+    m.write(os.path.join(OBJ_DIR, "scissor_lift.obj"), "Scissor lift")
+    construction = {
+        "machine": "aerial_platform",
+        "joints": joints,
+        "work_points": {"basket": point(deck, (0, fy + 0.08, 0))},
+        "seat_parts": [{"seat": 0, "part": deck}],
+        "work_seat": 0,
+        "aerial_platform": {"lift_speed": 0.006, "swing_speed": 0.0, "outriggers": False, "stow_to_drive": False,
+                            "raised_speed_factor": 0.25},
+    }
+    save_json("scissor_lift", base_json("Scissor Lift", "scissor_lift", 1, seats=[seat],
+                                        passenger_display={"entity_width": s, "entity_height": s},
+                                        construction=construction, wheel_parts=wheel_parts(wheels), weight_type="car",
+                                        width=1.0, height=2.0, max_speed=0.15, turn_speed=3.0, max_health=60.0,
+                                        max_fuel=600.0, inventory_size=9))
+
+
+BT_TURRET = (0.0, 1.0, 0.25)          # swing pivot
+BT_LUFF = (0.0, 1.55, 0.35)           # boom foot pin (the boom is stowed pointing back)
+BT_TIP = (0.0, 1.5, -3.45)            # bucket pin at the end of the top section, stowed
+
+
+def bucket_truck():
+    """Utility bucket truck: telescopic boom on a turret behind the cab, stowed pointing back over the
+    deck with the bucket at the rear; outriggers at the four corners. The driver drives from the cab, the
+    worker in the bucket (seat 1, work_seat) works the boom."""
+    m = Mesh()
+    m.box("body", -0.45, 0.5, -3.3, 0.45, 0.85, 2.45, 1)                 # frame
+    m.box("body", -1.0, 0.85, -3.3, 1.0, 1.0, 0.75, 3)                  # deck
+    for x in (-1.0, 0.95):
+        m.box("body", x, 1.0, -3.3, x + 0.05, 1.3, -0.2, 3)            # side boards
+    m.box("body", -0.5, 1.0, -2.95, 0.5, 1.33, -2.65, 1)               # boom rest
+    wheels = []
+    for i, (x, z, steer) in enumerate([(0.88, 1.75, 30.0), (-0.88, 1.75, 30.0), (0.85, -1.65, 0), (-0.85, -1.65, 0)]):
+        part = "$wheel%d" % i
+        m.wheel(part, x, 0.5, z, 0.5, 0.4)
+        wheels.append((part, x, 0.5, z, steer))
+    cab_box = (-1.0, 1.0, 0.95, 2.85, 0.85, 2.6)
+    s = min(cab_scale(*cab_box, seat_x=0.5), open_scale(-0.45, 0.45, -4.45, -3.53))
+    drv, _ = cab(m, "body", *cab_box, color=AERIAL_COLOR, seat_x=0.5, name="driver", max_scale=s)
+    m.box("body", -1.0, 0.6, 2.6, 1.0, 1.4, 2.75, 1)                    # front bumper / grille
+    # outriggers: out at the four corners, then the jacks down
+    stays = outriggers(m, corner_mounts(0.75, -3.05, 0.75, 0.1), 0.72, 0.12, 0.85, 0.5, 0.16, 1.2, 1.25,
+                       parent=None)
+    # turret
+    m.prism("body", (0, 1.0, BT_TURRET[2]), (0, 1.08, BT_TURRET[2]), 0.5, 12, [1])
+    m.box("$upper", -0.45, 1.08, -0.2, 0.45, 1.5, 0.7, 5)
+    m.box("$upper", -0.3, 1.5, 0.1, 0.3, 1.75, 0.6, 1)                    # boom foot bracket
+    # boom: base section and two telescopic sections, pointing back
+    m.box("$boom1", -0.22, 1.36, -3.3, 0.22, 1.74, 0.55, AERIAL_COLOR)
+    m.box("$boom2", -0.17, 1.4, -3.4, 0.17, 1.7, 0.3, 5)
+    m.box("$boom3", -0.13, 1.43, -3.5, 0.13, 1.66, -0.2, AERIAL_COLOR)
+    m.box("$boom3", -0.16, 1.4, -3.55, 0.16, 1.69, -3.35, 1)             # tip head
+    # bucket: hangs from the tip pin, kept level (level = -luff), turns on its own pin
+    m.box("$bucket", -0.08, 1.05, -3.6, 0.08, 1.56, -3.45, 1)            # hanger
+    bucket(m, "$bucket", -0.5, 0.5, 0.97, -4.5, -3.48)
+    seat_b = open_seat(m, "$bucket", 1.03, -0.45, 0.45, -4.45, -3.53, 0.0, s, "bucket", False, color=1, eye_over=1.2)
+    m.box("$bucket", -0.2, 1.68, -3.62, 0.2, 1.93, -3.53, 1)               # control box on the rim (boom side)
+    rams = ram(m, "luff_ram", "$upper", (0.0, 1.2, 0.65), (0.0, 1.36, -0.95), "$boom1", BT_LUFF, (1, 0, 0),
+               0.0, 75.0, size=0.16)
+    m.box("$boom1", -0.12, 1.28, -1.05, 0.12, 1.37, -0.8, 1)               # ram lug
+    m.write(os.path.join(OBJ_DIR, "bucket_truck.obj"), "Bucket truck")
+    joints = stays + [
+        joint("$upper", BT_TURRET, (0, 1, 0), channel="swing"),
+        joint("$boom1", BT_LUFF, (1, 0, 0), channel="luff", parent="$upper"),
+        joint("$boom2", (0, 0, 0), (0, 0, -1), mode="slide", channel="extend", factor=0.5, parent="$boom1"),
+        joint("$boom3", (0, 0, 0), (0, 0, -1), mode="slide", channel="extend", factor=0.5, parent="$boom2"),
+        joint("$bucket_level", BT_TIP, (1, 0, 0), channel="level", parent="$boom3"),
+        joint("$bucket", BT_TIP, (0, 1, 0), channel="basket", parent="$bucket_level"),
+    ] + rams
+    construction = {
+        "machine": "aerial_platform",
+        "joints": joints,
+        "work_points": {"basket": point("$bucket", (0, 1.03, -4.0))},
+        "seat_parts": [{"seat": 1, "part": "$bucket"}],
+        "work_seat": 1,
+        "swing_sound": dict(SWING_ALARM),
+        "aerial_platform": {"swing_speed": 1.0, "luff_speed": 0.5, "luff_min": 0.0, "luff_max": 75.0,
+                            "extend_speed": 0.04, "extend_max": 5.0, "basket_speed": 1.5, "basket_limit": 90.0,
+                            "outriggers": True, "require_outriggers": True, "stow_to_drive": True,
+                            # the turret is just behind the cab: only a near-vertical boom swings over it
+                            "swing_clear_luff": 72.0, "swing_low_limit": 100.0},
+    }
+    save_json("bucket_truck", base_json("Bucket Truck", "bucket_truck", 3, seats=[drv, seat_b],
+                                        passenger_display={"entity_width": s, "entity_height": s},
+                                        construction=construction, wheel_parts=wheel_parts(wheels), weight_type="car",
+                                        width=2.4, height=3.0, max_speed=0.6, turn_speed=2.5, max_health=110.0,
+                                        inventory_size=9))
+
+
+TB_KINGPIN = (0.0, 1.1, 2.75)
+TB_TURRET = (0.0, 0.65, 0.3)
+TB_LUFF = (0.0, 1.0, 0.45)            # lower boom foot (stowed pointing forward)
+TB_KNUCKLE = (0.0, 1.29, 2.55)        # upper boom pin at the lower boom's front end (upper stowed pointing back)
+TB_TIP = (0.0, 1.28, -0.55)           # bucket pin at the end of the telescope, stowed
+
+
+def trailer_boom_lift():
+    """Towable articulated boom lift on a single-axle trailer, coupled to a tractor's fifth wheel like
+    the low-bed trailer. Lower boom (luff) and upper boom (knuckle) fold over each other, the upper one
+    telescopes; the bucket is kept level by two joints undoing the two booms' angles. Outriggers at the
+    corners; worked from the bucket (it has no driver)."""
+    m = Mesh()
+    m.box("body", -0.6, 0.45, -2.2, 0.6, 0.65, 1.2, 1)                     # frame
+    m.beam("body", (0, 0.6, 1.1), (0, 1.0, 2.6), 0.3, 0.18, 1)             # drawbar
+    m.box("body", -0.3, 0.98, 2.5, 0.3, 1.1, 2.95, 3)                      # kingpin plate
+    wheels = []
+    for i, x in enumerate((0.82, -0.82)):
+        part = "$wheel%d" % i
+        m.wheel(part, x, 0.38, -0.5, 0.38, 0.25)
+        wheels.append((part, x, 0.38, -0.5, 0))
+        m.box("body", x - 0.15 if x > 0 else x - 0.15, 0.78, -0.95, x + 0.15, 0.82, -0.05, 1)   # mudguard
+        m.box("body", (0.6 if x > 0 else -0.68), 0.5, -0.6, (0.68 if x > 0 else -0.6), 0.6, -0.4, 1)  # axle stub
+    stays = outriggers(m, corner_mounts(0.95, -1.95, 0.5, 0.1), 0.55, 0.1, 0.8, 0.45, 0.14, 1.0, 1.05,
+                       parent=None)
+    m.prism("body", (0, 0.65, TB_TURRET[2]), (0, 0.72, TB_TURRET[2]), 0.42, 12, [1])
+    m.box("$upper", -0.38, 0.72, -0.1, 0.38, 1.0, 0.7, 5)
+    m.box("$upper", -0.35, 0.72, -0.45, 0.35, 1.05, -0.1, 1)              # counterweight / power pack
+    m.box("$upper", -0.12, 1.0, 0.3, 0.12, 1.15, 0.6, 1)                   # boom foot bracket
+    m.box("$boom1", -0.13, 0.92, 0.35, 0.13, 1.15, 2.65, AERIAL_COLOR)
+    m.box("$boom2", -0.11, 1.17, -0.4, 0.11, 1.38, 2.62, AERIAL_COLOR)
+    m.box("$boom2", -0.14, 1.15, 2.4, 0.14, 1.4, 2.7, 1)                   # knuckle head
+    m.box("$boom3", -0.08, 1.2, -0.6, 0.08, 1.35, 1.6, 5)
+    m.box("$boom3", -0.1, 1.18, -0.68, 0.1, 1.37, -0.5, 1)
+    m.box("body", -0.12, 0.65, 2.2, 0.12, 0.92, 2.4, 1)                    # rest for the folded booms
+    m.box("$bucket", -0.06, 0.85, -0.7, 0.06, 1.3, -0.6, 1)                 # hanger
+    bucket(m, "$bucket", -0.5, 0.5, 0.8, -1.72, -0.68, height=1.0)
+    s = open_scale(-0.45, 0.45, -1.67, -0.73)
+    seat_b = open_seat(m, "$bucket", 0.86, -0.45, 0.45, -1.67, -0.73, 0.0, s, "bucket", False, color=1, eye_over=1.2)
+    m.box("$bucket", -0.2, 1.53, -0.82, 0.2, 1.78, -0.73, 1)                  # control box on the rim
+    rams = ram(m, "luff_ram", "$upper", (0.0, 0.8, -0.05), (0.0, 0.92, 1.2), "$boom1", TB_LUFF, (-1, 0, 0),
+               0.0, 75.0, size=0.12)
+    rams += ram(m, "knuckle_ram", "$boom1", (0.0, 1.05, 1.6), (0.0, 1.3, 2.0), "$boom2", TB_KNUCKLE, (1, 0, 0),
+                0.0, 160.0, size=0.1)
+    m.write(os.path.join(OBJ_DIR, "trailer_boom_lift.obj"), "Trailer boom lift")
+    joints = stays + [
+        joint("$upper", TB_TURRET, (0, 1, 0), channel="swing"),
+        joint("$boom1", TB_LUFF, (-1, 0, 0), channel="luff", parent="$upper"),
+        joint("$boom2", TB_KNUCKLE, (1, 0, 0), channel="knuckle", parent="$boom1"),
+        joint("$boom3", (0, 0, 0), (0, 0, -1), mode="slide", channel="extend", parent="$boom2"),
+        # the bucket undoes the lower boom's tilt (+luff about +x) and the upper boom's (-knuckle about +x)
+        joint("$bucket_l1", TB_TIP, (1, 0, 0), channel="luff", parent="$boom3"),
+        joint("$bucket_l2", TB_TIP, (1, 0, 0), channel="knuckle", factor=-1.0, parent="$bucket_l1"),
+        joint("$bucket", TB_TIP, (0, 1, 0), channel="basket", parent="$bucket_l2"),
+    ] + rams
+    construction = {
+        "machine": "aerial_platform",
+        "joints": joints,
+        "work_points": {"basket": point("$bucket", (0, 0.86, -1.2))},
+        "seat_parts": [{"seat": 0, "part": "$bucket"}],
+        "work_seat": 0,
+        "swing_sound": dict(SWING_ALARM),
+        "aerial_platform": {"swing_speed": 1.0, "luff_speed": 0.5, "luff_min": 0.0, "luff_max": 75.0,
+                            "knuckle_speed": 0.8, "knuckle_min": 0.0, "knuckle_max": 160.0,
+                            "extend_speed": 0.03, "extend_max": 1.5, "basket_speed": 1.5, "basket_limit": 90.0,
+                            "outriggers": True, "require_outriggers": True, "stow_to_drive": True,
+                            # folded down, the bucket would swing into the front jacks
+                            "swing_clear_luff": 20.0, "swing_low_limit": 60.0,
+                            "tow": {"kingpin_x": TB_KINGPIN[0], "kingpin_y": TB_KINGPIN[1],
+                                    "kingpin_z": TB_KINGPIN[2], "axle_z": -0.5, "max_articulation": 80.0}},
+    }
+    save_json("trailer_boom_lift", base_json("Trailer Boom Lift", "trailer_boom_lift", 2, seats=[seat_b],
+                                             passenger_display={"entity_width": s, "entity_height": s},
+                                             construction=construction, wheel_parts=wheel_parts(wheels),
+                                             weight_type="unknown", width=1.8, height=2.0, max_speed=0.7,
+                                             max_health=90.0, fuel_consumption=-1.0, inventory_size=0))
+
+
+# ---------------------------------------------------------------- spider crane
+SP_SWING = (0.0, 0.55, -0.1)
+SP_LUFF = (0.0, 0.98, -0.8)
+SP_TIP = (0.0, 0.94, 1.32)
+
+
+def spider_crane():
+    """Mini crawler crane with four spider legs: narrow enough for a doorway, the legs swing out from
+    along its sides (first half of "outrigger") and their jacks go down (second half). Crane module as the
+    rough-terrain crane; the operator sits on a step at the back."""
+    m = Mesh()
+    top, _, _ = crawlers(m, 0.15, 0.38, 0.85, 0.32, r_end=0.13, wheel_r=0.06, n_wheels=4, link_len=0.12,
+                         shoe_t=0.045)
+    m.box("body", -0.37, 0.2, -0.95, 0.37, 0.55, 0.95, 0)
+    m.prism("body", (0, 0.5, SP_SWING[2]), (0, 0.58, SP_SWING[2]), 0.3, 10, [1])
+    legs = []
+    # spider legs: hinged at the corners, folded along the sides outside the crawlers
+    for name, z_h, sx, folded, axis in (("leg_fl", 0.8, 1, -1, (0, -1, 0)), ("leg_fr", 0.8, -1, -1, (0, 1, 0)),
+                                         ("leg_rl", -0.8, 1, 1, (0, 1, 0)), ("leg_rr", -0.8, -1, 1, (0, -1, 0))):
+        g, foot = "$" + name, "$%s_foot" % name
+        hinge = (sx * 0.42, 0.42, z_h)
+        tip = (sx * 0.42, 0.42, z_h + folded * 0.95)
+        m.box("body", sx * 0.37, 0.32, z_h - 0.07, sx * 0.47, 0.52, z_h + 0.07, 1)        # hinge bracket
+        m.beam(g, hinge, tip, 0.08, 0.1, 5)
+        m.prism(g, (tip[0], 0.3, tip[2]), (tip[0], 0.58, tip[2]), 0.05, 6, [1])          # jack cylinder
+        m.prism(foot, (tip[0], 0.08, tip[2]), (tip[0], 0.42, tip[2]), 0.025, 6, [10])     # jack rod
+        m.prism(foot, (tip[0], 0.03, tip[2]), (tip[0], 0.08, tip[2]), 0.09, 8, [1])       # pad
+        legs.append(joint(g, hinge, axis, channel="outrigger", factor=270.0, min=0.0, max=135.0))
+        legs.append(joint(foot, (0, 0, 0), (0, -1, 0), mode="slide", channel="outrigger", parent=g,
+                          factor=0.06, offset=-0.03, min=0.0, max=0.03))
+    # upper structure
+    m.box("$upper", -0.36, 0.58, -0.95, 0.36, 0.82, 0.55, 0)
+    m.box("$upper", -0.36, 0.82, -0.95, 0.36, 0.95, -0.55, 1)                          # engine cover / counterweight
+    m.box("$upper", -0.12, 0.82, -0.95, 0.12, 1.08, -0.65, 1)                          # boom foot bracket
+    # telescopic boom (4 sections) lying forward
+    m.box("$boom1", -0.13, 0.86, -0.95, 0.13, 1.1, 1.1, 5)
+    m.box("$boom2", -0.1, 0.89, -0.85, 0.1, 1.07, 1.2, 6)
+    m.box("$boom3", -0.08, 0.91, -0.8, 0.08, 1.05, 1.27, 5)
+    m.box("$boom4", -0.06, 0.93, -0.75, 0.06, 1.03, 1.3, 6)
+    m.box("$boom4", -0.08, 0.86, 1.25, 0.08, 1.05, 1.38, 3)                             # sheave head
+    m.box("$rope", -0.015, SP_TIP[1] - 1.0, SP_TIP[2] - 0.015, 0.015, SP_TIP[1], SP_TIP[2] + 0.015, 1)
+    m.box("$hook", -0.08, SP_TIP[1] - 0.3, SP_TIP[2] - 0.08, 0.08, SP_TIP[1], SP_TIP[2] + 0.08, 5)
+    m.box("$hook", -0.03, SP_TIP[1] - 0.45, SP_TIP[2] - 0.03, 0.03, SP_TIP[1] - 0.3, SP_TIP[2] + 0.03, 3)
+    rams = ram(m, "luff_ram", "$upper", (0.0, 0.72, 0.45), (0.0, 0.86, 0.1), "$boom1", SP_LUFF, (-1, 0, 0),
+               0.0, 80.0, size=0.1)
+    # operator step at the back (open; the rider's legs reach in over the engine cover)
+    m.box("$upper", -0.36, 0.55, -1.45, 0.36, 0.6, -0.95, 1)
+    s = open_scale(-0.36, 0.36, -1.43, -0.42)
+    seat = open_seat(m, "$upper", 0.6, -0.36, 0.36, -1.43, -0.42, 0.0, s, "operator", True)
+    m.write(os.path.join(OBJ_DIR, "spider_crane.obj"), "Spider crane")
+    joints = legs + [
+        joint("$upper", SP_SWING, (0, 1, 0), channel="swing"),
+        joint("$boom1", SP_LUFF, (-1, 0, 0), channel="luff", parent="$upper"),
+        joint("$boom2", (0, 0, 0), (0, 0, 1), mode="slide", channel="extend", factor=round(1 / 3, 4), parent="$boom1"),
+        joint("$boom3", (0, 0, 0), (0, 0, 1), mode="slide", channel="extend", factor=round(1 / 3, 4), parent="$boom2"),
+        joint("$boom4", (0, 0, 0), (0, 0, 1), mode="slide", channel="extend", factor=round(1 / 3, 4), parent="$boom3"),
+        joint("$rope", SP_TIP, (0, 1, 0), mode="scale", channel="rope", parent="$boom4", offset=0.0,
+              inherit_rotation=False),
+        joint("$hook", SP_TIP, (0, -1, 0), mode="slide", channel="rope", parent="$boom4", inherit_rotation=False),
+    ] + rams
+    construction = {
+        "machine": "crane",
+        "joints": joints,
+        "work_points": {"boom_tip": point("$boom4", SP_TIP)},
+        "seat_parts": [{"seat": 0, "part": "$upper"}],
+        "swing_sound": dict(SWING_ALARM),
+        "crane": {"swing_speed": 1.2, "luff_speed": 0.5, "luff_min": 0.0, "luff_max": 80.0,
+                  "extend_speed": 0.03, "extend_max": 3.0, "rope_speed": 0.1, "rope_min": 0.3, "rope_max": 20.0,
+                  "outrigger_speed": 0.02, "require_outriggers": True, "grab_radius": 1.0, "max_lift_width": 2.5,
+                  "hook_drop": 0.45},
+    }
+    save_json("spider_crane", base_json("Spider Crane", "spider_crane", 2, seats=[seat],
+                                        passenger_display={"entity_width": s, "entity_height": s},
+                                        construction=construction, width=1.0, height=1.3, max_speed=0.12,
+                                        turn_speed=2.0, max_health=70.0, inventory_size=9, **top))
+
+
+# ---------------------------------------------------------------- full-rotation pile drivers
+FR_PILE_R = 0.45       # steel casing pile radius
+FR_GRIP = 1.4          # the jaws' bottom (head) as modelled
+FR_TOP = 2.4           # pile top as modelled
+FR_TOOL = 3.0          # follower length
+
+
+def full_rotation_unit(m, cz, y_base, parent=None, leg_lift=0.0):
+    """The full-rotation unit centred on (0, cz): a square housing on four jack legs ("outrigger"), the
+    thrust table ($table, slides with "head" = the jaws' bottom), the rotating ring ($ring, turns with
+    "rpm") carrying four jaws ($jaw0..3, open radially with "chuck"), four thrust cylinders, and the pile
+    with its follower (ヤットコ, cap at its foot, shown on "tool"). leg_lift: how far the jack legs pull up
+    for travel ("outrigger" 0); 0 = always standing on the ground. Returns the joints."""
+    r_in, r_out = 0.62, 1.05
+    h0, h1 = y_base, y_base + 0.75
+    # housing round a square hole
+    m.box("body", -r_out, h0, cz - r_out, r_out, h1, cz - r_in, 1)
+    m.box("body", -r_out, h0, cz + r_in, r_out, h1, cz + r_out, 1)
+    m.box("body", -r_out, h0, cz - r_in, -r_in, h1, cz + r_in, 1)
+    m.box("body", r_in, h0, cz - r_in, r_out, h1, cz + r_in, 1)
+    joints = []
+    for i, (sx, sz) in enumerate(((1, 1), (-1, 1), (1, -1), (-1, -1))):
+        x, z = sx * (r_out - 0.12), cz + sz * (r_out - 0.12)
+        leg = "$unit_leg%d" % i
+        m.prism("body", (x, h0 - 0.02, z), (x, h1 + 0.1, z), 0.11, 8, [0])                 # jack cylinder
+        m.prism(leg, (x, 0.05, z), (x, h0, z), 0.06, 6, [10])                             # rod
+        m.prism(leg, (x, 0.0, z), (x, 0.05, z), 0.2, 8, [1])                              # pad
+        if leg_lift > 0:
+            joints.append(joint(leg, (0, 0, 0), (0, 1, 0), mode="slide", channel="outrigger",
+                                factor=round(-leg_lift, 4), offset=round(leg_lift, 4), parent=parent))
+        # thrust cylinder: barrel on the housing, rod with the table
+        tx, tz = sx * 0.78, cz + sz * 0.78
+        # thrust cylinder: its barrel inside the housing (a collar on top), the rod up to the table - long
+        # enough to stay in the barrel at the top of the stroke
+        m.prism("body", (tx, h1, tz), (tx, h1 + 0.12, tz), 0.09, 8, [3])
+        m.prism("$table", (tx, h0 + 0.05, tz), (tx, FR_GRIP - 0.05, tz), 0.05, 6, [10])
+    # thrust table (square ring) and rotating ring with jaws
+    t0, t1 = FR_GRIP - 0.05, FR_GRIP + 0.6
+    m.box("$table", -1.0, t0, cz - 1.0, 1.0, t0 + 0.12, cz - 0.62, 0)
+    m.box("$table", -1.0, t0, cz + 0.62, 1.0, t0 + 0.12, cz + 1.0, 0)
+    m.box("$table", -1.0, t0, cz - 0.62, -0.62, t0 + 0.12, cz + 0.62, 0)
+    m.box("$table", 0.62, t0, cz - 0.62, 1.0, t0 + 0.12, cz + 0.62, 0)
+    for i in range(8):
+        a = i * math.pi / 4
+        c, sn = math.cos(a), math.sin(a)
+        m.oriented_box("$ring", (c * 0.66, (t0 + 0.12 + t1) / 2, cz + sn * 0.66), (c, 0, sn), (0, 1, 0), (-sn, 0, c),
+                       0.07, (t1 - t0 - 0.12) / 2, 0.29, 5 if i % 2 else 3)
+    for i in range(4):
+        a = i * math.pi / 2
+        c, sn = math.cos(a), math.sin(a)
+        jaw = "$jaw%d" % i
+        m.oriented_box(jaw, (c * (FR_PILE_R + 0.09), (FR_GRIP + t1) / 2, cz + sn * (FR_PILE_R + 0.09)),
+                       (c, 0, sn), (0, 1, 0), (-sn, 0, c), 0.085, (t1 - FR_GRIP) / 2, 0.16, 1)
+        joints.append(joint(jaw, (0, 0, 0), (round(c, 4), 0, round(sn, 4)), mode="slide", channel="chuck",
+                            factor=0.1, parent="$ring"))
+    joints += [
+        joint("$table", (0, 0, 0), (0, 1, 0), mode="slide", channel="head", offset=round(-FR_GRIP, 4), parent=parent),
+        joint("$ring", (0, 0, cz), (0, 1, 0), mode="spin", channel="rpm", factor=0.3, parent="$table"),
+    ]
+    # the pile (casing), turned by the chuck; its follower stands on its head, cap at its foot
+    tip_h = 0.5
+    shaft = FR_TOP - tip_h
+    m.prism("$pile_shaft", (0, tip_h, cz), (0, FR_TOP, cz), FR_PILE_R, 12, [3, 10])
+    m.prism("$pile_tip", (0, 0.0, cz), (0, tip_h + 0.02, cz), FR_PILE_R * 1.03, 12, [1, 3])     # cutting shoe
+    hide = FR_TOP - 0.05
+    m.prism("$follower", (0, FR_TOP, cz), (0, FR_TOP + 0.25, cz), FR_PILE_R * 1.06, 12, [1])     # cap on the pile head
+    m.prism("$follower", (0, FR_TOP + 0.25, cz), (0, FR_TOP + FR_TOOL, cz), FR_PILE_R * 0.97, 12, [5, 1])
+    joints += [
+        joint("$pile", (0, 0, 0), (0, 1, 0), mode="slide", channel="pile_top", offset=round(-FR_TOP, 4), parent=parent),
+        joint("$pile_spin", (0, 0, cz), (0, 1, 0), mode="spin", channel="rpm", factor=0.3, parent="$pile"),
+        joint("$pile_shaft", (0, FR_TOP, cz), (0, 1, 0), mode="scale", channel="pile_length",
+              factor=round(1 / shaft, 5), offset=round(-tip_h / shaft, 5), min=0.02, parent="$pile_spin"),
+        joint("$pile_tip", (0, 0, 0), (0, 1, 0), mode="slide", channel="pile_length", factor=-1.0,
+              offset=round(FR_TOP, 4), parent="$pile_spin"),
+        joint("$follower", (0, hide, cz), (0, 1, 0), mode="show", channel="tool", parent="$pile_spin"),
+    ]
+    return joints
+
+
+def fr_settings(**extra):
+    d = {"mode": "full_rotation", "pile_block": "minecraft:iron_block", "max_depth": 40,
+         "outrigger_speed": 0.03, "require_outriggers": True, "swing_speed": 0.0,
+         "ticks_per_block": 50.0, "rpm": 12.0, "min_rpm": 2.0, "rpm_response": 0.1,
+         # jaws grip 1.4 - 2.1 above the ground (0.7 stroke), 0.6 tall; piles 3-8 blocks; 3-block follower
+         "head_min": 1.4, "head_max": 2.1, "head_speed": 0.06, "chuck_length": 0.6, "chuck_speed": 0.08,
+         "pile_length_min": 3, "pile_length_max": 8, "default_pile_length": 5,
+         "tool": "follower", "tool_length": FR_TOOL, "tool_speed": 0.05, "load_ticks_per_block": 5,
+         "extract_factor": 0.7,
+         "resistance": {"hardness_scale": 0.8, "refusal_hardness": 30.0}}
+    d.update(extra)
+    return d
+
+
+def full_rotation_machines():
+    # crawler (self-propelled) type: the unit at the front of a crawler base with a cab
+    m = Mesh()
+    cz = 2.85
+    top, _, _ = crawlers(m, 0.75, 1.4, 1.9, 0.75, r_end=0.3, wheel_r=0.12, n_wheels=6, carrier_r=0.08,
+                         n_carrier=1, link_len=0.22)
+    m.box("body", -0.75, 0.3, -1.9, 0.75, 0.75, 1.9, 3)
+    m.box("body", -1.35, 0.75, -2.3, 1.35, 1.0, 1.75, 0)                              # deck
+    m.box("body", -1.35, 1.0, -2.3, -0.1, 2.0, -0.4, 0)                               # power pack
+    m.box("body", -1.3, 1.0, -2.4, 1.3, 1.6, -2.3, 1)                                # counterweight
+    cab_box = (0.25, 1.3, 1.0, 2.6, -0.5, 1.0)
+    seat, display = cab(m, "body", *cab_box, seat_x=0.775)
+    # arms carrying the unit off the front of the base
+    for x in (-0.9, 0.9):
+        m.box("body", x - 0.12, 0.45, 1.6, x + 0.12, 0.75, cz - 1.0, 1)
+    joints = full_rotation_unit(m, cz, 0.45, leg_lift=0.35)
+    m.write(os.path.join(OBJ_DIR, "full_rotation_crawler.obj"), "Crawler full-rotation machine")
+    construction = {
+        "machine": "pile_driver",
+        "joints": joints,
+        "work_points": {"pile_point": point(None, (0, 0.5, cz))},
+        "pile_driver": fr_settings(),
+    }
+    save_json("full_rotation_crawler", base_json("Full-Rotation Machine (Crawler)", "full_rotation_crawler", 5,
+                                                 seats=[seat], passenger_display=display, construction=construction,
+                                                 width=3.0, height=2.6, max_speed=0.15, turn_speed=1.5,
+                                                 max_health=220.0, inventory_size=27, **top))
+
+    # stationary type: the unit set on the ground on its jacks, a power pack and an operator deck
+    m = Mesh()
+    cz = 0.0
+    joints = full_rotation_unit(m, cz, 0.45)
+    m.box("body", -0.5, 0.0, -1.95, 0.5, 0.95, -1.05, 1)                             # operator deck (on legs)
+    m.box("body", -0.5, 0.95, -1.95, 0.5, 1.0, -1.05, 3)
+    guard_rails(m, "body", -0.5, 0.5, 1.0, -1.95, -1.05, height=0.9, color=5)
+    s = open_scale(-0.46, 0.46, -1.91, -1.05)
+    seat = open_seat(m, "body", 1.0, -0.46, 0.46, -1.91, -1.09, 0.0, s, "operator", True, eye_over=1.15)
+    m.box("body", 1.25, 0.0, -1.0, 2.3, 1.2, 0.6, 0)                                  # power pack
+    m.beam("body", (1.25, 0.6, -0.2), (1.05, 0.7, -0.2), 0.12, 0.12, 1)                # hose bundle
+    m.write(os.path.join(OBJ_DIR, "full_rotation_unit.obj"), "Stationary full-rotation machine")
+    construction = {
+        "machine": "pile_driver",
+        "joints": joints,
+        "work_points": {"pile_point": point(None, (0, 0.5, cz))},
+        "pile_driver": fr_settings(),
+    }
+    save_json("full_rotation_unit", base_json("Full-Rotation Machine (Stationary)", "full_rotation_unit", 4,
+                                              seats=[seat], passenger_display={"entity_width": s, "entity_height": s},
+                                              construction=construction, width=2.4, height=2.0, max_speed=0.0,
+                                              turn_speed=0.0, max_health=200.0, inventory_size=27))
+
 if __name__ == "__main__":
     write_texture()
     backhoe()
@@ -1233,4 +1753,9 @@ if __name__ == "__main__":
     mixer_truck()
     tractor()
     lowboy_trailer()
+    scissor_lift()
+    bucket_truck()
+    trailer_boom_lift()
+    spider_crane()
+    full_rotation_machines()
     print("done")

@@ -15,8 +15,12 @@ public enum WorkAxis {
 	LUFF("work_luff_up", "work_luff_down"),
 	/** Crane telescoping. +1 = extend. Default , / . */
 	TELESCOPE("work_telescope_out", "work_telescope_in"),
-	/** Crane hoist. +1 = hook up. Default ; / / */
-	HOIST("work_hoist_up", "work_hoist_down");
+	/** Crane hoist. +1 = hook up. Default ; / ' */
+	HOIST("work_hoist_up", "work_hoist_down"),
+	/** Aerial platform upper boom (knuckle). +1 = raise. Default ; / ' */
+	KNUCKLE("work_knuckle_up", "work_knuckle_down"),
+	/** Aerial platform basket rotation. +1 = left. Default [ / ] */
+	BASKET("work_basket_left", "work_basket_right");
 
 	private final String positiveId;
 	private final String negativeId;
